@@ -1,0 +1,42 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Python y paquetes generados
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Caches de herramientas y reportes de cobertura
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Variables de entorno y secretos locales
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Exportaciones generadas por la aplicacion
+/valoraciones_*.xlsx
+~$*.xlsx
+
+# Archivos temporales y registros
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+Desktop.ini

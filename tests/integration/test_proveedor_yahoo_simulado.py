@@ -5,7 +5,7 @@ import math
 import pandas as pd
 import pytest
 
-import motor_valoracion as motor
+import valoracion.proveedores.yahoo as motor
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 

@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import motor_valoracion as motor
+import valoracion.normalizacion as motor
+from valoracion.proveedores import yahoo
 
 
 @pytest.mark.parametrize("ticker, esperado", [("TEST.MX", "MX"), ("test.mx", "MX"), ("TEST", "USA")])
@@ -64,7 +65,7 @@ def test_conversion_conserva_indice_y_entrada():
 
 def test_no_se_admiten_consultas_o_sockets_sin_preparar():
     with pytest.raises(pytest.fail.Exception, match="sin fixture"):
-        motor.yf.Ticker("NO_PREPARADO")
+        yahoo.yf.Ticker("NO_PREPARADO")
     with pytest.raises(pytest.fail.Exception, match="Socket de red"):
         socket.socket()
     with pytest.raises(pytest.fail.Exception, match="DNS"):

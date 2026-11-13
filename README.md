@@ -55,18 +55,21 @@ chmod +x ejecutar_app.sh
 
 ## Archivos principales
 
-- `app.py`: interfaz Streamlit y gráficas.
-- `motor_valoracion.py`: descarga, normalización, valoraciones y exportación a Excel.
+- `app.py`: entrada Streamlit, controles, sesión y cachés.
+- `motor_valoracion.py`: fachada compatible y entrada de la CLI.
+- `valoracion/`: configuración, modelos, normalización, cálculos, servicio, proveedor Yahoo, exportación y presentación.
+- `data/universo.json`: catálogo local de empresas y procedencia.
+- `tests/`: pruebas de comportamiento, arquitectura y equivalencia.
 - `requirements.txt`: dependencias.
 
 ## Consideraciones
 
 - Yahoo Finance puede no entregar todos los campos para todos los tickers, especialmente objetivos de analistas de emisoras mexicanas.
 - Las empresas financieras requieren una lectura diferente: la utilidad neta suele ser más útil que FCL, EBIT o EBITDA.
-- La lista mexicana prioriza emisoras grandes y líquidas; puede editarse en `EMPRESAS_MX` dentro de `motor_valoracion.py`.
+- La lista mexicana prioriza emisoras grandes y líquidas; se encuentra en `data/universo.json`. El catálogo conserva un snapshot local y no certifica la composición actual de un índice.
 - Los resultados son aproximaciones educativas y no constituyen una recomendación de inversión.
 
-## Pruebas y TDD (F1)
+## Pruebas y TDD
 
 Con el entorno virtual activo, instala las herramientas de desarrollo y ejecuta:
 
@@ -81,7 +84,7 @@ interfaz, sesión, cachés, CLI y libros Excel reales. Las consultas de mercado 
 preparadas y los sockets de red de Python están bloqueados durante las pruebas.
 La instalación de dependencias puede requerir Internet.
 
-El comando completo mide líneas y ramas en ambos archivos de aplicación, exige
+El comando completo mide líneas y ramas en las entradas y todo el paquete `valoracion`, exige
 85 % de cobertura total y genera `coverage.xml` y `test-results.xml`. Los reportes
 son archivos locales ignorados por Git. Para depurar un caso sin el umbral global:
 
@@ -91,6 +94,7 @@ python -m pytest -o addopts='' tests/ui/test_app.py -k todos_los_analisis_fallan
 
 Los cambios de software deben seguir **TDD: prueba, fallo observado, cambio mínimo
 y refactorización con pruebas verdes**. La [evidencia de F1](docs/TDD_F1.md), la
+[evidencia de F2](docs/TDD_F2.md), la
 [matriz de trazabilidad](docs/F1_TEST_MATRIX.md) y los
 [datos de referencia](tests/fixtures/README.md) explican qué se comprobó y con qué
 esperados. Las caracterizaciones de modelos actuales no validan su metodología
@@ -101,6 +105,18 @@ manual, con Python 3.12 y permisos de lectura. El workflow no despliega la app.
 Su ejecución remota debe verificarse en GitHub; la verificación local y sus
 versiones están registradas en la SDD. El bloqueo integral de dependencias y la
 ampliación de compatibilidad permanecen en F4.
+
+## Arquitectura (F2)
+
+La [decisión de arquitectura](docs/architecture.md) explica las dependencias,
+el contrato del proveedor y la compatibilidad. La UI y la CLI comparten el
+servicio; los cálculos se ejecutan sobre snapshots sin I/O. Se puede inyectar un
+`ProveedorDatos` en el servicio o una factory en `ProveedorYahoo` para probar
+datos alternativos sin cambiar las fórmulas.
+
+F1 y F2 están implementadas y verificadas localmente. La revisión metodológica,
+la formalización completa de dependencias y la demo de producto siguen pendientes
+de F3, F4 y F5, respectivamente.
 
 ## Especificación y plan de desarrollo
 

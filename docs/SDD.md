@@ -4,20 +4,21 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 1.1 |
+| Versión del documento | 1.2 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1 implementada y verificada localmente; primera ejecución remota de CI pendiente. F2 a F5 pendientes |
+| Estado | F1 y F2 implementadas y verificadas localmente; CI remoto no verificado en esta sesión. F3 a F5 pendientes |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
 | Método de implementación obligatorio | TDD: prueba primero, fallo observado, cambio mínimo y refactorización con pruebas verdes |
-| Trabajo posterior acordado | F2 a F5: arquitectura, metodología, reproducibilidad y presentación del repositorio |
+| Refactorización implementada | F2: separación de responsabilidades, a partir de `b9852e6` |
+| Trabajo posterior acordado | F3 a F5: metodología, reproducibilidad y presentación del repositorio |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior de F1. La matriz implementada está en [trazabilidad de F1](F1_TEST_MATRIX.md), los ciclos en [TDD de F1](TDD_F1.md) y el cierre se registra en la sección 21.6. F2 a F5 siguen siendo especificaciones pendientes.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 a F5 siguen pendientes.
 
 ## Índice
 
@@ -64,7 +65,7 @@ La aplicación ya tiene una funcionalidad concreta: comparar precios de acciones
 | 6 | Preparar la presentación del repositorio | Documentar y dejar pendiente | F5 |
 | Previo | Crear `.gitignore` | Ya realizado y comprobado | Completado |
 
-El usuario pidió primero redactar esta SDD y posteriormente autorizó implementar únicamente F1, con TDD obligatorio. F2 a F5 siguen pendientes. La evidencia de los ciclos se registra en [TDD de F1](TDD_F1.md).
+El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, y después F2. Ambas se implementaron en entregas separadas. El encargo actual termina en F2; F3 a F5 siguen pendientes. La evidencia se registra en [TDD de F1](TDD_F1.md) y [TDD de F2](TDD_F2.md).
 
 ### 1.3 Restricciones y decisiones de alcance
 
@@ -146,7 +147,7 @@ También existen localmente `.venv/`, `__pycache__/` y archivos del sistema; se 
 
 ### 3.2 Estado confirmado en la línea base original
 
-Este inventario corresponde al commit `635cd15`. La incorporación posterior de pruebas, workflow y documentación de F1 se registra en las secciones 19.3 y 21.6.
+Este inventario corresponde al commit `635cd15`. La incorporación de pruebas, workflow y documentación de F1 se registra en la sección 21.6; la reorganización de F2, en la sección 21.7. La tabla 19.3 mantiene el estado actual.
 
 | Aspecto | Estado observado |
 | --- | --- |
@@ -253,6 +254,8 @@ La descarga de la interfaz representa el **análisis completo almacenado**, no �
 ## 5. Mapa del código
 
 Las líneas siguientes corresponden a la línea base y pueden desplazarse. Buscar por nombre de función al retomar.
+
+Desde F2, las implementaciones están en el paquete `valoracion`; el mapa actual está en [arquitectura](architecture.md). Las referencias de este apartado se conservan para entender los hallazgos y la migración desde el monolito.
 
 ### 5.1 Interfaz: `app.py`
 
@@ -973,10 +976,12 @@ python -m pytest
 La configuración de pytest debe hacer que `python -m pytest` incluya los objetivos equivalentes a:
 
 ```bash
-python -m pytest --cov=app --cov=motor_valoracion --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=85
+python -m pytest --cov=app --cov=motor_valoracion --cov=valoracion --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=85
 ```
 
 No duplicar opciones de cobertura en varias configuraciones que puedan divergir. Elegir la configuración declarada como fuente del comando canónico. El bloqueo de red y los markers también deben quedar documentados allí.
+
+Desde F2 se mide también todo `valoracion`, tanto en `pytest.ini` como en `.coveragerc`. La cobertura no queda limitada a las fachadas después de mover el código.
 
 `pytest-cov` admite selección de fuentes, cobertura de ramas, reportes y umbral de fallo; véase su [referencia de configuración](https://pytest-cov.readthedocs.io/en/latest/config.html).
 
@@ -1079,7 +1084,7 @@ El cumplimiento de la suite completa debe poder revisarse en una sola entrega. E
 
 ## 15. F2: separación de responsabilidades
 
-**Estado: pendiente; corresponde al punto 3 original. Depende de F1.**
+**Estado: implementada y verificada localmente; corresponde al punto 3 original. Línea base: F1 en `b9852e6`.** La evidencia y la decisión de estructura están en `docs/TDD_F2.md` y `docs/architecture.md`.
 
 ### 15.1 Problema que resuelve
 
@@ -1177,14 +1182,14 @@ No descargar automáticamente los componentes de un índice para sustituir el ca
 6. Ajustar medición de cobertura a los módulos nuevos; no perder cobertura al dejar de medir código movido.
 7. Escribir una decisión de arquitectura que explique dependencias y compatibilidad.
 
-- [ ] Suite completa de F1 pasa con los mismos esperados numéricos.
-- [ ] Las pruebas de cálculo no necesitan parches de red.
-- [ ] Servicio probado con proveedor falso por inyección explícita.
-- [ ] UI e históricos usan el adaptador definido.
-- [ ] Entradas heredadas y esquemas públicos siguen funcionando.
-- [ ] Catálogo extraído sin cambios de símbolos u orden.
-- [ ] Diagrama e inventario actualizados; no hay dependencias circulares.
-- [ ] Cobertura incluye el código nuevo, no únicamente las fachadas.
+- [x] Suite completa de F1 pasa con los mismos esperados numéricos; ocho escenarios completos adicionales se comparan con snapshots de F1.
+- [x] Los cálculos no necesitan parches de red; también se ejecutó un oráculo fuera de pytest sin fixtures.
+- [x] Servicio probado con proveedor falso por inyección explícita.
+- [x] UI e históricos usan el adaptador definido; prueba de UI con proveedor de dominio inyectado.
+- [x] Entradas heredadas y esquemas públicos siguen funcionando; CLI verificada desde otra carpeta.
+- [x] Catálogo extraído sin cambios de símbolos, orden o fuentes; equivalencia por hash y conteos 500/104.
+- [x] Diagrama e inventario actualizados; 16 módulos y 23 dependencias internas, sin ciclos.
+- [x] Cobertura incluye `valoracion`, además de las entradas; total con ramas de 98.49 % en la ejecución de cierre.
 
 Entregables: paquete organizado, catálogo de datos, pruebas migradas y `docs/architecture.md` con la decisión de estructura.
 
@@ -1460,14 +1465,14 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Dependencias abiertas/lanzadores | F4-R01 a F4-R08 | Instalación limpia, comandos y matriz de CI |
 | Falta de evidencia de producto | F5-R01 a F5-R08 | Demo, documentación, capturas y ejemplo |
 
-### 19.3 Estado de ejecución después de F1
+### 19.3 Estado de ejecución después de F2
 
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 1.1; incorpora TDD obligatorio y evidencia de F1 |
+| SDD | Actualizada | Versión 1.2; incorpora evidencia de F1 y F2 |
 | F1 | Implementada y verificada localmente; CI remoto pendiente | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
-| F2 | Pendiente | El código sigue en los dos archivos principales |
+| F2 | Implementada y verificada localmente; CI remoto no verificado | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Pendiente | Fórmulas descritas para caracterización; metodología no validada |
 | F4 | Pendiente | Dependencias abiertas y lanzadores que instalan al arrancar |
 | F5 | Pendiente | Sin demo, capturas de portafolio ni licencia definida |
@@ -1493,6 +1498,10 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | D-013 | TDD obligatorio para los cambios de software de todas las fases | Instrucción explícita posterior del usuario; ciclos de F1 documentados |
 | D-014 | Bloqueo de red en fixture automática, sin pytest-socket | Ajuste de diseño de F1: proveedor, sockets Python y DNS bloqueados con monkeypatch y verificados mediante tests |
 | D-015 | PyYAML como herramienta de desarrollo | Permite comprobar el contrato estructural del workflow; no se incorpora al producto |
+| D-016 | Paquete plano y fachada de reexports | Implementada en F2; mantiene comandos y funciones públicas sin duplicar lógica ni exigir instalación editable |
+| D-017 | Protocolo de proveedor y snapshots de dominio | Implementada en F2; Yahoo, servicio, cálculo y presentación comparten contratos explícitos |
+| D-018 | Catálogo extraído a JSON con validación | Implementada en F2; conserva contenido/orden/fuentes, distingue snapshot y verificación de referencias |
+| D-019 | Migrar parches a módulos propietarios | Implementada en F2; no se usan imports incidentales del monolito como interfaz de inyección |
 
 ### 20.2 Riesgos y mitigaciones
 
@@ -1544,7 +1553,7 @@ Es una referencia local de trabajo, no una ruta que deba aparecer en comandos p�
 
 ### 21.2 Instrucción lista para continuar con F1
 
-Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar el cierre de la sección 21.6: F1 ya está implementada localmente y no debe rehacerse desde cero. Las correcciones futuras deben seguir TDD; F2 continúa pendiente y requiere una solicitud para iniciarse.
+Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los cierres de las secciones 21.6 y 21.7: F1 y F2 ya están implementadas localmente y no deben rehacerse desde cero. Las correcciones futuras deben seguir TDD; F3 continúa pendiente y requiere una solicitud para iniciarse.
 
 > Lee `docs/SDD.md` y las instrucciones del repositorio. Implementa únicamente F1: corrige los casos de fallo, crea pruebas deterministas para todas las áreas relevantes y automatízalas en CI en una misma entrega. F2 a F5 siguen pendientes. Empieza por reproducir BUG-001 y BUG-002 mediante tests y corrige sus causas. Usa fixtures sintéticos y un proveedor falso; las pruebas obligatorias no deben consultar Yahoo. Conserva las fórmulas válidas actuales y sus contratos públicos; documenta como caracterización lo que aún requiere revisión metodológica. Sigue la matriz de pruebas, verifica los resultados numéricos de forma independiente, mide cobertura sobre ambos archivos con ramas y usa el umbral inicial de 85 %. Añade el workflow y comandos de desarrollo sin realizar la refactorización completa ni el bloqueo integral de dependencias de fases posteriores. Ejecuta las comprobaciones disponibles, distingue suite local de CI remoto, y actualiza esta SDD con archivos cambiados, comandos, resultados reales y pendientes. No publiques ni despliegues como parte de esta tarea.
 
@@ -1654,6 +1663,27 @@ No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI e
 - Workflow: `.github/workflows/tests.yml`, Ubuntu/Python 3.12, eventos push/PR/manual, permisos de lectura, acciones oficiales fijadas por SHA y reportes XML/JUnit. Se verificó el contrato local, no se ejecutó un runner remoto.
 - Pendiente externo: comprobar el primer run real de CI cuando el usuario publique estos cambios. No se afirma un run verde ni se incluye un enlace inexistente.
 - Siguiente fase: F2, pendiente y no iniciada. F3, F4 y F5 también permanecen pendientes.
+
+### 21.7 Registro de implementación de F2
+
+- Fecha: 2026-11-12.
+- Línea base: `b9852e6`, commit de F1. El árbol estaba limpio al comenzar. Los cambios de F2 permanecen en el árbol de trabajo; no se hizo commit ni se publicó como parte del encargo.
+- Estado: implementada y verificada localmente. F3 a F5 no iniciadas.
+- Método: TDD y refactorización respaldada por la suite verde. Se registraron RED/GREEN para núcleo puro, catálogo, servicio/proveedor, entradas/cobertura y compatibilidad de estados `None` en `docs/TDD_F2.md`.
+- Organización: paquete `valoracion` de 16 módulos, con configuración, modelos, normalización, cálculo puro, servicio, proveedor Yahoo, exportación, presentación y CLI. La fachada quedó en 24 líneas; la UI en 446.
+- Contratos: `DatosEmpresa`, `ResultadoAnalisis`, `Diagnostico` y `ProveedorDatos`. El servicio acepta un proveedor explícito. Yahoo acepta una factory, también utilizada para FX, y permite aislar cachés entre instancias.
+- Datos: `data/universo.json` conserva exactamente 500 símbolos USA, 104 MX, su orden y las tres fuentes originales. El hash de equivalencia se documenta en arquitectura. La fecha de verificación de fuentes permanece `null`; no se consultaron ni actualizaron índices.
+- Compatibilidad: se mantienen `streamlit run app.py`, `python motor_valoracion.py ...`, los argumentos de CLI, las 19/45 columnas y las siete hojas Excel. Las pruebas de F1 conservan los esperados y cambian sus imports/parches al módulo propietario.
+- Equivalencia: ocho snapshots completos de resultados de F1, capturados antes de sustituir el motor, se comparan con el servicio nuevo; también se conservan los oráculos independientes de F1. No se cambiaron fórmulas ni políticas de FX, deuda, sectores o mediana.
+- Casos límite: la revisión detectó que los estados `None` debían normalizarse como vacíos en el adaptador; tres regresiones RED precedieron la corrección.
+- Cobertura: `pytest.ini` y `.coveragerc` incluyen `app`, `motor_valoracion` y todo `valoracion`; no se excluyeron módulos movidos ni se redujo el umbral del 85 %.
+- Ejecución canónica: `python -m pytest`, **270 passed**, cero skips y xfails, en **32.30 s**. Cobertura total combinada de líneas y ramas **98.49 %**.
+- Dependencias: `python -m pip check` sin requisitos rotos. No se añadieron paquetes ni se cambió la estrategia de instalación; F4 sigue pendiente.
+- Entorno: macOS, Python 3.12.2 y las versiones locales de F1. Una advertencia de pandas corresponde al caso de fechas no interpretables ya caracterizado.
+- Arquitectura: análisis de imports de 16 módulos y 23 dependencias internas, sin ciclos ni imports de la fachada desde el paquete. Cálculo puro ejecutado fuera de pytest sin fixtures ni parches de proveedor.
+- Documentación: `docs/architecture.md`, `docs/TDD_F2.md`, esta SDD, README y explicación de snapshots en `tests/fixtures/README.md`.
+- CI: el workflow sigue ejecutando `python -m pytest`, que ahora mide el paquete nuevo. No se ejecutó un runner remoto ni se afirma un run verde en esta sesión.
+- Siguiente fase: F3, revisión de metodología y trazabilidad; pendiente. F4 y F5 también permanecen pendientes.
 
 ## 22. Fuentes y mantenimiento
 

@@ -6,7 +6,7 @@ import sys
 import pytest
 from openpyxl import load_workbook
 
-import motor_valoracion as motor
+import valoracion.cli as motor
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 

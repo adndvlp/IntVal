@@ -8,7 +8,9 @@ import pytest
 from openpyxl import load_workbook
 from streamlit.testing.v1 import AppTest
 
-import motor_valoracion as motor
+from valoracion import servicio, universo
+from valoracion.proveedores import yahoo
+from valoracion.exportacion import excel
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 
@@ -28,12 +30,12 @@ def analizar(app, texto="TEST"):
 
 
 def espiar_exportacion(monkeypatch):
-    original = motor.escribir_excel
+    original = excel.escribir_excel
     exportaciones = []
     def escribir(principales, detalles, ruta, config):
         original(principales, detalles, ruta, config)
         exportaciones.append((principales, config, ruta.read_bytes()))
-    monkeypatch.setattr(motor, "escribir_excel", escribir)
+    monkeypatch.setattr(excel, "escribir_excel", escribir)
     return exportaciones
 
 
@@ -41,7 +43,7 @@ def test_todos_los_analisis_fallan_sin_romper_la_interfaz(monkeypatch):
     def fallar(*args, **kwargs):
         raise RuntimeError("Fallo simulado del proveedor")
 
-    monkeypatch.setattr(motor, "analizar_ticker", fallar)
+    monkeypatch.setattr(servicio, "analizar_ticker", fallar)
     app = AppTest.from_file("app.py", default_timeout=20).run()
     widget_por_etiqueta(app.sidebar.multiselect, "Tickers").set_value(["A"])
     widget_por_etiqueta(app.sidebar.button, "Analizar empresas").click().run()
@@ -178,7 +180,7 @@ def test_fallo_al_obtener_estados_del_detalle_es_localizado(monkeypatch, industr
         if len(llamadas) >= 3:
             raise RuntimeError("Estados simulados no disponibles")
         return industrial
-    monkeypatch.setattr(motor.yf, "Ticker", ticker)
+    monkeypatch.setattr(yahoo.yf, "Ticker", ticker)
     app = analizar(iniciar())
     assert not app.exception
     assert len(app.get("download_button")) == 1
@@ -188,7 +190,7 @@ def test_fallo_al_obtener_estados_del_detalle_es_localizado(monkeypatch, industr
 def test_error_exportacion_conserva_resultados(monkeypatch, industrial):
     def fallar(*args, **kwargs):
         raise PermissionError("No se puede escribir el Excel")
-    monkeypatch.setattr(motor, "escribir_excel", fallar)
+    monkeypatch.setattr(excel, "escribir_excel", fallar)
     app = analizar(iniciar())
     assert not app.exception
     assert app.session_state["principales"][0]["Ticker"] == "TEST"
@@ -209,8 +211,8 @@ def test_analisis_almacenado_vacio_no_selecciona_filas_inexistentes(config_simpl
 
 
 def test_todos_los_mercados_y_seleccion_completa(monkeypatch, industrial, proveedor):
-    monkeypatch.setattr(motor, "EMPRESAS_USA", ["TEST"])
-    monkeypatch.setattr(motor, "EMPRESAS_MX", ["TEST.MX"])
+    monkeypatch.setattr(universo, "EMPRESAS_USA", ["TEST"])
+    monkeypatch.setattr(universo, "EMPRESAS_MX", ["TEST.MX"])
     proveedor[0]["TEST.MX"] = TickerSintetico()
     app = iniciar()
     widget_por_etiqueta(app.sidebar.radio, "Mercado").set_value("Todos").run()

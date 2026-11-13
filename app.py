@@ -1,37 +1,22 @@
 from __future__ import annotations
 
-import math
 import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
-import yfinance as yf
 
-from motor_valoracion import (
-    COLUMNAS_DETALLE,
-    COLUMNAS_PRINCIPAL,
-    EMPRESAS_MX,
-    EMPRESAS_USA,
-    Configuracion,
-    alinear_series,
-    analizar_ticker,
-    construir_ebitda,
-    construir_fcl,
-    convertir_serie,
-    crear_resultado_error,
-    escribir_excel,
-    estimar_tasa_impuestos,
-    mercado_de_ticker,
-    obtener_fila,
-    obtener_info_segura,
-    obtener_tipo_cambio,
-)
+from valoracion.configuracion import Configuracion
+from valoracion.exportacion.excel import escribir_excel
+from valoracion.modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE, crear_resultado_error
+from valoracion.normalizacion import mercado_de_ticker
+from valoracion.presentacion.formatos import format_money, format_percent
+from valoracion.presentacion.graficas import grafica_valoraciones
+from valoracion.servicio import analizar_ticker, obtener_precio_historico, obtener_historicos_financieros
+from valoracion.universo import EMPRESAS_USA, EMPRESAS_MX
 
 
 st.set_page_config(
@@ -89,123 +74,17 @@ def analizar_cached(ticker: str, config_values: tuple) -> tuple[dict, dict]:
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def precio_historico(ticker: str, periodo: str) -> pd.DataFrame:
-    accion = yf.Ticker(ticker)
-    historia = accion.history(period=periodo, auto_adjust=True)
-    if historia is None or historia.empty:
-        return pd.DataFrame(columns=["Fecha", "Cierre"])
-    historia = historia.reset_index()
-    fecha_col = "Date" if "Date" in historia.columns else historia.columns[0]
-    return pd.DataFrame(
-        {
-            "Fecha": pd.to_datetime(historia[fecha_col]).dt.tz_localize(None),
-            "Cierre": pd.to_numeric(historia["Close"], errors="coerce"),
-        }
-    ).dropna()
+    return obtener_precio_historico(ticker, periodo)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def historicos_financieros(ticker: str, config_values: tuple) -> tuple[pd.DataFrame, pd.DataFrame]:
     config = Configuracion(**dict(config_values))
-    accion = yf.Ticker(ticker)
-    info = obtener_info_segura(accion)
-
-    try:
-        resultados = accion.income_stmt
-    except Exception:
-        resultados = pd.DataFrame()
-    try:
-        flujo = accion.cashflow
-    except Exception:
-        flujo = pd.DataFrame()
-
-    ingresos = obtener_fila(resultados, ["Total Revenue", "Operating Revenue", "Revenue"])
-    ebit = obtener_fila(resultados, ["EBIT", "Operating Income", "Operating Income Loss"])
-    utilidad = obtener_fila(
-        resultados,
-        ["Net Income Common Stockholders", "Net Income", "Net Income Including Noncontrolling Interests"],
-    )
-    impuestos = obtener_fila(resultados, ["Tax Provision", "Income Tax Expense"])
-    pretax = obtener_fila(resultados, ["Pretax Income", "Income Before Tax", "Earnings Before Tax"])
-    fcl, _ = construir_fcl(flujo)
-    ebitda, _ = construir_ebitda(resultados, flujo, ebit)
-
-    moneda_financiera = str(info.get("financialCurrency") or info.get("currency") or "USD").upper()
-    moneda_cotizacion = str(info.get("currency") or "USD").upper()
-    fx = obtener_tipo_cambio(moneda_financiera, moneda_cotizacion) or 1.0
-
-    series = {
-        "Ingresos": convertir_serie(ingresos, fx),
-        "FCL": convertir_serie(fcl, fx),
-        "EBIT": convertir_serie(ebit, fx),
-        "EBITDA": convertir_serie(ebitda, fx),
-        "Utilidad neta": convertir_serie(utilidad, fx),
-    }
-
-    marco = pd.concat(series, axis=1).sort_index()
-    if marco.empty:
-        return pd.DataFrame(), pd.DataFrame()
-
-    indice = pd.to_datetime(marco.index, errors="coerce")
-    marco = marco.loc[~indice.isna()].copy()
-    indice = pd.to_datetime(marco.index)
-    marco.index = indice.year.astype(str)
-    marco = marco.groupby(level=0).last().sort_index()
-    marco = marco / 1_000_000.0
-    marco.index.name = "Año"
-
-    tasa = estimar_tasa_impuestos(
-        convertir_serie(impuestos, fx),
-        convertir_serie(pretax, fx),
-        config,
-    )
-    ingresos_base = series["Ingresos"]
-    nopat = series["EBIT"] * (1.0 - tasa)
-
-    margenes = {}
-    for nombre, serie in {
-        "Margen FCL": series["FCL"],
-        "Margen EBIT": nopat,
-        "Margen EBITDA": series["EBITDA"],
-        "Margen neto": series["Utilidad neta"],
-    }.items():
-        alineado = alinear_series(serie, ingresos_base)
-        if alineado.empty:
-            continue
-        alineado.columns = ["metrica", "ingresos"]
-        valor = alineado["metrica"] / alineado["ingresos"].replace(0, np.nan)
-        margenes[nombre] = valor
-
-    df_margenes = pd.concat(margenes, axis=1).sort_index() if margenes else pd.DataFrame()
-    if not df_margenes.empty:
-        idx = pd.to_datetime(df_margenes.index, errors="coerce")
-        df_margenes = df_margenes.loc[~idx.isna()].copy()
-        df_margenes.index = pd.to_datetime(df_margenes.index).year.astype(str)
-        df_margenes = df_margenes.groupby(level=0).last().sort_index()
-        df_margenes.index.name = "Año"
-
-    return marco, df_margenes
+    return obtener_historicos_financieros(ticker, config)
 
 
-def format_money(value: object, currency: str | None = None) -> str:
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return "—"
-    if not math.isfinite(number):
-        return "—"
-    symbol = "$"
-    suffix = f" {currency}" if currency else ""
-    return f"{symbol}{number:,.2f}{suffix}"
 
 
-def format_percent(value: object) -> str:
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return "—"
-    if not math.isfinite(number):
-        return "—"
-    return f"{number:.1%}"
 
 
 def construir_configuracion() -> Configuracion:
@@ -292,30 +171,6 @@ def render_table(df: pd.DataFrame) -> None:
     )
 
 
-def grafica_valoraciones(fila: pd.Series) -> go.Figure:
-    datos = pd.DataFrame(
-        {
-            "Método": ["Mercado", "FCL", "EBIT", "EBITDA", "Utilidad neta", "Mediana", "Analistas"],
-            "Valor": [
-                fila.get("Precio de mercado"),
-                fila.get("Valor intrínseco FCL"),
-                fila.get("Valor intrínseco EBIT"),
-                fila.get("Valor intrínseco EBITDA"),
-                fila.get("Valor intrínseco utilidad neta"),
-                fila.get("Mediana de modelos"),
-                fila.get("Precio objetivo analistas"),
-            ],
-        }
-    ).dropna()
-    fig = px.bar(datos, x="Método", y="Valor", text_auto=".2f")
-    fig.update_layout(
-        title="Valor por acción según metodología",
-        xaxis_title=None,
-        yaxis_title=f"Precio por acción ({fila.get('Moneda', '')})",
-        showlegend=False,
-        margin=dict(l=20, r=20, t=55, b=20),
-    )
-    return fig
 
 
 def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config_tuple: tuple) -> None:

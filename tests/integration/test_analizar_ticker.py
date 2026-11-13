@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import motor_valoracion as motor
+import valoracion.servicio as motor
+from valoracion.modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 
@@ -24,8 +25,8 @@ def test_industrial_completa_concilia_cuatro_modelos(industrial, config_simple):
     assert [detalle[c] for c in ["Base FCL", "Base NOPAT", "Base EBITDA ajustado", "Base utilidad neta"]] == pytest.approx([104, 128, 128, 96])
     assert detalle["PV flujos FCL"] == pytest.approx(312)
     assert detalle["PV terminal FCL"] == pytest.approx(208)
-    assert list(principal) == motor.COLUMNAS_PRINCIPAL
-    assert list(detalle) == motor.COLUMNAS_DETALLE
+    assert list(principal) == COLUMNAS_PRINCIPAL
+    assert list(detalle) == COLUMNAS_DETALLE
 
 
 @pytest.mark.parametrize("extranjera", [False, True])

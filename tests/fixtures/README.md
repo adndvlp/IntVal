@@ -69,3 +69,19 @@ El caso FX ausente está rotulado como caracterización pendiente de F3.
 Las pruebas de UI usan la configuración visible predeterminada; sus importes
 no deben confundirse con los esperados del escenario simplificado anterior.
 Los casos numéricos de proyección, CAGR y márgenes adicionales están en la SDD.
+
+## Equivalencia de F2 frente a F1
+
+`escenarios_f2.py` define ocho variantes usadas para comparar el motor completo:
+configuración predeterminada y simple, ausencia de acciones, fallo de flujo,
+sector financiero, crecimiento fallback, sólo utilidad neta y FX ausente.
+
+`resultados_f1.json` se capturó ejecutando el motor original del commit `b9852e6`,
+antes de sustituirlo por la fachada. Contiene los 19 campos de resumen y 45 de
+detalle, incluidas sus notas, para cada caso. La suite compara valores con una
+tolerancia de `1e-12` y conserva los nombres y el orden de las columnas.
+
+Estos archivos son una caracterización de compatibilidad, no datos de mercado
+ni demostración de validez económica. No regenerar los esperados desde el motor
+nuevo para hacer pasar un cambio de comportamiento; cualquier cambio de
+metodología requiere la justificación y pruebas de F3.

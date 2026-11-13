@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-import motor_valoracion as motor
+import valoracion.calculos as motor
 
 
 @pytest.mark.parametrize("argumentos, esperado", [

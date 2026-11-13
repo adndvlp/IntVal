@@ -5,7 +5,7 @@ from dataclasses import replace
 import pandas as pd
 import pytest
 
-import motor_valoracion as motor
+import valoracion.calculos as motor
 
 
 def test_cagr_conocido():

@@ -6,7 +6,9 @@ from types import SimpleNamespace
 import pytest
 import streamlit as st
 
-import motor_valoracion as motor
+from valoracion.configuracion import Configuracion
+from valoracion.proveedores import yahoo
+from valoracion import cli
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 
@@ -24,7 +26,7 @@ def proveedor(monkeypatch):
             raise respuesta
         return respuesta
 
-    monkeypatch.setattr(motor.yf, "Ticker", obtener)
+    monkeypatch.setattr(yahoo.yf, "Ticker", obtener)
     return tickers, llamadas
 
 
@@ -37,7 +39,7 @@ def industrial(proveedor):
 
 @pytest.fixture
 def config_simple():
-    return motor.Configuracion(
+    return Configuracion(
         anos_proyeccion=3, tasa_descuento=0,
         multiplo_terminal_fcl=2, multiplo_terminal_ebit=2,
         multiplo_terminal_ebitda=2, multiplo_terminal_utilidad_neta=2,
@@ -61,14 +63,14 @@ def aislar_entorno(monkeypatch):
     def dns_no_permitido(*args, **kwargs):
         pytest.fail("Resolución DNS no autorizada en las pruebas")
 
-    monkeypatch.setattr(motor.yf, "Ticker", proveedor_no_preparado)
+    monkeypatch.setattr(yahoo.yf, "Ticker", proveedor_no_preparado)
     # Reemplazar sólo la referencia del motor: AppTest necesita el sleep real
     # del módulo estándar para coordinar sus hilos.
-    monkeypatch.setattr(motor, "time", SimpleNamespace(sleep=lambda _: None))
+    monkeypatch.setattr(cli, "time", SimpleNamespace(sleep=lambda _: None))
     monkeypatch.setattr(socket, "socket", SocketSinRed)
     monkeypatch.setattr(socket, "getaddrinfo", dns_no_permitido)
-    motor.CACHE_FX.clear()
+    yahoo.CACHE_FX.clear()
     st.cache_data.clear()
     yield
-    motor.CACHE_FX.clear()
+    yahoo.CACHE_FX.clear()
     st.cache_data.clear()

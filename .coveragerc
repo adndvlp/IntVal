@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = app, motor_valoracion
+source = app, motor_valoracion, valoracion
 
 [report]
 show_missing = True

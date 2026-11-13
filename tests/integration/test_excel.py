@@ -7,7 +7,8 @@ import numpy as np
 import pytest
 from openpyxl import load_workbook
 
-import motor_valoracion as motor
+import valoracion.exportacion.excel as motor
+from valoracion.servicio import analizar_ticker
 
 
 HOJAS = ["Resumen", "USA", "MX", "Detalle", "Supuestos", "Universo", "Fuentes"]
@@ -48,7 +49,7 @@ def test_excel_con_errores_o_vacio_conserva_el_esquema(tmp_path, con_error):
 
 
 def test_excel_particion_orden_valores_formatos_y_supuestos(tmp_path, industrial, config_simple):
-    principal, detalle = motor.analizar_ticker("TEST", config_simple)
+    principal, detalle = analizar_ticker("TEST", config_simple)
     mx = {**principal, "Mercado": "MX", "Ticker": "TEST.MX", "Empresa": "Compañía México", "Estado": "REVISAR"}
     incompleto = {**principal, "Ticker": "INCOMPLETO", "Estado": "DATOS INCOMPLETOS", "Upside mediana": None}
     error = {"Mercado": "USA", "Ticker": "ERROR", "Estado": "ERROR", "Notas": "No disponible"}
@@ -86,7 +87,7 @@ def test_excel_particion_orden_valores_formatos_y_supuestos(tmp_path, industrial
 
 @pytest.mark.parametrize("invalido", [np.nan, np.inf, -np.inf])
 def test_excel_escribe_no_finitos_como_celdas_vacias(tmp_path, industrial, config_simple, invalido):
-    principal, detalle = motor.analizar_ticker("TEST", config_simple)
+    principal, detalle = analizar_ticker("TEST", config_simple)
     principal["Precio de mercado"] = invalido
     detalle["Ingresos actuales"] = invalido
     ruta = tmp_path / "ausencias.xlsx"

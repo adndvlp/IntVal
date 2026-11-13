@@ -12,7 +12,8 @@ remota de CI y la validación de una URL publicada son evidencias independientes
 
 La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora sus
 fundamentos, descritos en la sección 8; F7 añade la landing (sección 9), con
-revisión local y capturas completadas. F8–F11 siguen pendientes. El contrato de
+revisión local y capturas completadas. F8 incorpora análisis HTTP (sección 10);
+F9–F11 siguen pendientes. El contrato de
 ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
 de F11.
 
@@ -403,3 +404,124 @@ favicon y metadatos de texto están disponibles en preview. `/app/` tiene
 el alojamiento.
 
 La evidencia y sus límites se registran en [TDD_F7.md](TDD_F7.md).
+
+## 10. API de análisis (F8)
+
+La factoría de la sección 8 ahora expone trabajos, resultados, cancelación,
+históricos y Excel. Iniciar Uvicorn con **un proceso**, sin --workers múltiples:
+cola, IDs y cachés pertenecen a la memoria de esa instancia. Reiniciar elimina
+los trabajos; no hay base de datos, cuentas ni listado global de análisis.
+El comando de producción Streamlit permanece vigente hasta F11.
+
+### Recorrido HTTP
+
+Para un servicio API en ejecución, crear explícitamente el análisis:
+
+```http
+POST /api/v1/analyses
+Content-Type: application/json
+
+{
+  "client_request_id": "00000000-0000-4000-8000-000000000008",
+  "source": "demo",
+  "tickers": ["DEMO-USA", "DEMO-MX.MX", "DEMO-INCOMPLETA"],
+  "configuration": {"tasa_descuento": 0.1, "tasa_descuento_empresa": 0.1}
+}
+```
+
+La respuesta 202 contiene id, configuración completa, estado y links. Conservar
+client_request_id al reintentar la misma creación; usar otro para un nuevo lote.
+La misma solicitud normalizada no ejecuta dos trabajos. Un UUID reutilizado con
+otro contenido produce 409. Los campos omitidos toman los defaults web, no una
+configuración financiera enviada después desde otro formulario.
+
+| Operación | Ruta |
+| --- | --- |
+| Estado y conteos | GET /api/v1/analyses/{id} |
+| Página de filas nuevas | GET /api/v1/analyses/{id}/results?after=0&limit=100 |
+| Cancelar | POST /api/v1/analyses/{id}/cancel |
+| Precio histórico | GET /api/v1/analyses/{id}/companies/{ticker}/prices?period=1y |
+| Estados y márgenes | GET /api/v1/analyses/{id}/companies/{ticker}/financials |
+| Excel completo | GET /api/v1/analyses/{id}/export.xlsx |
+
+Usar next_cursor para la página siguiente. Las filas son append-only en el
+orden aceptado; el cliente aplica el orden visual después. done indica estado
+terminal, no que esa página contenga todas las filas. Drenar las páginas hasta
+processed. Estado y filas financieras tienen significados distintos: completed
+puede incluir ERROR; failed conserva parciales por un fallo de infraestructura.
+
+Cancelar queued no consulta al proveedor. En running devuelve cancelling,
+termina la empresa actual y pasa a cancelled antes de comenzar otra. Repetir
+cancel en un terminal conserva ese estado. Excel requiere completed, incluso
+cuando todas las filas son ERROR; otros estados devuelven EXPORT_NOT_READY.
+No enviar filtros, supuestos actuales o filas al descargar: se usa el snapshot.
+
+Los históricos requieren una empresa perteneciente al lote y ya procesada.
+Precios: date/value y price_kind synthetic o adjusted_close. Financieros:
+year, unit=millions y márgenes unit=ratio. El servicio ya convirtió los importes
+a millones; la UI no debe repetir esa división. Null no es cero. Los históricos
+se adquieren después del análisis y exponen tiempos/procedencia independientes.
+
+### Límites y configuración del runtime
+
+GET /api/v1/meta publica las capacidades y los límites efectivos. Las variables
+operativas siguientes son enteros ASCII positivos y se leen al crear la app:
+
+| Variable | Default |
+| --- | ---: |
+| VALORACION_MAX_TICKERS | 650 |
+| VALORACION_MAX_BODY_BYTES | 65536 |
+| VALORACION_MAX_QUEUE | 2 |
+| VALORACION_MAX_RETAINED | 16 |
+| VALORACION_MEMORY_BUDGET_BYTES | 67108864 |
+| VALORACION_TERMINAL_TTL_SECONDS | 3600 |
+| VALORACION_ANALYSIS_CACHE_TTL_SECONDS | 3600 |
+| VALORACION_PRICES_CACHE_TTL_SECONDS | 1800 |
+| VALORACION_FINANCIALS_CACHE_TTL_SECONDS | 3600 |
+| VALORACION_JOB_DEADLINE_SECONDS | 1800 |
+| VALORACION_ACQUISITION_TIMEOUT_SECONDS | 60 |
+
+Se mantienen VALORACION_DEMO, VALORACION_MARKET_ENABLED y VALORACION_CORS_ORIGINS de la
+sección 8. CORS permite GET/POST y Content-Type sólo para los orígenes explícitos;
+no habilita credenciales. La demo nunca recurre a Yahoo.
+
+El worker financiero es serial. Las cachés tienen hasta 512 entradas combinadas;
+las marcas de expiración, hasta 64. El presupuesto mide payload JSON administrado,
+no RSS. Al necesitar espacio, se eliminan cachés y terminales antiguos, nunca
+un activo sin transición. Una fila que excede el presupuesto falla su trabajo
+con MEMORY_LIMIT_EXCEEDED; no desaparecen silenciosamente los parciales.
+
+Los TTL usan tiempo monotónico; las fechas de respuesta son UTC. Los cache hits
+conservan las fechas originales. La recolección ocurre al acceder y cada 30 s
+cuando el worker está ocioso. Un ID expirado conocido da 410; uno perdido tras
+reinicio o fuera de las marcas retenidas da 404. Ambos requieren crear un nuevo
+análisis explícitamente.
+
+Un proceso spawn por lote mantiene su propio proveedor y FX. La adquisición
+de cada empresa está limitada por watchdog: al superar el plazo se mata y
+recolecta al hijo, se conserva lo ya calculado y el worker puede continuar con
+otro trabajo. El deadline global se comprueba entre empresas. Los históricos
+usan el mismo aislamiento y un carril por fuente: si falta capacidad dan
+503/Retry-After; un histórico cacheado no necesita el carril. La admisión llena
+da 429/Retry-After. No confundir cancelar un fetch con cancelar el trabajo.
+
+Todos los errores de API tienen error.code/message/fields/retryable. Nunca
+mostrar una excepción del proveedor: los mensajes ya son seguros y están en
+español. No reintentar validaciones; para fallos retryable usar esperas acotadas
+y respetar Retry-After. GET /healthz y /readyz no consultan Yahoo; readiness
+comprueba el runtime, no los estáticos de la futura distribución F11.
+
+### Pruebas y contratos
+
+```bash
+.venv/bin/python -m pytest tests/api
+.venv/bin/python -m valoracion.web.contratos --check
+npm run types:generate --prefix frontend
+git diff -- contracts/openapi.v1.json frontend/src/lib/generated/api.ts
+```
+
+Las pruebas de proceso usan proveedores locales y TestClient ASGI: no necesitan
+abrir puertos ni consultar Yahoo. La suite completa sigue siendo obligatoria.
+No editar los tipos generados ni actualizar fixtures financieras para ocultar
+una diferencia. Evidencia, timeouts inspeccionados y medidas:
+[TDD_F8.md](TDD_F8.md). La siguiente integración de UI corresponde a F9.

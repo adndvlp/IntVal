@@ -1,6 +1,34 @@
 {
   "components": {
     "schemas": {
+      "CampoAuditoria": {
+        "additionalProperties": false,
+        "properties": {
+          "domain_key": {
+            "title": "Domain Key",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          }
+        },
+        "required": [
+          "key",
+          "domain_key",
+          "label",
+          "value"
+        ],
+        "title": "CampoAuditoria",
+        "type": "object"
+      },
       "CampoInvalido": {
         "additionalProperties": false,
         "properties": {
@@ -206,6 +234,105 @@
         "title": "ConfiguracionEfectiva",
         "type": "object"
       },
+      "ConfiguracionWeb": {
+        "additionalProperties": false,
+        "properties": {
+          "factor_crecimiento_final": {
+            "default": 0.5,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Factor Crecimiento Final",
+            "type": "number"
+          },
+          "factor_crecimiento_inicial": {
+            "default": 0.25,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Factor Crecimiento Inicial",
+            "type": "number"
+          },
+          "factor_margen_conservador": {
+            "default": 0.8,
+            "maximum": 1.0,
+            "minimum": 0.4,
+            "title": "Factor Margen Conservador",
+            "type": "number"
+          },
+          "multiplo_terminal_ebit": {
+            "default": 12.0,
+            "maximum": 30.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Ebit",
+            "type": "number"
+          },
+          "multiplo_terminal_ebitda": {
+            "default": 12.0,
+            "maximum": 30.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Ebitda",
+            "type": "number"
+          },
+          "multiplo_terminal_fcl": {
+            "default": 12.0,
+            "maximum": 30.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Fcl",
+            "type": "number"
+          },
+          "multiplo_terminal_utilidad_neta": {
+            "default": 15.0,
+            "maximum": 35.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Utilidad Neta",
+            "type": "number"
+          },
+          "tasa_descuento": {
+            "default": 0.1,
+            "maximum": 0.2,
+            "minimum": 0.05,
+            "title": "Tasa Descuento",
+            "type": "number"
+          },
+          "tasa_descuento_empresa": {
+            "default": 0.1,
+            "maximum": 0.2,
+            "minimum": 0.05,
+            "title": "Tasa Descuento Empresa",
+            "type": "number"
+          }
+        },
+        "title": "ConfiguracionWeb",
+        "type": "object"
+      },
+      "Conteos": {
+        "additionalProperties": false,
+        "properties": {
+          "DATOS INCOMPLETOS": {
+            "title": "Datos Incompletos",
+            "type": "integer"
+          },
+          "ERROR": {
+            "title": "Error",
+            "type": "integer"
+          },
+          "OK": {
+            "title": "Ok",
+            "type": "integer"
+          },
+          "REVISAR": {
+            "title": "Revisar",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "OK",
+          "DATOS INCOMPLETOS",
+          "REVISAR",
+          "ERROR"
+        ],
+        "title": "Conteos",
+        "type": "object"
+      },
       "DatosDemo": {
         "additionalProperties": false,
         "properties": {
@@ -248,13 +375,62 @@
         "title": "EmpresaCatalogo",
         "type": "object"
       },
+      "EnlacesTrabajo": {
+        "additionalProperties": false,
+        "properties": {
+          "cancel": {
+            "title": "Cancel",
+            "type": "string"
+          },
+          "export": {
+            "title": "Export",
+            "type": "string"
+          },
+          "results": {
+            "title": "Results",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "results",
+          "cancel",
+          "export"
+        ],
+        "title": "EnlacesTrabajo",
+        "type": "object"
+      },
       "ErrorDetalle": {
         "additionalProperties": false,
         "properties": {
           "code": {
             "enum": [
               "INVALID_REQUEST",
-              "SOURCE_DISABLED"
+              "SOURCE_DISABLED",
+              "IDEMPOTENCY_CONFLICT",
+              "CAPACITY_EXCEEDED",
+              "SERVICE_UNAVAILABLE",
+              "ANALYSIS_EXPIRED",
+              "ANALYSIS_NOT_FOUND",
+              "INVALID_CURSOR",
+              "ACQUISITION_FAILED",
+              "COMPANY_NOT_FOUND",
+              "COMPANY_NOT_READY",
+              "ACQUISITION_BUSY",
+              "HISTORY_FAILED",
+              "EXPORT_NOT_READY",
+              "EXPORT_BUSY",
+              "EXPORT_FAILED",
+              "BODY_TOO_LARGE",
+              "NOT_FOUND",
+              "METHOD_NOT_ALLOWED",
+              "INTERNAL_ERROR",
+              "JOB_DEADLINE_EXCEEDED",
+              "MEMORY_LIMIT_EXCEEDED"
             ],
             "title": "Code",
             "type": "string"
@@ -271,7 +447,6 @@
             "type": "string"
           },
           "retryable": {
-            "const": false,
             "default": false,
             "title": "Retryable",
             "type": "boolean"
@@ -282,6 +457,270 @@
           "message"
         ],
         "title": "ErrorDetalle",
+        "type": "object"
+      },
+      "EstadoTrabajo": {
+        "additionalProperties": false,
+        "properties": {
+          "configuration": {
+            "$ref": "#/components/schemas/ConfiguracionEfectiva"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Conteos"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "current_ticker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Ticker"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetalle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "financial_contract_version": {
+            "title": "Financial Contract Version",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "links": {
+            "$ref": "#/components/schemas/EnlacesTrabajo"
+          },
+          "methodology_version": {
+            "title": "Methodology Version",
+            "type": "string"
+          },
+          "processed": {
+            "title": "Processed",
+            "type": "integer"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "running",
+              "cancelling",
+              "completed",
+              "cancelled",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "source",
+          "total",
+          "processed",
+          "current_ticker",
+          "counts",
+          "configuration",
+          "dataset_version",
+          "schema_version",
+          "methodology_version",
+          "financial_contract_version",
+          "revision",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "expires_at",
+          "error",
+          "links"
+        ],
+        "title": "EstadoTrabajo",
+        "type": "object"
+      },
+      "FinancierosHistoricos": {
+        "additionalProperties": false,
+        "properties": {
+          "availability": {
+            "enum": [
+              "available",
+              "empty"
+            ],
+            "title": "Availability",
+            "type": "string"
+          },
+          "cache_hit": {
+            "title": "Cache Hit",
+            "type": "boolean"
+          },
+          "computed_at": {
+            "title": "Computed At",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "fetched_at": {
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ObservacionFinanciera"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "margins": {
+            "$ref": "#/components/schemas/MargenesHistoricos"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "reference_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Date"
+          },
+          "source": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "ticker": {
+            "title": "Ticker",
+            "type": "string"
+          },
+          "unit": {
+            "const": "millions",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "computed_at",
+          "expires_at",
+          "cache_hit",
+          "ticker",
+          "source",
+          "dataset_version",
+          "currency",
+          "reference_date",
+          "fetched_at",
+          "availability",
+          "message",
+          "provenance",
+          "unit",
+          "items",
+          "margins"
+        ],
+        "title": "FinancierosHistoricos",
         "type": "object"
       },
       "FuenteDisponible": {
@@ -307,19 +746,181 @@
         "title": "FuenteDisponible",
         "type": "object"
       },
+      "JsonValue": {},
       "Limites": {
         "additionalProperties": false,
         "properties": {
+          "acquisition_timeout_seconds": {
+            "title": "Acquisition Timeout Seconds",
+            "type": "integer"
+          },
+          "analysis_cache_ttl_seconds": {
+            "title": "Analysis Cache Ttl Seconds",
+            "type": "integer"
+          },
+          "analysis_workers": {
+            "const": 1,
+            "default": 1,
+            "title": "Analysis Workers",
+            "type": "integer"
+          },
+          "financials_cache_ttl_seconds": {
+            "title": "Financials Cache Ttl Seconds",
+            "type": "integer"
+          },
+          "job_deadline_seconds": {
+            "title": "Job Deadline Seconds",
+            "type": "integer"
+          },
+          "max_body_bytes": {
+            "title": "Max Body Bytes",
+            "type": "integer"
+          },
+          "max_cache_entries": {
+            "const": 512,
+            "default": 512,
+            "title": "Max Cache Entries",
+            "type": "integer"
+          },
+          "max_queue": {
+            "title": "Max Queue",
+            "type": "integer"
+          },
+          "max_results_page": {
+            "const": 100,
+            "default": 100,
+            "title": "Max Results Page",
+            "type": "integer"
+          },
+          "max_retained": {
+            "title": "Max Retained",
+            "type": "integer"
+          },
+          "max_symbol_length": {
+            "const": 32,
+            "default": 32,
+            "title": "Max Symbol Length",
+            "type": "integer"
+          },
           "max_tickers": {
             "exclusiveMinimum": 0.0,
             "title": "Max Tickers",
             "type": "integer"
+          },
+          "max_tombstones": {
+            "const": 64,
+            "default": 64,
+            "title": "Max Tombstones",
+            "type": "integer"
+          },
+          "memory_budget_bytes": {
+            "title": "Memory Budget Bytes",
+            "type": "integer"
+          },
+          "memory_measurement": {
+            "const": "managed_json_payload_bytes",
+            "default": "managed_json_payload_bytes",
+            "title": "Memory Measurement",
+            "type": "string"
+          },
+          "prices_cache_ttl_seconds": {
+            "title": "Prices Cache Ttl Seconds",
+            "type": "integer"
+          },
+          "terminal_ttl_seconds": {
+            "title": "Terminal Ttl Seconds",
+            "type": "integer"
           }
         },
         "required": [
-          "max_tickers"
+          "max_tickers",
+          "max_body_bytes",
+          "max_queue",
+          "max_retained",
+          "memory_budget_bytes",
+          "terminal_ttl_seconds",
+          "analysis_cache_ttl_seconds",
+          "prices_cache_ttl_seconds",
+          "financials_cache_ttl_seconds",
+          "job_deadline_seconds",
+          "acquisition_timeout_seconds"
         ],
         "title": "Limites",
+        "type": "object"
+      },
+      "MargenesHistoricos": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ObservacionMargenes"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "unit": {
+            "const": "ratio",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit",
+          "items"
+        ],
+        "title": "MargenesHistoricos",
+        "type": "object"
+      },
+      "Mediana": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "included_models": {
+            "items": {
+              "enum": [
+                "fcl",
+                "nopat",
+                "ebitda_adjusted",
+                "net_income"
+              ],
+              "type": "string"
+            },
+            "title": "Included Models",
+            "type": "array"
+          },
+          "upside": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upside"
+          },
+          "value_per_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Per Share"
+          }
+        },
+        "required": [
+          "value_per_share",
+          "upside",
+          "count",
+          "included_models"
+        ],
+        "title": "Mediana",
         "type": "object"
       },
       "Metadatos": {
@@ -327,7 +928,13 @@
         "properties": {
           "capabilities": {
             "items": {
-              "const": "catalog",
+              "enum": [
+                "catalog",
+                "analyses",
+                "cancellation",
+                "histories",
+                "excel_export"
+              ],
               "type": "string"
             },
             "title": "Capabilities",
@@ -385,6 +992,495 @@
         "title": "Metadatos",
         "type": "object"
       },
+      "ObjetivoAnalistas": {
+        "additionalProperties": false,
+        "properties": {
+          "coverage": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "horizon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horizon"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statistic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistic"
+          },
+          "upside": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upside"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "upside",
+          "statistic",
+          "coverage",
+          "date",
+          "horizon",
+          "source"
+        ],
+        "title": "ObjetivoAnalistas",
+        "type": "object"
+      },
+      "ObservacionFinanciera": {
+        "additionalProperties": false,
+        "properties": {
+          "ebit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebit"
+          },
+          "ebitda": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebitda"
+          },
+          "fcl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcl"
+          },
+          "net_income": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Income"
+          },
+          "revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "revenue",
+          "fcl",
+          "ebit",
+          "ebitda",
+          "net_income"
+        ],
+        "title": "ObservacionFinanciera",
+        "type": "object"
+      },
+      "ObservacionMargenes": {
+        "additionalProperties": false,
+        "properties": {
+          "ebitda": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebitda"
+          },
+          "fcl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcl"
+          },
+          "net_income": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Income"
+          },
+          "nopat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nopat"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "fcl",
+          "nopat",
+          "ebitda",
+          "net_income"
+        ],
+        "title": "ObservacionMargenes",
+        "type": "object"
+      },
+      "ObservacionPrecio": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "ObservacionPrecio",
+        "type": "object"
+      },
+      "PaginaResultados": {
+        "additionalProperties": false,
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ResultadoPublicado"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "title": "Next Cursor",
+            "type": "integer"
+          },
+          "processed": {
+            "title": "Processed",
+            "type": "integer"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "next_cursor",
+          "processed",
+          "total",
+          "done",
+          "revision",
+          "items"
+        ],
+        "title": "PaginaResultados",
+        "type": "object"
+      },
+      "PreciosHistoricos": {
+        "additionalProperties": false,
+        "properties": {
+          "availability": {
+            "enum": [
+              "available",
+              "empty"
+            ],
+            "title": "Availability",
+            "type": "string"
+          },
+          "cache_hit": {
+            "title": "Cache Hit",
+            "type": "boolean"
+          },
+          "computed_at": {
+            "title": "Computed At",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "fetched_at": {
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ObservacionPrecio"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "period": {
+            "enum": [
+              "1y",
+              "2y",
+              "5y",
+              "10y"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "price_kind": {
+            "enum": [
+              "synthetic",
+              "adjusted_close"
+            ],
+            "title": "Price Kind",
+            "type": "string"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "reference_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Date"
+          },
+          "source": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "ticker": {
+            "title": "Ticker",
+            "type": "string"
+          }
+        },
+        "required": [
+          "computed_at",
+          "expires_at",
+          "cache_hit",
+          "ticker",
+          "source",
+          "dataset_version",
+          "currency",
+          "reference_date",
+          "fetched_at",
+          "availability",
+          "message",
+          "provenance",
+          "period",
+          "price_kind",
+          "items"
+        ],
+        "title": "PreciosHistoricos",
+        "type": "object"
+      },
+      "Proxy": {
+        "additionalProperties": false,
+        "properties": {
+          "exclusion_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusion Reason"
+          },
+          "id": {
+            "enum": [
+              "fcl",
+              "nopat",
+              "ebitda_adjusted",
+              "net_income"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "included": {
+            "title": "Included",
+            "type": "boolean"
+          },
+          "upside": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upside"
+          },
+          "value_per_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Per Share"
+          }
+        },
+        "required": [
+          "id",
+          "value_per_share",
+          "upside",
+          "included",
+          "exclusion_reason"
+        ],
+        "title": "Proxy",
+        "type": "object"
+      },
       "RespuestaError": {
         "additionalProperties": false,
         "properties": {
@@ -396,6 +1492,125 @@
           "error"
         ],
         "title": "RespuestaError",
+        "type": "object"
+      },
+      "ResultadoPublicado": {
+        "additionalProperties": false,
+        "properties": {
+          "analyst_target": {
+            "$ref": "#/components/schemas/ObjetivoAnalistas"
+          },
+          "audit_fields": {
+            "items": {
+              "$ref": "#/components/schemas/CampoAuditoria"
+            },
+            "title": "Audit Fields",
+            "type": "array"
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/SelloCalculo"
+          },
+          "company_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Class"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "market": {
+            "enum": [
+              "USA",
+              "MX"
+            ],
+            "title": "Market",
+            "type": "string"
+          },
+          "market_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Price"
+          },
+          "median": {
+            "$ref": "#/components/schemas/Mediana"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "proxies": {
+            "items": {
+              "$ref": "#/components/schemas/Proxy"
+            },
+            "title": "Proxies",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "DATOS INCOMPLETOS",
+              "REVISAR",
+              "ERROR"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "ticker": {
+            "title": "Ticker",
+            "type": "string"
+          },
+          "traceability": {
+            "$ref": "#/components/schemas/Trazabilidad"
+          }
+        },
+        "required": [
+          "ticker",
+          "market",
+          "company_name",
+          "currency",
+          "market_price",
+          "proxies",
+          "median",
+          "analyst_target",
+          "status",
+          "notes",
+          "company_class",
+          "traceability",
+          "audit_fields",
+          "calculation"
+        ],
+        "title": "ResultadoPublicado",
         "type": "object"
       },
       "Salud": {
@@ -410,6 +1625,229 @@
         },
         "title": "Salud",
         "type": "object"
+      },
+      "SelloCalculo": {
+        "additionalProperties": false,
+        "properties": {
+          "cache_hit": {
+            "title": "Cache Hit",
+            "type": "boolean"
+          },
+          "computed_at": {
+            "title": "Computed At",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "computed_at",
+          "expires_at",
+          "cache_hit"
+        ],
+        "title": "SelloCalculo",
+        "type": "object"
+      },
+      "SolicitudAnalisis": {
+        "additionalProperties": false,
+        "properties": {
+          "client_request_id": {
+            "title": "Client Request Id",
+            "type": "string"
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/ConfiguracionWeb"
+          },
+          "source": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "tickers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tickers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "client_request_id",
+          "source",
+          "tickers"
+        ],
+        "title": "SolicitudAnalisis",
+        "type": "object"
+      },
+      "Trazabilidad": {
+        "additionalProperties": false,
+        "properties": {
+          "cash_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Period"
+          },
+          "debt_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Period"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "fx_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fx Date"
+          },
+          "fx_fetched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fx Fetched At"
+          },
+          "fx_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fx Rate"
+          },
+          "fx_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fx Source"
+          },
+          "price_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Date"
+          },
+          "price_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Source"
+          },
+          "quote_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Currency"
+          },
+          "reporting_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporting Currency"
+          },
+          "revenue_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Period"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "source",
+          "fetched_at",
+          "price_date",
+          "price_source",
+          "reporting_currency",
+          "quote_currency",
+          "fx_rate",
+          "fx_source",
+          "fx_fetched_at",
+          "fx_date",
+          "revenue_period",
+          "debt_period",
+          "cash_period"
+        ],
+        "title": "Trazabilidad",
+        "type": "object"
       }
     }
   },
@@ -419,6 +1857,966 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analyses": {
+      "post": {
+        "operationId": "createAnalysis",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudAnalisis"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoTrabajo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Crear"
+      }
+    },
+    "/api/v1/analyses/{id}": {
+      "get": {
+        "operationId": "getAnalysis",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoTrabajo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Estado"
+      }
+    },
+    "/api/v1/analyses/{id}/cancel": {
+      "post": {
+        "operationId": "cancelAnalysis",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoTrabajo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Cancelar"
+      }
+    },
+    "/api/v1/analyses/{id}/companies/{ticker}/financials": {
+      "get": {
+        "operationId": "getCompanyFinancials",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "title": "Ticker",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancierosHistoricos"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Financieros"
+      }
+    },
+    "/api/v1/analyses/{id}/companies/{ticker}/prices": {
+      "get": {
+        "operationId": "getCompanyPrices",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "title": "Ticker",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "1y",
+              "enum": [
+                "1y",
+                "2y",
+                "5y",
+                "10y"
+              ],
+              "title": "Period",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreciosHistoricos"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Precios"
+      }
+    },
+    "/api/v1/analyses/{id}/export.xlsx": {
+      "get": {
+        "operationId": "exportAnalysis",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Snapshot completo del análisis."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Exportar"
+      }
+    },
+    "/api/v1/analyses/{id}/results": {
+      "get": {
+        "operationId": "getAnalysisResults",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaResultados"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Resultados"
+      }
+    },
     "/api/v1/catalog": {
       "get": {
         "operationId": "getCatalog",
@@ -512,6 +2910,34 @@
           }
         },
         "summary": "Salud"
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "getReadiness",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Salud"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Preparado"
       }
     }
   }

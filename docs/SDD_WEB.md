@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.3 |
+| Versión de esta extensión | 1.4 |
 | Fecha | 2026-11-13 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6 y F7 verificadas localmente; F8–F11 pendientes |
-| Encargo de esta edición | Implementar sólo F7 con TDD; conservar el servicio Streamlit y no publicar |
+| Estado de F6–F11 | F6–F8 implementadas y verificadas localmente; F9–F11 pendientes |
+| Encargo de esta edición | Implementar sólo F8 con TDD; conservar el servicio Streamlit y no publicar |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -24,7 +24,9 @@ de cobertura combinada de líneas y ramas**, con un warning conocido. F6 añade
 el shell Astro/React y la API de lectura FastAPI: **394 pruebas Python, 12
 unitarias frontend, dos del HTML compilado y cuatro de navegador** pasan
 localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. F7 añade la landing y metodología con ocho pruebas de navegador y capturas
-revisadas; cierre en 21.6 y TDD_F7.md. El dashboard sigue pendiente.
+revisadas; cierre en 21.6 y TDD_F7.md. F8 añade el transporte de análisis,
+aislamiento de adquisiciones, cachés, históricos y Excel; evidencia en
+[TDD_F8.md](TDD_F8.md) y continuidad en 21.7. El dashboard sigue pendiente.
 
 ## Índice
 
@@ -1587,8 +1589,8 @@ fuente o versión como si siguiera vigente.
 
 ## 18. Fases F6–F11
 
-Todas están **pendientes de implementación** al redactar esta versión. Continuar
-una por una; cada fase incluye código, pruebas, documentación y evidencia propia.
+F6–F8 están implementadas; F9–F11 siguen pendientes. Continuar una por una;
+cada fase incluye código, pruebas, documentación y evidencia propia.
 
 ### 18.1 F6 — Fundamentos web, contratos iniciales y CI
 
@@ -1643,6 +1645,9 @@ Las preferencias visuales se valoran sobre el resultado concreto; no se requiere
 elegir colores por adelantado con una aprobación separada.
 
 ### 18.3 F8 — API de análisis, trabajos, cachés e históricos
+
+**Implementada y verificada localmente el 2026-11-13.** Registro RED/GREEN,
+procesos reales, contratos y límites en [TDD_F8.md](TDD_F8.md) y 21.7.
 
 **Objetivo:** exponer el motor sin duplicar lógica y con un transporte operable.
 
@@ -1751,7 +1756,7 @@ flowchart LR
 | F1–F5 | Completadas en la línea base | SDD general y registros existentes |
 | F6 | Implementada; validación local completa | [TDD_F6.md](TDD_F6.md); CI remoto del nuevo commit pendiente |
 | F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
-| F8 | Especificada, pendiente | Ninguna todavía |
+| F8 | Implementada y verificada localmente | TDD_F8.md; 458 pruebas Python, procesos reales y contratos sin drift |
 | F9 | Especificada, pendiente | Ninguna todavía |
 | F10 | Especificada, pendiente | Ninguna todavía |
 | F11 | Especificada, pendiente | Ninguna todavía |
@@ -1836,8 +1841,8 @@ La carpeta temp es una referencia del usuario, ajena al producto y a las
 resoluciones; conservar sus archivos y no añadirla en bloque.
 
 No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-pide el siguiente punto después del cierre de F7, corresponde **F8**. Leer
-primero 21.6 y no rehacer la landing ni solicitar de nuevo sus capturas.
+pide el siguiente punto después del cierre de F8, corresponde **F9**. Leer
+primero 21.7; no rehacer F7/F8 ni solicitar de nuevo sus capturas o instalaciones.
 
 ### 21.2 Encargo histórico de F6 (ya implementado)
 
@@ -1879,7 +1884,7 @@ No se modificaron workflows o recursos externos al consultar su estado.
 
 ### 21.5 Registro de cierre local de F6
 
-La continuidad vigente está en 21.6.
+La continuidad vigente está en 21.7.
 
 F6 está implementada con TDD. [TDD_F6.md](TDD_F6.md) documenta los ciclos,
 incidencias y resultados: 394 pruebas Python con 97.90 % de cobertura combinada,
@@ -1913,6 +1918,8 @@ los comandos de desarrollo reproducibles están en [development.md](development.
 > commit/push ni publiques como efecto automático.
 
 ### 21.6 Cierre local de F7 y siguiente fase
+
+Registro histórico; la continuidad vigente está en 21.7.
 
 F7 queda implementada y verificada localmente. La base de implementación fue
 fd47e78; el cierre corrige y revisa el árbol sobre fb3951d. Existen landing,
@@ -1949,6 +1956,46 @@ versionados de development.md; el helper temporal no es dependencia.
 > análisis, trabajos, idempotencia, límites, cancelación, cachés, históricos,
 > Excel y contratos reales. Preservar el dominio y los oráculos; no adelantar
 > dashboard F9 ni distribución F11. F7 ya está cerrada y no necesita repetirse.
+
+### 21.7 Cierre local de F8 y siguiente fase
+
+F8 se implementa sobre 4dedb81. Hay once rutas reales, trabajos con idempotencia,
+cola acotada y cancelación, resultados con cursor, DTO con 73 campos de auditoría,
+cachés/TTL por fuente y recurso, históricos y Excel del snapshot aceptado.
+OpenAPI y tipos TypeScript están regenerados. Los defaults y variables están
+en [development.md, sección 10](development.md#10-api-de-análisis-f8).
+
+La adquisición está aislada en procesos spawn propios; el watchdog termina al
+hijo bloqueado y permite al worker tomar otro trabajo. Un proveedor por lote
+mantiene FX propio. Cancelar termina la empresa actual; el deadline global es
+cooperativo. No presentar el timeout de una petición HTTP como si detuviera I/O.
+La documentación registra los timeouts inspeccionados de yfinance y las pruebas
+de recuperación. Los terminales se confirman después de liberar el carril.
+
+Regresiones verifican oráculos anteriores, demo real, tasas/valores del XLSX,
+financieros ya convertidos a millones de moneda de cotización y años sin fechas
+inventadas. No se cambian metodología, fórmulas, proveedores existentes, catálogo,
+datos, snapshots, ejemplos, CLI, entrada Streamlit, estilos o capturas F7.
+Resultados y ciclos concretos en [TDD_F8.md](TDD_F8.md).
+Pasan 458 pruebas Python con 95.28 % de cobertura combinada, 14 unitarias
+frontend y cinco de HTML compilado; lint, formato, tipos y build correctos.
+La evidencia de navegador/capturas sigue siendo la del cierre de F7; no se
+atribuye una nueva revisión visual a una fase que no cambió la presentación.
+
+La memoria es efímera y requiere un proceso ASGI por instancia. GET /readyz
+acredita el runtime; el build de distribución se verifica al integrarlo en F11.
+El presupuesto publicado mide payload JSON administrado, no RSS. F10 conserva
+la medición de carga/memoria y la revisión integrada. El CI remoto y una URL
+publicada son comprobaciones separadas. No hubo commit/push ni publicación.
+
+> Para continuar: revisar Git, TDD_F8.md y las secciones 7–9, 14 y 18.4.
+> Cuando se solicite el siguiente punto, implementar únicamente F9 con TDD:
+> dashboard React, borrador separado de snapshot, catálogo/supuestos, creación
+> idempotente, polling/cancelación, tabla/KPI, detalle/gráficas, Excel y paridad
+> APP-01 a APP-18. Consumir los contratos generados de F8 sin duplicar fórmulas.
+> Consultar las guías web antes de UI y verificar navegador/teclado/móvil reales.
+> Conservar Streamlit y el arranque hasta F11. No rehacer landing/API ni actualizar
+> dependencias por avisos del instalador; añadir herramientas cuando se utilicen.
 
 ## 22. Fuentes y mantenimiento
 

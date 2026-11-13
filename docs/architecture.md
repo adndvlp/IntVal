@@ -13,7 +13,8 @@ el contrato vigente es 2.0, con prefijos heredados y 24/73 campos. Las extension
 de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
 históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
 posterior se especifica en [SDD_WEB.md](SDD_WEB.md); F6 incorpora los fundamentos
-web descritos al final. La continuidad vigente es 21.14 de la SDD general.
+web descritos al final. F8 añade el transporte de trabajos del ADR-003;
+la continuidad vigente es 21.15 de la SDD general.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -327,6 +328,7 @@ contrato, fachada, CLI de mercado, catálogo ni snapshots históricos.
 ## ADR-002: fundamentos HTTP y frontend estático (F6)
 
 Fecha: 2026-11-13. Estado: implementado y verificado localmente.
+Registro del alcance de F6; la ampliación actual de F8 está en ADR-003.
 
 La frontera HTTP está en `valoracion/web`: `create_app` crea una instancia con
 ajustes operativos propios y catálogos locales. Expone salud, metadatos y
@@ -369,13 +371,49 @@ La captura reproducible prueba el build/API y guarda imágenes intencionales de
 documentación sólo cuando pasa. La revisión de navegador/visual se registra
 por separado en [TDD_F7.md](TDD_F7.md): ocho pruebas reales y capturas aceptadas.
 
-## Destino web pendiente después de F7
+## ADR-003: trabajos efímeros y adquisición aislada (F8)
+
+Fecha: 2026-11-13. Estado: implementado; evidencia en [TDD_F8.md](TDD_F8.md).
+
+FastAPI inicia un GestorTrabajos en su lifespan. Un worker serial procesa una
+cola acotada; un lock protege admisión, idempotencia, snapshots, revisiones y
+publicación de filas. El estado HTTP permanece pequeño y los resultados se
+obtienen con cursor. La configuración aceptada y los registros de dominio
+copiados alimentan las descargas, sin volver a calcular ni aceptar filas del
+navegador. Los DTOs exponen los cuatro proxies y los 73 campos de auditoría.
+
+Cada lote que necesita adquisición crea un proceso spawn y un proveedor con
+FX propio. Un watchdog termina y recolecta al hijo si la operación excede el
+plazo; no se abandona un hilo bloqueado. El worker queda disponible para el
+siguiente trabajo. La cancelación normal es cooperativa y termina la empresa
+actual antes de detener el lote. Los terminales se confirman tras liberar los
+recursos, evitando una carrera con la primera consulta de detalle.
+
+Los históricos tienen procesos de adquisición y carriles acotados por fuente.
+Un recurso sin caché puede devolver 503 reintentable mientras la vía está
+ocupada; la demo no depende del carril de mercado. Fechas/unidades corresponden
+al servicio: precios ajustados o sintéticos, años financieros, millones de la
+moneda de cotización y márgenes en ratios. Su adquisición posterior no modifica
+la valoración almacenada.
+
+Una caché LRU/TTL separa recursos, fuente, dataset y configuración/período.
+Conserva los tiempos originales en hits. Cola, retención, cachés, tombstones y
+payload JSON tienen límites; reloj monotónico para TTL y UTC para respuestas.
+El presupuesto administrado no mide RSS de Python ni procesos hijos. Los IDs
+se pierden tras reinicio; no hay persistencia compartida entre instancias.
+
+OpenAPI y los tipos se regeneran desde once rutas reales. El shell acepta las
+capacidades aditivas consumiendo sólo su subconjunto. No cambia la entrada
+Streamlit ni el contrato financiero 2.0. Las decisiones F6/F7 anteriores
+describen el alcance al cerrar esas fases, ampliado aquí por F8.
+
+## Destino web pendiente después de F8
 
 La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
 API FastAPI, manteniendo el motor/proveedores/Excel existentes. F6 implementa
-los fundamentos anteriores y F7 la presentación estática. F8–F11 siguen
-siendo diseño futuro.
+los fundamentos, F7 la presentación estática y F8 el transporte HTTP completo.
+F9–F11 siguen siendo diseño futuro.
 
-La migración separará cachés/sesión de Streamlit del transporte HTTP y preservará
-los snapshots/configuración de análisis. La entrada actual seguirá funcionando
+El transporte HTTP tiene cachés propias y preserva snapshots/configuración de
+análisis. El dashboard pendiente consumirá esos contratos. La entrada actual seguirá funcionando
 hasta demostrar paridad y cumplir los criterios de transición de F11.

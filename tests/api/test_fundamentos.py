@@ -28,7 +28,13 @@ def test_salud_y_metadatos_describen_solo_capacidades_implementadas():
         assert meta["methodology_version"] == "proxies-1.0"
         assert meta["financial_contract_version"] == "2.0"
         assert meta["default_source"] == "market"
-        assert meta["capabilities"] == ["catalog"]
+        assert meta["capabilities"] == [
+            "catalog",
+            "analyses",
+            "cancellation",
+            "histories",
+            "excel_export",
+        ]
         assert meta["demo"] == {"version": "demo-1.0", "reference_date": "2025-01-03"}
         config = meta["configuration"]
         assert config["tasa_descuento"] == config["tasa_descuento_empresa"] == 0.1
@@ -36,7 +42,7 @@ def test_salud_y_metadatos_describen_solo_capacidades_implementadas():
         assert config["factor_margen_conservador"] == 0.8
         assert config["pausa_entre_tickers"] == 0.15
         assert meta["limits"]["max_tickers"] >= 604
-        assert client.post("/api/v1/analyses", json={}).status_code == 404
+        assert client.post("/api/v1/analyses", json={}).status_code == 422
 
 
 @pytest.mark.parametrize(
@@ -214,7 +220,19 @@ def test_openapi_exporta_solo_rutas_reales_y_es_determinista_desde_otro_cwd(tmp_
     exportar = modulo("contratos").exportar_openapi
     app = modulo("aplicacion").create_app()
     schema = app.openapi()
-    assert set(schema["paths"]) == {"/healthz", "/api/v1/meta", "/api/v1/catalog"}
+    assert set(schema["paths"]) == {
+        "/healthz",
+        "/readyz",
+        "/api/v1/meta",
+        "/api/v1/catalog",
+        "/api/v1/analyses",
+        "/api/v1/analyses/{id}",
+        "/api/v1/analyses/{id}/results",
+        "/api/v1/analyses/{id}/cancel",
+        "/api/v1/analyses/{id}/companies/{ticker}/prices",
+        "/api/v1/analyses/{id}/companies/{ticker}/financials",
+        "/api/v1/analyses/{id}/export.xlsx",
+    }
     assert schema["info"]["version"] == "1.0"
     monkeypatch.chdir(tmp_path)
     primera = tmp_path / "a.json"

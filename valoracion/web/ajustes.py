@@ -46,6 +46,24 @@ class Ajustes:
     mercado_habilitado: bool = True
     max_tickers: int = 650
     origenes_cors: tuple[str, ...] = ()
+    max_body_bytes: int = 65536
+    max_queue: int = 2
+    max_retained: int = 16
+    memory_budget_bytes: int = 64 * 1024 * 1024
+    terminal_ttl_seconds: int = 3600
+    analysis_cache_ttl_seconds: int = 3600
+    prices_cache_ttl_seconds: int = 1800
+    financials_cache_ttl_seconds: int = 3600
+    job_deadline_seconds: int = 1800
+    acquisition_timeout_seconds: int = 60
+
+    def __post_init__(self):
+        for campo in self.__dataclass_fields__:
+            if campo in {"demo", "mercado_habilitado", "origenes_cors"}:
+                continue
+            valor = getattr(self, campo)
+            if type(valor) is not int or valor <= 0:
+                raise ValueError(f"VALORACION_{campo.upper()} debe ser un entero positivo.")
 
     @property
     def fuente_default(self) -> str:
@@ -57,9 +75,20 @@ class Ajustes:
         texto = os.environ.get(nombre, "650")
         if not texto.isascii() or not texto.isdecimal() or int(texto) <= 0:
             raise ValueError(f"{nombre} debe ser un entero positivo.")
+        operativos = {}
+        for campo in cls.__dataclass_fields__:
+            if campo in {"demo", "mercado_habilitado", "max_tickers", "origenes_cors"}:
+                continue
+            nombre_operativo = f"VALORACION_{campo.upper()}"
+            valor = os.environ.get(nombre_operativo)
+            if valor is not None:
+                if not valor.isascii() or not valor.isdecimal() or int(valor) <= 0:
+                    raise ValueError(f"{nombre_operativo} debe ser un entero positivo.")
+                operativos[campo] = int(valor)
         return cls(
             demo=_bandera("VALORACION_DEMO", "0"),
             mercado_habilitado=_bandera("VALORACION_MARKET_ENABLED", "1"),
             max_tickers=int(texto),
             origenes_cors=_origenes(),
+            **operativos,
         )

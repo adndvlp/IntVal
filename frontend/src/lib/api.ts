@@ -26,7 +26,7 @@ export async function obtenerMetadatos(
       !('capabilities' in data) ||
       !Array.isArray(data.capabilities) ||
       !data.capabilities.includes('catalog') ||
-      !data.capabilities.every((capability) => capability === 'catalog')
+      !data.capabilities.every((capability) => typeof capability === 'string')
     )
       throw new Error();
     return { schema_version: data.schema_version, capabilities: ['catalog'] };

@@ -4,6 +4,29 @@ import { obtenerMetadatos } from './api';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('cliente de metadatos', () => {
+  it('acepta capacidades aditivas de F8 y consume sólo catálogo', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            schema_version: '1.0',
+            capabilities: [
+              'catalog',
+              'analyses',
+              'cancellation',
+              'histories',
+              'excel_export',
+            ],
+          }),
+        ),
+      ),
+    );
+    expect(await obtenerMetadatos('')).toEqual({
+      schema_version: '1.0',
+      capabilities: ['catalog'],
+    });
+  });
   it('usa la URL configurada y sólo capacidades reales', async () => {
     const meta = { schema_version: '1.0', capabilities: ['catalog'] };
     const fetcher = vi
@@ -30,6 +53,7 @@ describe('cliente de metadatos', () => {
     new Response('<html>Fallback estático</html>'),
     new Response('{"schema_version":"otra","capabilities":["catalog"]}'),
     new Response('{"schema_version":"1.0","capabilities":[]}'),
+    new Response('{"schema_version":"1.0","capabilities":["catalog",123]}'),
     new Response('null'),
   ])(
     'rechaza respuestas incompatibles sin exponer detalles',

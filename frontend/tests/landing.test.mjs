@@ -42,7 +42,9 @@ test('la landing entrega su narrativa, CTA y ejemplo en el HTML inicial', async 
   const figura = doc.querySelector('[data-demo-figure]');
   assert.match(figura.textContent, /Datos sintéticos/);
   assert.match(figura.textContent, /2025-01-03/);
-  const tabla = getByRole(figura, 'table');
+  const tabla = getByRole(figura, 'table', {
+    name: 'Comparación en USD por acción',
+  });
   for (const importe of ['100.00', '112.02', '117.87', '114.51', '116.19'])
     assert.match(tabla.textContent, new RegExp(importe.replace('.', '\\.')));
   assert.match(figura.textContent, /16.2/);

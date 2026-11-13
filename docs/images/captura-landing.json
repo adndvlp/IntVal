@@ -1,0 +1,109 @@
+{
+  "baseline_commit": "fb3951dc299efd20c6b956a58ce56aa644bfc9a4",
+  "source_state": "F7 working tree with reviewed zoom and accessibility fixes",
+  "captured_at_utc": "2026-11-13T20:46:00.984759+00:00",
+  "browser": "System Chrome through Playwright 1.65.0, channel chrome",
+  "platform": "macOS ARM64",
+  "viewport_desktop": {
+    "width": 1440,
+    "height": 900
+  },
+  "viewport_mobile": {
+    "width": 390,
+    "height": 900
+  },
+  "dataset_version": "demo-1.0",
+  "reference_date": "2025-01-03",
+  "methodology_version": "proxies-1.0",
+  "e2e": {
+    "passed": 8,
+    "failed": 0,
+    "seconds": 15.5
+  },
+  "scope": "Static landing, methodology, shell and real API smoke; viewport reflow, not a real mobile-device or full WCAG audit",
+  "images": [
+    {
+      "file": "docs/images/landing-desktop.png",
+      "width": 1440,
+      "height": 4501,
+      "bytes": 503429,
+      "sha256": "ee8bee7b877d70ac3162a026eccd405589450e38b2c4cc466815bb8c0142a933",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "docs/images/landing-mobile.png",
+      "width": 390,
+      "height": 6299,
+      "bytes": 403291,
+      "sha256": "06fbe30f88b9e619789ffc6bc982e4987c8f972a36a26e20d65c1331f29fdb1f",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "docs/images/landing-metodologia.png",
+      "width": 1440,
+      "height": 3560,
+      "bytes": 434167,
+      "sha256": "e4d1837e5c5e16941b4b97517af1b7f9543a186bfd74ed017767974f0b25764b",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "frontend/public/images/social.png",
+      "width": 1248,
+      "height": 879,
+      "bytes": 107212,
+      "sha256": "1bc0bfea38adf934f7611386872b83930b2ba0bdff400d2c1724799ed1a6c2c0",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    }
+  ],
+  "text_contrasts": [
+    {
+      "selector": ".hero-description",
+      "ratio": 5.944112903747616
+    },
+    {
+      "selector": ".button--primary",
+      "ratio": 6.60563726000312
+    },
+    {
+      "selector": ".button--secondary",
+      "ratio": 14.167359373633774
+    },
+    {
+      "selector": ".sheet-caution",
+      "ratio": 9.152895167665635
+    },
+    {
+      "selector": ".sheet-ticker",
+      "ratio": 9.152895167665635
+    },
+    {
+      "selector": ".sheet-difference strong",
+      "ratio": 11.926091175594916
+    },
+    {
+      "selector": ".preview-note",
+      "ratio": 5.944112903747616
+    },
+    {
+      "selector": ".project-section p:not(.eyebrow)",
+      "ratio": 9.152895167665635
+    }
+  ],
+  "minimum_measured_text_contrast_ratio": 5.944112903747616
+}

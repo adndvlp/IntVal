@@ -41,6 +41,9 @@ la suite completa no oculte el fallo de comportamiento.
 | 01 | Dos pruebas de `test_demo_web.py` fallan por ausencia del exportador del derivado | Exportador stdlib sin motor/red y JSON versionado; dos pruebas verdes |
 | 02 | Tres pruebas de HTML fallan por narrativa ausente y rutas de metodología/404 inexistentes | Landing, layout, tabla, metodología, 404, metadatos y estilos; cinco pruebas HTML verdes, incluidas las dos heredadas |
 | 03 | La prueba CI exige comprobar el derivado antes del build y falla | `web.yml` ejecuta `python -m examples.exportar_demo_web --check`; prueba verde |
+| 04 | Navegador real: seis pruebas pasan y dos detectan overflow en 320 px con texto al 200 % | Se elimina el mínimo rígido del footer, se permiten columnas encogibles y texto redistribuido; las ocho pruebas pasan en 13.6 s |
+| 05 | La prueba HTML exige el nombre accesible de tabla con espacios; falla por «enUSDpor» | El caption se genera como una sola cadena con espacios explícitos; HTML verde |
+| 06 | La revisión visual al 200 % detecta etiquetas partidas letra por letra pese a no haber overflow global | Se conserva ancho legible de tabla, desplazamiento local por teclado y una comprobación de FCL en una línea; ocho pruebas verdes en 15.5 s y capturas revisadas |
 
 Registros temporales: `/tmp/valoracion-f7-01-red.log`, `01-green`, `02-red`,
 `02-green`, `03-red` y `03-green`. Las pruebas versionadas permiten reproducir
@@ -98,31 +101,49 @@ entorno Python y archivos del usuario. Se repite la suite completa con espacio.
 | Ruff / ESLint / Prettier | Correctos |
 | Derivado demo | Reproducible y conciliado; check correcto |
 | JS inicial de landing | **0 archivos**; no islas React |
-| CSS inicial | **4741 bytes gzip**, inferior a 50 KiB |
-| HTML inicial | 3676 bytes gzip en la medición previa al ajuste final de texto |
+| CSS inicial | **4844 bytes gzip**, inferior a 50 KiB |
+| HTML inicial | 3711 bytes gzip en el build final |
 | Fuentes web / imágenes raster del hero | **0 / 0** |
-| Navegador, contraste real y capturas | **Pendientes** de la ejecución preparada |
+| Navegador, contraste real y capturas | **8 passed** en **15.5 s**, con API real, lectura al 200 % y desplazamiento por teclado; capturas revisadas |
 
 Los tamaños provienen del build de producción de esta edición; son tamaños de
 recursos, no mediciones de LCP/CLS/INP. No se afirman métricas de campo ni una
 auditoría WCAG completa. El registro final Python está en
 `/tmp/valoracion-f7-python-final.log`; presupuesto en
-`/tmp/valoracion-f7-presupuesto.json`. La ejecución directa de Chrome también
-está restringida dentro de la sesión. Sigue pendiente ejecutar en la terminal
-permitida y revisar las imágenes antes de cerrar F7:
+`/tmp/valoracion-f7-presupuesto-final.json`. La ejecución directa de Chrome está restringida dentro de la sesión; el usuario
+realizó las ejecuciones en su terminal. El run final terminó correctamente y
+`npm run capture` copió las imágenes reales después de verificar las ocho pruebas.
+
+Se revisaron las vistas de escritorio (1440 px), móvil (390 px), metodología e
+imagen social, además de las dos posiciones de la tabla al ampliar texto. La
+primera revisión había rechazado las etiquetas letra por letra: ahora FCL se
+mantiene en una línea, las palabras se conservan y el contenedor permite llegar
+a todas las cifras usando flechas. La comprobación de ancho global se mantiene.
+El test añade diagnóstico de elementos que se salgan del viewport si reaparece.
+
+Las ocho combinaciones de texto/fondo comprobadas en el navegador superan 4.5:1;
+el mínimo medido es 5.944:1.
+No se acredita una auditoría completa WCAG ni Safari/dispositivo móvil real.
+Las capturas son full-page de Chrome en macOS ARM64 con viewports fijos; la
+variante móvil acredita reflow de viewport, no un teléfono físico.
+
+Procedencia, dimensiones, hashes SHA-256 y referencia del dataset en
+[images/captura-landing.json](images/captura-landing.json). Imágenes aceptadas en
+[images/README.md](images/README.md#landing-y-metodología-f7). La imagen social
+mide 107212 bytes (104.7 KiB) y se usa sólo como metadato cuando exista un origen
+público configurado. No añade una imagen raster al hero de la landing.
+
+Se conservan como archivos intencionales tres capturas de documentación y la
+imagen OG. Reportes, trazas y capturas de tests siguen ignorados. Para repetir
+la comprobación desde frontend con el entorno de F6:
 
 ```bash
-.venv/bin/python /tmp/f7.py
+PLAYWRIGHT_CHANNEL=chrome npm run capture
 ```
 
-Alternativa versionada: `PLAYWRIGHT_CHANNEL=chrome npm run capture` desde
-`frontend/`, con Node/npm de F6 en PATH y Python preparado. El script temporal
-no es una dependencia del proyecto. El navegador prueba el build y la API real;
-no se sustituyen por respuestas simuladas para sortear el bloqueo.
-
-F7 está implementada, pero **su validación visual y cierre están pendientes**.
-La imagen OG raster se generará junto a las capturas al pasar el navegador.
-El CI remoto del commit que se publique y una URL desplegada no están acreditados.
+El script temporal de asistencia no es una dependencia del proyecto. F7 queda
+**implementada y cerrada con verificación local**. El CI remoto del nuevo commit,
+la publicación y una URL desplegada son comprobaciones separadas y no se acreditan.
 
 ## Guías aplicadas
 
@@ -132,7 +153,8 @@ Una segunda búsqueda de texto encontró un índice ausente en el paquete CLI;
 las guías recuperadas y la referencia local sí estaban disponibles.
 
 Se aplican tamaños tipográficos con rem y clamp limitado, contenedores fluidos,
-container query del panel con adaptación básica por viewport, altura libre de
+container queries del panel, pasos y capacidades, columnas con mínimos
+encogibles, tabla con desplazamiento propio, altura libre de
 textos, líneas de lectura acotadas, foco visible, semántica de tabla y colores
 de sistema para forced-colors. No hay contenido que dependa de una animación.
 El esquema claro completo sigue la decisión explícita de la SDD.

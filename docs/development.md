@@ -12,7 +12,7 @@ remota de CI y la validación de una URL publicada son evidencias independientes
 
 La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora sus
 fundamentos, descritos en la sección 8; F7 añade la landing (sección 9), con
-revisión de navegador pendiente. F8–F11 siguen pendientes. El contrato de
+revisión local y capturas completadas. F8–F11 siguen pendientes. El contrato de
 ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
 de F11.
 

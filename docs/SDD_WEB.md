@@ -4,11 +4,11 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.2 |
+| Versión de esta extensión | 1.3 |
 | Fecha | 2026-11-13 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6 verificada localmente; F7 implementada con revisión de navegador pendiente; F8–F11 pendientes |
+| Estado de F6–F11 | F6 y F7 verificadas localmente; F8–F11 pendientes |
 | Encargo de esta edición | Implementar sólo F7 con TDD; conservar el servicio Streamlit y no publicar |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
@@ -23,8 +23,8 @@ Las cifras históricas de pruebas son las del cierre de F5: **345 pruebas y 98.5
 de cobertura combinada de líneas y ramas**, con un warning conocido. F6 añade
 el shell Astro/React y la API de lectura FastAPI: **394 pruebas Python, 12
 unitarias frontend, dos del HTML compilado y cuatro de navegador** pasan
-localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. F7 añade la landing y metodología; su revisión de navegador está pendiente,
-como se registra en 21.6 y TDD_F7.md. El dashboard sigue pendiente.
+localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. F7 añade la landing y metodología con ocho pruebas de navegador y capturas
+revisadas; cierre en 21.6 y TDD_F7.md. El dashboard sigue pendiente.
 
 ## Índice
 
@@ -1619,7 +1619,8 @@ app anterior preservada. Crear TDD_F6.md con el registro real.
 
 ### 18.2 F7 — Sistema visual y landing completa
 
-**Implementada; revisión visual/navegador pendiente.** Ver [TDD_F7.md](TDD_F7.md).
+**Implementada y cerrada con verificación local el 2026-11-13.** Ocho pruebas
+de navegador y capturas reales revisadas. Ver [TDD_F7.md](TDD_F7.md).
 
 **Objetivo:** materializar la identidad y una landing estática cuidada.
 
@@ -1749,7 +1750,7 @@ flowchart LR
 | --- | --- | --- |
 | F1–F5 | Completadas en la línea base | SDD general y registros existentes |
 | F6 | Implementada; validación local completa | [TDD_F6.md](TDD_F6.md); CI remoto del nuevo commit pendiente |
-| F7 | Implementada, revisión de navegador pendiente | [TDD_F7.md](TDD_F7.md) |
+| F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
 | F8 | Especificada, pendiente | Ninguna todavía |
 | F9 | Especificada, pendiente | Ninguna todavía |
 | F10 | Especificada, pendiente | Ninguna todavía |
@@ -1835,8 +1836,8 @@ La carpeta temp es una referencia del usuario, ajena al producto y a las
 resoluciones; conservar sus archivos y no añadirla en bloque.
 
 No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-retoma ahora, primero debe cerrar la revisión de F7 descrita en 21.6; después
-corresponde **F8**.
+pide el siguiente punto después del cierre de F7, corresponde **F8**. Leer
+primero 21.6 y no rehacer la landing ni solicitar de nuevo sus capturas.
 
 ### 21.2 Encargo histórico de F6 (ya implementado)
 
@@ -1911,31 +1912,43 @@ los comandos de desarrollo reproducibles están en [development.md](development.
 > dashboard F9 dentro de esta fase. Actualiza evidencia y continuidad; no hagas
 > commit/push ni publiques como efecto automático.
 
-### 21.6 Implementación de F7 y paso pendiente
+### 21.6 Cierre local de F7 y siguiente fase
 
-F7 se implementa sobre fd47e78: landing con todos los bloques de 6.2,
-metodología pública, 404, tokens y componentes base, metadatos y captura
-reproducible. El ejemplo DEMO-USA sale del CSV/manifest público mediante
-`examples.exportar_demo_web`; CI detecta drift. No hay fórmulas de valoración
-ni islas React en la landing. Las fuentes son del sistema y el gráfico es HTML.
+F7 queda implementada y verificada localmente. La base de implementación fue
+fd47e78; el cierre corrige y revisa el árbol sobre fb3951d. Existen landing,
+metodología, 404, tokens/componentes compartidos, metadatos y capturas reales.
+El ejemplo está conciliado con CSV/manifest mediante el derivado de demo.
+La landing no hidrata React ni consulta el proveedor; los CTA abren el shell
+real con la fuente en query y explican su estado de preparación.
 
-Pasan 396 pruebas Python, 12 unitarias frontend y cinco del HTML compilado.
-Ruff, ESLint, Prettier, tipos y build son correctos. Se preservan motor, API,
-contratos, datos y entrada Streamlit. Detalle: [TDD_F7.md](TDD_F7.md).
+Evidencia: 396 pruebas Python (97.90 %), 12 unitarias frontend, cinco HTML y
+**ocho Playwright en 15.5 s** contra API real. Se verifican 320/390/768/1440 px,
+texto al 200 %, movimiento reducido, ocho contrastes de texto de al menos
+5.94:1, navegación sin JS y desplazamiento de la tabla por teclado. La revisión
+visual aceptó escritorio, móvil, metodología, tabla ampliada e imagen social.
 
-**F7 no está cerrada:** falta ejecutar el navegador y revisar las capturas.
-La sesión no puede escuchar puertos ni lanzar Chrome. El usuario tiene el
-comando corto `.venv/bin/python /tmp/f7.py`; alternativa permanente:
-`PLAYWRIGHT_CHANNEL=chrome npm run capture` desde frontend con el entorno fijado.
-Al pasar se generan las capturas de documentación y la imagen OG. Inspeccionarlas,
-registrar tamaños/contrastes/resultados y actualizar este estado antes de F8.
-No certificar WCAG, métricas de campo o CI remoto con las comprobaciones locales.
+La primera ejecución detectó overflow; la revisión posterior detectó etiquetas
+fragmentadas aunque los tests de ancho pasaban. Se corrigieron mínimos de grid,
+footer y tabla, y se añadió una comprobación de FCL en una línea. La tabla
+conserva sus cifras y admite scroll propio cuando el texto ampliado lo exige.
+No se ocultó el overflow global para forzar el test a verde.
 
-> Para continuar: revisar Git y TDD_F7.md; terminar y documentar el navegador de
-> F7 sin rehacer su implementación. Después, y sólo cuando se solicite, iniciar
-> F8 con TDD según 18.3: trabajos, proveedor, cachés, históricos y exportación
-> reales. Conservar cálculos, contrato financiero 2.0, ejemplo y Streamlit. No
-> adelantar dashboard F9 ni publicar como efecto automático.
+Detalles y límites en [TDD_F7.md](TDD_F7.md). Procedencia/dimensiones/hashes de
+imágenes en [captura-landing.json](images/captura-landing.json). Los reportes y
+capturas efímeras siguen ignorados; sólo las imágenes revisadas se versionan.
+No se certifica WCAG completa, métricas de campo ni Safari/teléfono real.
+CI remoto del nuevo commit y publicación siguen sin acreditarse.
+
+Se mantienen motor, metodología proxies-1.0, contrato 2.0, datos, API inicial,
+CLI y entrada Streamlit. No actualizar Node/npm por el aviso del instalador:
+se conserva la resolución fijada. Para repetir imágenes, usar los comandos
+versionados de development.md; el helper temporal no es dependencia.
+
+> Para continuar: revisar Git, TDD_F7.md y las secciones 9–12, 14 y 18.3.
+> Cuando se solicite el siguiente punto, implementar únicamente F8 con TDD:
+> análisis, trabajos, idempotencia, límites, cancelación, cachés, históricos,
+> Excel y contratos reales. Preservar el dominio y los oráculos; no adelantar
+> dashboard F9 ni distribución F11. F7 ya está cerrada y no necesita repetirse.
 
 ## 22. Fuentes y mantenimiento
 

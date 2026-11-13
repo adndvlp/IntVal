@@ -202,7 +202,8 @@ no la validez predictiva de una valoración.
 - [SDD y continuidad](docs/SDD.md): requisitos, decisiones, fases y trabajo pendiente.
 - [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
-  públicas, con revisión de navegador pendiente. F8–F11 permanecen pendientes.
+  públicas, verificadas con navegador y capturas revisadas. F8–F11 permanecen
+  pendientes.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
@@ -215,9 +216,13 @@ las capturas reales revisadas y la licencia MIT completan la presentación del
 repositorio. El [CI del commit F5](https://github.com/adndvlp/IntVal/actions/runs/43370891010)
 está verificado. F6 añade los fundamentos web con validación local; su nuevo
 workflow aún requiere ejecución remota en el commit que se publique. F7 añade
-la landing estática, metodología y sistema visual; su cierre espera la revisión
-de navegador/capturas preparada. F8–F11, el despliegue público y la validación de
+la landing estática, metodología y sistema visual, con ocho pruebas de navegador
+y capturas finales revisadas. F8–F11, el despliegue público y la validación de
 su URL quedan pendientes.
+
+Capturas de la nueva web: [escritorio](docs/images/landing-desktop.png),
+[móvil](docs/images/landing-mobile.png) y
+[metodología](docs/images/landing-metodologia.png).
 
 ## Licencia
 

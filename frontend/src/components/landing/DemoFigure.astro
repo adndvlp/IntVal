@@ -35,37 +35,45 @@ const escala = Math.max(...filas.map((fila) => fila.value));
       <p>Un precio. Cuatro perspectivas.</p>
       <span>{demo.currency}</span>
     </div>
-    <table class="comparison-table">
-      <caption>Comparación en{demo.currency}por acción</caption>
-      <thead class="visually-hidden">
-        <tr>
-          <th scope="col">Referencia o aproximación</th>
-          <th scope="col">{demo.currency} por acción</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filas.map((fila, index) => (
-          <tr class:list={[{ 'price-row': index === 0 }]}>
-            <th scope="row">
-              <span>{fila.label}</span>
-              <span class="value-track" aria-hidden="true">
-                <span
-                  class="value-bar"
-                  style={'inline-size:' + (fila.value / escala) * 100 + '%'}
-                ></span>
-              </span>
-            </th>
-            <td>{numero(fila.value)}</td>
+    <p class="comparison-hint">Desplaza la tabla para comparar los importes.</p>
+    <div
+      class="comparison-scroll"
+      tabindex="0"
+      role="region"
+      aria-label="Comparación por acción, desplazable horizontalmente"
+    >
+      <table class="comparison-table">
+        <caption>{'Comparación en ' + demo.currency + ' por acción'}</caption>
+        <thead class="visually-hidden">
+          <tr>
+            <th scope="col">Referencia o aproximación</th>
+            <th scope="col">{demo.currency} por acción</th>
           </tr>
-        ))}
-      </tbody>
-      <tfoot>
-        <tr>
-          <th scope="row">Mediana de los 4 proxies</th>
-          <td>{numero(demo.median)}</td>
-        </tr>
-      </tfoot>
-    </table>
+        </thead>
+        <tbody>
+          {filas.map((fila, index) => (
+            <tr class:list={[{ 'price-row': index === 0 }]}>
+              <th scope="row">
+                <span>{fila.label}</span>
+                <span class="value-track" aria-hidden="true">
+                  <span
+                    class="value-bar"
+                    style={'inline-size:' + (fila.value / escala) * 100 + '%'}
+                  ></span>
+                </span>
+              </th>
+              <td>{numero(fila.value)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">Mediana de los 4 proxies</th>
+            <td>{numero(demo.median)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
     <div class="sheet-difference">
       <span>Brecha frente al precio</span>
       <strong>{porcentaje}</strong>

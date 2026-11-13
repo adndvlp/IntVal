@@ -107,7 +107,7 @@ test('landing legible en cuatro anchos y navegación a metodología y demo', asy
 
 test('contenido usable sin movimiento y con texto al 200 por ciento', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/');
@@ -115,11 +115,52 @@ test('contenido usable sin movimiento y con texto al 200 por ciento', async ({
     content: 'html { font-size: 200%; } p { line-height: 1.5; }',
   });
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  const lineasFcl = await page
+    .getByRole('rowheader', { name: 'FCL', exact: true })
+    .locator('span')
+    .first()
+    .evaluate((element) => {
+      const rango = document.createRange();
+      rango.selectNodeContents(element);
+      return Array.from(rango.getClientRects()).filter((rect) => rect.width > 0)
+        .length;
+    });
+  expect(lineasFcl, 'La etiqueta FCL debe leerse en una línea').toBe(1);
+  await page.locator('[data-demo-figure]').screenshot({
+    path: testInfo.outputPath('figure-zoom.png'),
+  });
+  const comparacion = page.getByRole('region', {
+    name: 'Comparación por acción, desplazable horizontalmente',
+  });
+  await comparacion.focus();
+  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(() => comparacion.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(0);
+  await page.locator('[data-demo-figure]').screenshot({
+    path: testInfo.outputPath('figure-zoom-values.png'),
+  });
+  const layout = await page.evaluate(() => ({
+    viewportWidth: innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    overflow: Array.from(document.querySelectorAll('body *'))
+      .filter(
+        (element) => element.getBoundingClientRect().right > innerWidth + 1,
+      )
+      .map((element) => ({
+        element: element.tagName.toLowerCase(),
+        class: element.getAttribute('class'),
+        right: element.getBoundingClientRect().right,
+      })),
+  }));
+  await page.screenshot({
+    path: testInfo.outputPath('landing-zoom.png'),
+    fullPage: true,
+  });
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
+    layout.documentWidth,
+    JSON.stringify(layout.overflow),
+  ).toBeLessThanOrEqual(layout.viewportWidth);
   await page.getByRole('link', { name: 'Analizar empresas' }).click();
   await expect(page).toHaveURL(/fuente=market$/);
 });

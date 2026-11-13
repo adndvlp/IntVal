@@ -4,17 +4,17 @@
 
 La nueva etapa de landing y dashboard está detallada en la
 [SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.14 para
-continuar el trabajo. F1–F6 están implementadas; F7 está implementada con validación de navegador
-pendiente; F8–F11 siguen pendientes de implementación.
+continuar el trabajo. F1–F7 están implementadas y verificadas localmente; F8–F11 siguen pendientes
+de implementación.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.2 |
+| Versión del documento | 2.3 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F6 completadas; F7 implementada con cierre visual pendiente. 396 pruebas Python, 12 unitarias frontend y cinco HTML pasan. Continuidad en 21.14; CI y publicación se verifican por commit/entorno |
+| Estado | F1–F7 implementadas y verificadas localmente: 396 pruebas Python, 12 unitarias frontend, cinco HTML y ocho navegador. Continuidad en 21.14; CI y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -1548,14 +1548,14 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 2.2; continuidad vigente en 21.14 y extensión SDD_WEB.md |
+| SDD | Actualizada | Versión 2.3; continuidad vigente en 21.14 y extensión SDD_WEB.md |
 | F1 | Implementada y verificada localmente; incluida en CI previo a F5 | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; incluida en CI previo a F5 | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
 | F4 | Implementada; CI remoto del commit d90fc2a correcto; publicación pendiente | Resoluciones, entorno limpio, Ruff, arranque agnóstico y [Tests #5](https://github.com/adndvlp/IntVal/actions/runs/43363574654); cierre histórico en 21.10 |
 | F5 | Implementada; verificación local y CI remoto de 345aa0a correctos | Demo, ejemplo, documentación, capturas y MIT; cierre en 21.11. [Run 43370891010](https://github.com/adndvlp/IntVal/actions/runs/43370891010) verificado durante la especificación web |
 | F6 | Implementada y verificada localmente | [TDD_F6.md](TDD_F6.md); fundamentos web y API de lectura |
-| F7 | Implementada, validación de navegador pendiente | [TDD_F7.md](TDD_F7.md) |
+| F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
 | F8–F11 | Especificadas, pendientes | [SDD web](SDD_WEB.md), sección 18 |
 
 ## 20. Decisiones y riesgos
@@ -2083,28 +2083,31 @@ Implementar sólo F7 cuando se solicite: sistema visual y landing. Mantener TDD,
 guía web, revisión real y entrada Streamlit. No adelantar análisis F8 o dashboard
 F9 ni volver a pedir decisiones ya resueltas sobre licencia, stack o alojamiento.
 
-### 21.14 Implementación de F7 y validación pendiente
+### 21.14 Cierre local de F7 y continuidad vigente
 
-Fecha: 2026-11-13. Base `fd47e78`. F7 añade landing editorial, metodología,
-404, sistema visual compartido y demo estática conciliada con el CSV/manifest.
-La página funciona sin JavaScript; los CTA llevan al shell con la fuente en la
-query. El análisis web sigue en preparación y Streamlit permanece intacto.
+Fecha: 2026-11-13. Implementación sobre fd47e78; cierre y correcciones de
+revisión sobre fb3951d. F7 está implementada y verificada localmente: landing,
+metodología, 404, identidad compartida, ejemplo estático conciliado, metadatos
+y capturas reales. La aplicación Streamlit y los contratos se conservan.
 
-TDD: derivado ausente, contenido/rutas ausentes y comprobación CI ausente
-producen RED antes de implementar. Pasan 396 pruebas Python (97.90 %), 12
-unitarias frontend y cinco pruebas de HTML, además de formato/lint/tipos/build.
-Se conserva el contrato financiero 2.0 y la metodología proxies-1.0.
+TDD y revisión: el navegador detectó overflow al 200 %. Se corrigieron mínimos
+de layout; la revisión visual detectó además etiquetas fragmentadas. Se conserva
+un ancho de lectura de la tabla con scroll local y teclado, y una regresión de
+FCL en una línea. No se oculta contenido para conseguir una prueba verde.
 
-**Para terminar F7:** ejecutar el navegador/captura preparado y revisar imágenes.
-La sesión no puede escuchar puertos ni lanzar Chrome. El comando temporal es
-`.venv/bin/python /tmp/f7.py`; el equivalente permanente, desde frontend, es
-`PLAYWRIGHT_CHANNEL=chrome npm run capture` con Node/npm fijados. Registrar los
-resultados reales en [TDD_F7.md](TDD_F7.md), incorporar capturas revisadas y cerrar
-los criterios LND/F7. No marcar la fase completa antes de eso.
+Pasan 396 pruebas Python (97.90 %), 12 unitarias frontend, cinco HTML y ocho
+E2E en 15.5 s contra API real. Se verifican cuatro anchos, texto al 200 %,
+movimiento reducido, contraste, enlaces y HTML sin JavaScript. Se revisaron las
+capturas finales; registro de ejecución en [TDD_F7.md](TDD_F7.md), procedencia en
+[images/captura-landing.json](images/captura-landing.json). No se acredita una
+certificación WCAG ni un dispositivo Safari real; calidad integrada corresponde
+a F10. CI remoto de este cambio y URL publicada siguen pendientes.
 
-La siguiente fase después de cerrar F7 es F8: API de análisis, trabajos, cachés,
-históricos y Excel. No iniciar dashboard F9 ni despliegue como parte de F7.
-No hubo commit/push ni publicación en esta implementación.
+**Siguiente fase: F8**, únicamente cuando se solicite: API de análisis, trabajos,
+idempotencia, cachés, cancelación, históricos y Excel. Leer SDD_WEB.md 9–12,
+14, 18.3 y 21.6. No rehacer F7 ni volver a pedir esta ejecución; no adelantar
+el dashboard F9 o cambiar el arranque antes de F11. No hubo commit/push ni
+publicación en este cierre.
 
 ## 22. Fuentes y mantenimiento
 
@@ -2142,7 +2145,7 @@ requisitos futuros con software ya implementado.
 | Fase | Entrega prevista | Estado |
 | --- | --- | --- |
 | F6 | Fundamentos Astro/React/TS, contratos iniciales FastAPI y CI | Implementada; [evidencia local](TDD_F6.md) |
-| F7 | Sistema visual y landing estática completa | Implementada; revisión visual pendiente: [TDD_F7.md](TDD_F7.md) |
+| F7 | Sistema visual y landing estática completa | Implementada y revisada: [TDD_F7.md](TDD_F7.md) |
 | F8 | API de análisis, trabajos, cachés, históricos y Excel | Especificada, pendiente |
 | F9 | Dashboard React e integración con paridad funcional | Especificada, pendiente |
 | F10 | Calidad integrada, accesibilidad, móvil, rendimiento y capturas | Especificada, pendiente |

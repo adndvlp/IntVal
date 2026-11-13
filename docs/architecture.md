@@ -367,7 +367,7 @@ HTTP ni una caché de cotizaciones. El contrato API de F6 permanece intacto.
 El sitio incorpora metadatos, favicon y canonical condicionado a un origen real.
 La captura reproducible prueba el build/API y guarda imágenes intencionales de
 documentación sólo cuando pasa. La revisión de navegador/visual se registra
-por separado en [TDD_F7.md](TDD_F7.md); está pendiente de la ejecución preparada.
+por separado en [TDD_F7.md](TDD_F7.md): ocho pruebas reales y capturas aceptadas.
 
 ## Destino web pendiente después de F7
 

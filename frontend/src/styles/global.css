@@ -18,6 +18,12 @@ a {
   color: inherit;
   text-underline-offset: 0.25em;
 }
+p,
+a,
+dt,
+dd {
+  overflow-wrap: anywhere;
+}
 p {
   margin-block: 0 1rem;
   max-inline-size: 65ch;
@@ -124,7 +130,7 @@ nav [aria-current='page'] {
 }
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(2rem, 4dvw, 5rem);
   align-items: center;
   padding-block: 4.75rem 5rem;
@@ -251,6 +257,7 @@ svg {
 }
 .sheet-top {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.8rem;
 }
@@ -284,6 +291,7 @@ svg {
 }
 .sheet-intro {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   border-block-start: 1px solid var(--line-dark);
@@ -300,6 +308,15 @@ svg {
   border-collapse: collapse;
   margin-block: 1rem;
   font-variant-numeric: tabular-nums;
+}
+.comparison-scroll {
+  overflow-x: auto;
+}
+.comparison-hint {
+  display: none;
+  color: var(--muted-on-dark);
+  font-size: 0.65rem;
+  margin-block: 1rem 0;
 }
 .comparison-table caption {
   text-align: start;
@@ -357,6 +374,7 @@ svg {
 }
 .sheet-difference {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   font-size: 0.7rem;
@@ -419,6 +437,7 @@ svg {
   color: var(--muted);
 }
 .steps {
+  container-type: inline-size;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 3rem;
@@ -449,7 +468,7 @@ svg {
 .methodology-preview,
 .project-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5rem;
 }
 .capability-list article {
@@ -457,6 +476,12 @@ svg {
   gap: 1.5rem;
   border-block-start: 1px solid #b9c1b4;
   padding-block: 1.5rem 1rem;
+}
+.capability-list {
+  container-type: inline-size;
+}
+.capability-list article > div {
+  min-inline-size: 0;
 }
 .capability-list h3 {
   font-size: 1.1rem;
@@ -544,7 +569,7 @@ svg {
 }
 .footer-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2rem 4rem;
 }
 .footer-brand {
@@ -557,7 +582,8 @@ svg {
 }
 .footer-links {
   justify-self: end;
-  min-inline-size: 12rem;
+  inline-size: min(12rem, 100%);
+  min-inline-size: 0;
 }
 .footer-links a {
   display: flex;
@@ -698,7 +724,7 @@ svg {
   border-radius: 0.1rem;
 }
 .project-section :where(a, button):focus-visible,
-.analysis-sheet :where(a, button):focus-visible {
+.analysis-sheet :where(a, button, [tabindex]):focus-visible {
   outline-color: var(--accent);
 }
 .skip-link {
@@ -732,7 +758,7 @@ svg {
 }
 @media (width < 58rem) {
   .hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding-block: 3rem;
     gap: 3rem;
   }
@@ -785,14 +811,14 @@ svg {
   .capabilities-layout,
   .methodology-preview,
   .project-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .steps {
     margin-block-start: 2.5rem;
   }
   .steps li {
     display: grid;
-    grid-template-columns: 3rem 1fr;
+    grid-template-columns: 3rem minmax(0, 1fr);
     gap: 0.5rem 1rem;
   }
   .steps h3 {
@@ -811,10 +837,11 @@ svg {
     flex-direction: column;
   }
   .footer-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .footer-links {
     justify-self: stretch;
+    inline-size: 100%;
   }
   .footer-bottom {
     flex-direction: column;
@@ -827,6 +854,26 @@ svg {
   }
   .hero-footnote > span + span::before {
     margin-inline-end: 0.75rem;
+  }
+}
+@container (width < 18rem) {
+  .capability-list article {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .steps li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .steps p {
+    grid-column: 1;
+  }
+}
+@container (width < 12rem) {
+  .sheet-monogram {
+    display: none;
+  }
+  .comparison-hint {
+    display: block;
   }
 }
 @media (width < 30rem) {
@@ -873,7 +920,7 @@ nav .header-demo:hover {
 }
 
 .comparison-table th {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .comparison-table td {
   white-space: nowrap;

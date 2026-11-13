@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.4 |
+| Versión de esta extensión | 1.5 |
 | Fecha | 2026-11-13 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6–F8 implementadas y verificadas localmente; F9–F11 pendientes |
-| Encargo de esta edición | Implementar sólo F8 con TDD; conservar el servicio Streamlit y no publicar |
+| Estado de F6–F11 | F6–F9 implementadas y verificadas localmente; F10–F11 pendientes |
+| Encargo de esta edición | Implementar sólo F9 con TDD; conservar el servicio Streamlit y no publicar |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -26,7 +26,7 @@ unitarias frontend, dos del HTML compilado y cuatro de navegador** pasan
 localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. F7 añade la landing y metodología con ocho pruebas de navegador y capturas
 revisadas; cierre en 21.6 y TDD_F7.md. F8 añade el transporte de análisis,
 aislamiento de adquisiciones, cachés, históricos y Excel; evidencia en
-[TDD_F8.md](TDD_F8.md) y continuidad en 21.7. El dashboard sigue pendiente.
+[TDD_F8.md](TDD_F8.md). F9 integra el dashboard React con la API, doce pruebas de navegador y capturas revisadas; evidencia en [TDD_F9.md](TDD_F9.md) y continuidad en 21.8.
 
 ## Índice
 
@@ -1589,7 +1589,7 @@ fuente o versión como si siguiera vigente.
 
 ## 18. Fases F6–F11
 
-F6–F8 están implementadas; F9–F11 siguen pendientes. Continuar una por una;
+F6–F9 están implementadas; F10–F11 siguen pendientes. Continuar una por una;
 cada fase incluye código, pruebas, documentación y evidencia propia.
 
 ### 18.1 F6 — Fundamentos web, contratos iniciales y CI
@@ -1674,6 +1674,9 @@ de cancelación o timeout.
 
 ### 18.4 F9 — Dashboard e integración completa
 
+**Implementada y verificada localmente el 2026-11-13.** Evidencia y límites en
+[TDD_F9.md](TDD_F9.md) y 21.8.
+
 **Objetivo:** sustituir la experiencia genérica por una herramienta coherente con
 la landing, con paridad de análisis y exportación.
 
@@ -1757,7 +1760,7 @@ flowchart LR
 | F6 | Implementada; validación local completa | [TDD_F6.md](TDD_F6.md); CI remoto del nuevo commit pendiente |
 | F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
 | F8 | Implementada y verificada localmente | TDD_F8.md; 458 pruebas Python, procesos reales y contratos sin drift |
-| F9 | Especificada, pendiente | Ninguna todavía |
+| F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), demo/XLSX reales y capturas revisadas |
 | F10 | Especificada, pendiente | Ninguna todavía |
 | F11 | Especificada, pendiente | Ninguna todavía |
 
@@ -1841,8 +1844,8 @@ La carpeta temp es una referencia del usuario, ajena al producto y a las
 resoluciones; conservar sus archivos y no añadirla en bloque.
 
 No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-pide el siguiente punto después del cierre de F8, corresponde **F9**. Leer
-primero 21.7; no rehacer F7/F8 ni solicitar de nuevo sus capturas o instalaciones.
+pide el siguiente punto después del cierre de F9, corresponde **F10**. Leer
+primero 21.8; no rehacer F7–F9 ni solicitar de nuevo sus capturas o instalaciones.
 
 ### 21.2 Encargo histórico de F6 (ya implementado)
 
@@ -1884,7 +1887,7 @@ No se modificaron workflows o recursos externos al consultar su estado.
 
 ### 21.5 Registro de cierre local de F6
 
-La continuidad vigente está en 21.7.
+La continuidad vigente está en 21.8.
 
 F6 está implementada con TDD. [TDD_F6.md](TDD_F6.md) documenta los ciclos,
 incidencias y resultados: 394 pruebas Python con 97.90 % de cobertura combinada,
@@ -1919,7 +1922,7 @@ los comandos de desarrollo reproducibles están en [development.md](development.
 
 ### 21.6 Cierre local de F7 y siguiente fase
 
-Registro histórico; la continuidad vigente está en 21.7.
+Registro histórico; la continuidad vigente está en 21.8.
 
 F7 queda implementada y verificada localmente. La base de implementación fue
 fd47e78; el cierre corrige y revisa el árbol sobre fb3951d. Existen landing,
@@ -1959,6 +1962,8 @@ versionados de development.md; el helper temporal no es dependencia.
 
 ### 21.7 Cierre local de F8 y siguiente fase
 
+Registro histórico; la continuidad vigente está en 21.8.
+
 F8 se implementa sobre 4dedb81. Hay once rutas reales, trabajos con idempotencia,
 cola acotada y cancelación, resultados con cursor, DTO con 73 campos de auditoría,
 cachés/TTL por fuente y recurso, históricos y Excel del snapshot aceptado.
@@ -1996,6 +2001,63 @@ publicada son comprobaciones separadas. No hubo commit/push ni publicación.
 > Consultar las guías web antes de UI y verificar navegador/teclado/móvil reales.
 > Conservar Streamlit y el arranque hasta F11. No rehacer landing/API ni actualizar
 > dependencias por avisos del instalador; añadir herramientas cuando se utilicen.
+
+### 21.8 Cierre local de F9 y siguiente fase
+
+Fecha: 2026-11-13. Base: `93a143a`. Se implementó sólo F9 con TDD. El dashboard
+React de `/app/` consume los contratos de F8 y sustituye el shell de vista
+previa. Landing y metodología enlazan al flujo real. El contrato financiero,
+motor, API, datos/oráculos, CLI y entrada Streamlit se conservan.
+
+La implementación está en `frontend/src/features/analysis/`: `model.ts` contiene
+normalización, filtros, KPI y reducer; `transport.ts` valida DTO runtime y gestiona
+errores/abort; `use-analysis.ts` orquesta recursos/trabajos; `AnalysisApp`,
+`AnalysisForm`, `ResultsTable` y `CompanyDetail` componen la UI; `Charts.tsx`
+carga Recharts de forma diferida. Estilos propios en `dashboard.css`; no se
+introducen fórmulas financieras ni dependencias de UI sin utilizar.
+
+El formulario permite catálogo USA/MX/Todos, búsqueda, selección de todo el
+mercado aunque esté paginado, extras normalizados con `&` y nueve supuestos.
+Demostración conserva su catálogo propio y referencia sintética visible. Mercado
+no crea un trabajo al abrir; la demo se inicia una sola vez. El borrador nunca
+modifica el snapshot aceptado ni el Excel hasta solicitar otro análisis.
+
+UUID/payload se conservan al reintentar una creación. Las claves de Query incluyen
+API/fuente/dataset/trabajo/empresa/período según el recurso; las generaciones y
+revisiones descartan respuestas antiguas. Cambiar fuente o limpiar aborta lecturas
+y cancela un trabajo conocido; si el POST llega tarde se cancela su ID. Se drenan
+las páginas antes de declarar completos los resultados. Un lote nuevo de la
+misma fuente conserva el anterior rotulado hasta recibir sus primeras filas.
+
+`sessionStorage` guarda sólo fuente, supresión de auto-demo y referencia/solicitud
+aceptada bajo `intval.analysis.v1:<baseUrl>`; no persiste filas o históricos.
+Recuperar 404/410 explica la pérdida y exige volver a analizar explícitamente.
+El bloqueo de almacenamiento no impide usar la pestaña actual.
+
+Tabla paginada con todas las columnas financieras opcionales, filtros locales,
+null al final, cuatro KPI del conjunto filtrado y detalle del snapshot completo.
+Históricos se adquieren al abrir su panel y sus fallos/vacíos son locales;
+estados y márgenes comparten recurso, con millones/FX ya aplicados por la API.
+La descarga conserva todo el lote y los supuestos aceptados aunque los filtros
+vacien la tabla. El Excel real se reabre y concilia, incluidas sus siete hojas.
+
+El usuario ejecutó Chrome fuera del sandbox y compartió los doce recorridos
+correctos. Se revisaron las capturas reales de escritorio, móvil y diálogo,
+además de reflow a 320 px, ampliación al 200 %, teclado/Esc y axe en el estado
+recorrido. Fuente/cifras/fecha sintética son visibles. Los PNG seleccionados
+están en docs/images; reportes, trazas y XLSX temporales siguen ignorados.
+Versiones, ciclos, resultados y límites en [TDD_F9.md](TDD_F9.md); comandos
+permanentes en [development.md, sección 11](development.md#11-dashboard-react-f9).
+
+**Siguiente fase: F10**, únicamente al solicitarla. Leer 14, 15 y 18.5 junto
+con TDD_F9.md, estado Git y los reportes disponibles. No rehacer landing/API/
+dashboard ni pedir de nuevo las instalaciones o capturas ya acreditadas.
+Completar auditoría manual de lector/contraste, varios motores de navegador,
+escenarios integrados de transporte y mediciones de bundles/estabilidad/demo/
+memoria con contexto. No atribuir RSS al presupuesto de payload ni capacidad
+PaaS a una medición local. Mantener TDD y registrar verificaciones ya correctas
+sin RED artificial. F11 conserva la distribución agnóstica y el cambio de arranque.
+No hubo commit/push, CI remoto de esta entrega ni publicación de URL.
 
 ## 22. Fuentes y mantenimiento
 

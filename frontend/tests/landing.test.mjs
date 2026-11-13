@@ -38,7 +38,10 @@ test('la landing entrega su narrativa, CTA y ejemplo en el HTML inicial', async 
       (a) => a.getAttribute('href') === '/app/?fuente=market',
     ),
   );
-  assert.match(doc.body.textContent, /en preparación/);
+  assert.doesNotMatch(
+    doc.body.textContent,
+    /experiencia web en preparación|análisis y exportación en preparación/,
+  );
   const figura = doc.querySelector('[data-demo-figure]');
   assert.match(figura.textContent, /Datos sintéticos/);
   assert.match(figura.textContent, /2025-01-03/);

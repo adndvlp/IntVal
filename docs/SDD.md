@@ -3,18 +3,18 @@
 **Especificación y diseño de software de IntVal: formalización del repositorio y evolución de su interfaz web.**
 
 La nueva etapa de landing y dashboard está detallada en la
-[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.15 para
-continuar el trabajo. F1–F8 están implementadas y verificadas localmente; F9–F11 siguen pendientes
+[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.16 para
+continuar el trabajo. F1–F9 están implementadas y verificadas localmente; F10–F11 siguen pendientes
 de implementación.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.4 |
+| Versión del documento | 2.5 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F8 implementadas y verificadas localmente; resultados de F8 en TDD_F8.md. Continuidad en 21.15; CI remoto y publicación se verifican por commit/entorno |
+| Estado | F1–F9 implementadas y verificadas localmente; resultados de F9 en TDD_F9.md. Continuidad en 21.16; CI remoto y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -27,7 +27,7 @@ de implementación.
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). El cierre de F5 está en 21.11 y [TDD de F5](TDD_F5.md). **La continuidad vigente es 21.15 y [SDD_WEB.md](SDD_WEB.md)**: no rehacer F1–F5 ni confundir diseño futuro, implementación, CI remoto y publicación.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). El cierre de F5 está en 21.11 y [TDD de F5](TDD_F5.md). **La continuidad vigente es 21.16 y [SDD_WEB.md](SDD_WEB.md)**: no rehacer F1–F5 ni confundir diseño futuro, implementación, CI remoto y publicación.
 
 ## Índice
 
@@ -1548,7 +1548,7 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 2.4; continuidad vigente en 21.15 y extensión SDD_WEB.md |
+| SDD | Actualizada | Versión 2.5; continuidad vigente en 21.16 y extensión SDD_WEB.md |
 | F1 | Implementada y verificada localmente; incluida en CI previo a F5 | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; incluida en CI previo a F5 | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
@@ -1557,7 +1557,8 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | F6 | Implementada y verificada localmente | [TDD_F6.md](TDD_F6.md); fundamentos web y API de lectura |
 | F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
 | F8 | Implementada y verificada localmente | [TDD_F8.md](TDD_F8.md); API, procesos, snapshots, cachés y Excel |
-| F9–F11 | Especificadas, pendientes | [SDD web](SDD_WEB.md), sección 18 |
+| F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), dashboard y capturas reales |
+| F10–F11 | Especificadas, pendientes | [SDD web](SDD_WEB.md), sección 18 |
 
 ## 20. Decisiones y riesgos
 
@@ -1818,7 +1819,7 @@ heurísticas como datos auditados.
 
 ### 21.9 Corrección posterior a F3: ruta de AppTest en CI
 
-Registro previo a F4; el punto de continuidad vigente está en 21.15.
+Registro previo a F4; el punto de continuidad vigente está en 21.16.
 
 - Línea base: `43d6725`; fecha 2026-11-12. El usuario compartió un run anterior
   con 20 pruebas de UI fallidas, 250 pasadas y cobertura 84.39 %. AppTest buscaba
@@ -1841,7 +1842,7 @@ Registro previo a F4; el punto de continuidad vigente está en 21.15.
 
 ### 21.10 Registro histórico de implementación de F4
 
-El punto de continuidad vigente es 21.15. Este apartado conserva la evidencia
+El punto de continuidad vigente es 21.16. Este apartado conserva la evidencia
 y los pendientes que existían al terminar F4; el CI de ese commit se verificó
 posteriormente al implementar F5.
 
@@ -1900,7 +1901,7 @@ sigue necesitando decisión de su titular. No inventar un run remoto ni publicac
 
 ### 21.11 Registro de implementación y cierre de F5
 
-El punto de continuidad vigente es 21.15 y SDD_WEB.md. Este registro conserva
+El punto de continuidad vigente es 21.16 y SDD_WEB.md. Este registro conserva
 los resultados y el alcance del cierre de F5.
 
 - Fecha: 2026-11-12. Línea base: commit `d90fc2a`, F4. Antes del cambio:
@@ -2086,7 +2087,7 @@ F9 ni volver a pedir decisiones ya resueltas sobre licencia, stack o alojamiento
 
 ### 21.14 Cierre local de F7 y continuidad vigente
 
-Registro histórico; la continuidad vigente está en 21.15.
+Registro histórico; la continuidad vigente está en 21.16.
 
 Fecha: 2026-11-13. Implementación sobre fd47e78; cierre y correcciones de
 revisión sobre fb3951d. F7 está implementada y verificada localmente: landing,
@@ -2112,7 +2113,7 @@ idempotencia, cachés, cancelación, históricos y Excel. Leer SDD_WEB.md 9–12
 el dashboard F9 o cambiar el arranque antes de F11. No hubo commit/push ni
 publicación en este cierre.
 
-### 21.15 Cierre local de F8 y continuidad vigente
+### 21.15 Cierre local de F8 (registro histórico)
 
 Fecha: 2026-11-13. Base: 4dedb81. Se implementó únicamente F8 con TDD:
 creación/idempotencia, snapshot de fuente/configuración, worker y cola acotados,
@@ -2140,6 +2141,33 @@ UI. No rehacer F7/F8 ni cambiar el arranque antes de F11. Memoria/carga integrad
 corresponden a F10; el presupuesto de payload no acredita RSS ni capacidad de
 un plan. El CI remoto y publicación se verifican separadamente. No hubo
 commit/push ni despliegue en este cierre.
+
+### 21.16 Cierre local de F9 y continuidad vigente
+
+Fecha: 2026-11-13. Base: `93a143a`. Se implementó únicamente F9 con TDD:
+dashboard React en `/app/`, fuente explícita, catálogo/selección/extras y nueve
+supuestos; creación idempotente, progreso, cancelación y páginas de resultados;
+tabla/KPI/filtros y detalle con cuatro gráficas; Excel completo del snapshot.
+El formulario es un borrador separado, las respuestas antiguas se descartan
+y la pestaña recupera referencias sin almacenar filas financieras.
+
+El E2E usa API, demo y Excel reales; el usuario ejecutó Chrome en un entorno
+permitido. Doce recorridos pasan; las capturas de escritorio/móvil/diálogo se
+inspeccionaron e incorporaron a docs/images. La suite Python conserva 458
+pruebas y 95.28 % combinado. Se incluyen todos los módulos de ejecución del
+dashboard en la cobertura frontend y se mantiene el umbral del 85 %.
+El registro de cifras, ciclos RED/GREEN y límites está en [TDD_F9.md](TDD_F9.md).
+
+Arquitectura en ADR-004, comandos en development.md 11 y continuidad detallada
+en **SDD_WEB.md 21.8**. Fórmulas, metodología, contratos, API F8, datos, catálogo,
+CLI, Streamlit y arranque se conservan. Sólo se añaden las dependencias web
+utilizadas, con resoluciones exactas. No hubo commit/push ni despliegue.
+
+**Siguiente fase: F10**, cuando se solicite: calidad integrada, varios motores,
+auditoría manual de accesibilidad y mediciones de rendimiento/memoria. No
+rehacer F7–F9 ni volver a pedir su preparación externa. Mantener TDD y distinguir
+evidencia local, CI remoto y URL publicada. El arranque y la distribución
+agnóstica se abordan en F11; no desplegar por inferencia.
 
 ## 22. Fuentes y mantenimiento
 
@@ -2179,12 +2207,12 @@ requisitos futuros con software ya implementado.
 | F6 | Fundamentos Astro/React/TS, contratos iniciales FastAPI y CI | Implementada; [evidencia local](TDD_F6.md) |
 | F7 | Sistema visual y landing estática completa | Implementada y revisada: [TDD_F7.md](TDD_F7.md) |
 | F8 | API de análisis, trabajos, cachés, históricos y Excel | Implementada: [TDD_F8.md](TDD_F8.md) |
-| F9 | Dashboard React e integración con paridad funcional | Especificada, pendiente |
+| F9 | Dashboard React e integración con paridad funcional | Implementada: [TDD_F9.md](TDD_F9.md) |
 | F10 | Calidad integrada, accesibilidad, móvil, rendimiento y capturas | Especificada, pendiente |
 | F11 | Distribución agnóstica, arranque y cierre de la migración | Especificada, pendiente |
 
 Cada fase tiene requisitos, primeros casos RED, criterios de cierre y una matriz
-de verificación en la extensión. La siguiente fase de implementación es F9,
+de verificación en la extensión. La siguiente fase de implementación es F10,
 cuando el usuario la solicite. La publicación de una URL sigue siendo una acción
 externa separada del diseño y de la preparación del artefacto.
 

@@ -159,10 +159,11 @@ mínimo y refactorización en verde**. Véanse [CONTRIBUTING](CONTRIBUTING.md), 
 debe comprobar su propio run remoto.
 
 La base de la nueva web está en `frontend/`, con Astro estático, React y
-TypeScript. Incluye landing, metodología y un shell de vista previa. La API
-FastAPI ya ofrece análisis, trabajos, cancelación, históricos y Excel; la
-integración de esos flujos en el dashboard corresponde a F9. La interfaz de
-análisis actual continúa en Streamlit. Para instalar y comprobar el
+TypeScript. Incluye landing, metodología y el dashboard React conectado a la API
+FastAPI: selección de empresas, supuestos, progreso y cancelación, filtros,
+cuatro gráficas y descarga del Excel completo. La demo se abre desde la landing;
+Mercado sólo analiza al solicitarlo. El arranque por defecto continúa en
+Streamlit hasta la transición F11. Para instalar y comprobar el
 frontend se usa Node 26.13.1 y npm 11.12.1:
 
 ```bash
@@ -205,13 +206,13 @@ no la validez predictiva de una valoración.
 - [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el
-  transporte de análisis; F9–F11 permanecen pendientes.
+  transporte de análisis y F9 lo integra en el dashboard. F10–F11 permanecen pendientes.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
   [F3](docs/TDD_F3.md), [corrección de CI](docs/TDD_CI_APPTEST.md),
   [F4](docs/TDD_F4.md), [F5](docs/TDD_F5.md), [F6](docs/TDD_F6.md),
-  [F7](docs/TDD_F7.md) y [F8](docs/TDD_F8.md).
+  [F7](docs/TDD_F7.md), [F8](docs/TDD_F8.md) y [F9](docs/TDD_F9.md).
 
 F1–F5 están implementadas y verificadas localmente. La demo, el ejemplo público,
 las capturas reales revisadas y la licencia MIT completan la presentación del
@@ -220,13 +221,18 @@ está verificado. F6 añade los fundamentos web con validación local; su nuevo
 workflow aún requiere ejecución remota en el commit que se publique. F7 añade
 la landing estática, metodología y sistema visual, con ocho pruebas de navegador
 y capturas finales revisadas. F8 añade API de trabajos, cachés, históricos y
-Excel con snapshots y recuperación de adquisiciones bloqueadas. F9–F11,
+Excel con snapshots y recuperación de adquisiciones bloqueadas. F9 incorpora
+el dashboard, sus pruebas y capturas reales revisadas. F10–F11,
 el despliegue público y la validación de
 su URL quedan pendientes.
 
 Capturas de la nueva web: [escritorio](docs/images/landing-desktop.png),
 [móvil](docs/images/landing-mobile.png) y
 [metodología](docs/images/landing-metodologia.png).
+
+Dashboard: [escritorio](docs/images/dashboard-desktop.png) y
+[móvil](docs/images/dashboard-mobile.png). Procedencia y reproducción en
+[el registro de capturas](docs/images/README.md).
 
 ## Licencia
 

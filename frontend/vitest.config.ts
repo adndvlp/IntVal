@@ -7,8 +7,17 @@ const config: ViteUserConfig = {
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      include: ['src/lib/api.ts', 'src/components/**/*.tsx'],
-      exclude: ['**/*.test.*'],
+      include: [
+        'src/lib/api.ts',
+        'src/components/**/*.tsx',
+        'src/features/analysis/**/*.{ts,tsx}',
+      ],
+      exclude: [
+        '**/*.test.*',
+        '**/test-fixtures.ts',
+        '**/test-server.ts',
+        '**/types.ts',
+      ],
       reporter: ['text', 'lcov'],
       thresholds: { statements: 85, branches: 85, functions: 85, lines: 85 },
     },

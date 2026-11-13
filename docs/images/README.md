@@ -1,4 +1,4 @@
-# Capturas de la demo
+# Capturas reales del producto
 
 Estado: **resumen y detalle capturados, revisados e incorporados al README**.
 Ambas imágenes proceden de la aplicación real y de los datos sintéticos
@@ -79,3 +79,47 @@ Para repetir, ejecutar `PLAYWRIGHT_CHANNEL=chrome npm run capture` desde
 `frontend/`, con los runtimes fijados y Python preparado. El comando sólo copia
 estas imágenes después de que pasen los E2E. Revisar cada resultado antes de
 aceptarlo; no actualiza automáticamente baselines de comparación de píxeles.
+
+## Dashboard React (F9)
+
+Capturas reales del build Astro conectado a la API FastAPI y al dataset
+`demo-1.0`, referencia **2025-01-03**. Última ejecución: **12 pruebas pasan en
+29.3 s**, Chrome **157.0.8103.52** mediante Playwright **1.65.0**, macOS ARM64.
+El usuario ejecutó el navegador fuera del sandbox del agente; se revisaron los
+archivos finales antes de copiarlos. No representan una URL pública.
+
+| Archivo | Viewport / imagen completa | Revisión |
+| --- | --- | --- |
+| [dashboard-desktop.png](dashboard-desktop.png) | 1280 × 800 / 1280 × 4063 | Fuente sintética, controles, tres filas, conteos 2 OK/1 incompleta, KPI, detalle MXN y tabla de datos de la gráfica |
+| [dashboard-mobile.png](dashboard-mobile.png) | 390 × 844 / 390 × 5726 | Configuración en diálogo, KPI redistribuidos, tabla con scroll propio y detalle legible |
+| [dashboard-controls-mobile.png](dashboard-controls-mobile.png) | 390 × 844 / 390 × 5726 | Diálogo nativo abierto con cabecera, cierre y formulario; el resto del documento conserva el backdrop |
+
+Fecha UTC de cada captura, dimensiones, bytes, hashes SHA-256 y huella del código
+de producto en [captura-dashboard.json](captura-dashboard.json). Código basado
+en `93a143a` más la implementación F9 sin commit al capturar. Los PNG sólo
+contienen IHDR/IDAT/IEND; no contienen comentarios, EXIF ni rutas personales.
+Se conservan intactos los bytes revisados; no se retocaron cifras ni interfaz.
+
+La primera revisión encontró overflow al ampliar texto; la siguiente mostró
+palabras partidas pese a que el ancho global ya era correcto. Se corrigieron
+espacio y tipografía, se exigió la lectura de «análisis.» sin cortes dentro de
+los títulos y se acortó el CTA de demo. La captura final de diagnóstico a
+320 px/200 % fue revisada, pero permanece en los reportes ignorados. No se
+versionan trazas, capturas de fallos ni XLSX descargados durante los tests.
+
+Para repetir estas tres capturas:
+
+1. Preparar Python y los runtimes Node/npm fijados; ejecutar `npm ci` en frontend.
+2. Ejecutar `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e` desde frontend, o usar
+   el Chromium de Playwright instalado. El test prepara su API y build reales.
+3. Comprobar los doce resultados y la conciliación del Excel; abrir los archivos
+   `dashboard.png` de los proyectos desktop/mobile y `dashboard-controls.png`
+   de mobile dentro de `frontend/test-results/dashboard-demo-*`.
+4. Revisar fuente, moneda, valores, filtros, scroll y legibilidad. Copiar sólo
+   los tres PNG aceptados con los nombres de esta tabla y actualizar procedencia,
+   dimensiones y hashes. Las capturas anteriores de F5/F7 se conservan.
+
+El comando `npm run capture` mantiene su selección de imágenes F7; estas de F9
+se seleccionan después de la revisión. No hay actualización automática de
+baselines ni captura de datos de mercado. El viewport móvil de Chrome de
+escritorio no sustituye una prueba en un teléfono físico o en Safari.

@@ -13,7 +13,8 @@ remota de CI y la validación de una URL publicada son evidencias independientes
 La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora sus
 fundamentos, descritos en la sección 8; F7 añade la landing (sección 9), con
 revisión local y capturas completadas. F8 incorpora análisis HTTP (sección 10);
-F9–F11 siguen pendientes. El contrato de
+F9 añade el dashboard React conectado a esa API (sección 11).
+F10–F11 siguen pendientes. El contrato de
 ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
 de F11.
 
@@ -352,9 +353,8 @@ posteriores al commit; no se deducen del resultado local.
 
 El build estático incorpora `/`, `/metodologia/`, `/app/` y `/404.html`.
 La landing y metodología no hidratan React ni hacen peticiones a la API.
-Los CTA conservan `fuente=demo|market` al entrar al shell. La nueva experiencia
-de análisis sigue en preparación hasta F8/F9; el servicio actual continúa
-siendo Streamlit.
+Los CTA conservan `fuente=demo|market` al entrar al dashboard integrado en F9.
+El arranque por defecto continúa siendo Streamlit hasta la transición F11.
 
 El diseño comparte tokens de color, tipografía y estados entre las rutas.
 Usa fuentes del sistema, sin descargas de fuentes ni bibliotecas de gráficas
@@ -524,4 +524,71 @@ Las pruebas de proceso usan proveedores locales y TestClient ASGI: no necesitan
 abrir puertos ni consultar Yahoo. La suite completa sigue siendo obligatoria.
 No editar los tipos generados ni actualizar fixtures financieras para ocultar
 una diferencia. Evidencia, timeouts inspeccionados y medidas:
-[TDD_F8.md](TDD_F8.md). La siguiente integración de UI corresponde a F9.
+[TDD_F8.md](TDD_F8.md). La integración de UI se documenta a continuación.
+
+## 11. Dashboard React (F9)
+
+`frontend/src/pages/app/index.astro` carga la isla `AnalysisApp` con `client:load`.
+Astro genera cuatro rutas estáticas. La landing y metodología funcionan sin
+JavaScript; `/app/` explica que el análisis requiere JavaScript y ofrece enlaces
+a metodología y ejemplos. El frontend consume `PUBLIC_API_BASE_URL`, fijada al
+compilar, y los tipos generados de `contracts/openapi.v1.json`. El origen puede
+ser el mismo o uno permitido por CORS. La distribución conjunta queda para F11.
+
+Para comprobar el producto nuevo, usar los runtimes fijados en `frontend/`:
+
+```bash
+npm ci
+npm run lint
+npm run format:check
+npm run check
+npm run test:unit
+npm run build
+npm run test:shell
+npx --no-install playwright install chromium
+npm run test:e2e
+```
+
+El E2E inicia su API real en localhost:8766 y sirve el build en localhost:4321;
+los cierra al terminar. La configuración de prueba usa `VALORACION_DEMO=1`,
+`VALORACION_MARKET_ENABLED=0` y CORS para el origen de prueba. No reutiliza un
+servicio existente. Requiere la `.venv` de la raíz, Node en PATH y puertos libres.
+Si se dispone de Chrome instalado, `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`
+usa ese navegador. Esto es una comprobación de desarrollo, no un requisito de
+operación local del producto publicado.
+
+Los doce recorridos cubren escritorio y viewport móvil, landing, HTML sin JS,
+demo real, teclado/Esc, filtros, cuatro gráficas, axe, 320 px y texto al 200 %.
+Descargan el Excel real y `scripts/verify-export.py` reabre sus siete hojas con
+openpyxl; comprueba las tres filas, 73 campos y la tasa aceptada del 10 % después
+de editar el borrador al 15 %. No compara sólo un nombre o un mock del archivo.
+Reportes, trazas, capturas diagnósticas y XLSX quedan ignorados en
+`frontend/test-results/`, `playwright-report/` y `coverage/`. Las capturas de
+documentación seleccionadas y revisadas sí se versionan en `docs/images/`.
+
+El estado React separa borrador, trabajo HTTP y snapshot financiero. Las
+consultas incluyen origen de API, fuente, dataset, ID, empresa y período según
+el recurso. Cambiar fuente o limpiar invalida la generación y aborta lecturas;
+una creación aceptada tarde se cancela por su ID. Cada creación usa UUID y el
+reintento conserva UUID/payload. Los GET reintentables tienen dos reintentos
+acotados y respetan Retry-After; los POST no se repiten automáticamente.
+
+`sessionStorage` usa la clave `intval.analysis.v1:<baseUrl>` para fuente,
+referencia de trabajo y solicitud aceptada. No almacena filas, históricos ni
+Excel. Recupera el mismo ID/UUID después de recargar; si recibe 404/410 informa
+que hay que volver a analizar explícitamente. Al limpiar la demo se guarda su
+supresión para evitar un análisis automático involuntario al volver a montar.
+Si el almacenamiento está bloqueado, la sesión actual sigue funcionando.
+
+La tabla pagina veinte filas; el catálogo muestra treinta opciones por página,
+pero «Seleccionar todo el mercado» incluye el catálogo completo del mercado
+elegido. La descarga contiene el snapshot completo aunque los filtros dejen
+la tabla vacía. Los históricos se solicitan sólo al abrir su panel; estados y
+márgenes comparten recurso. Millones y FX llegan transformados desde la API;
+el cliente sólo da formato. Recharts se carga con import dinámico y cada gráfica
+tiene una alternativa tabular con encabezados y desplazamiento por teclado.
+
+Evidencia y límites: [TDD_F9.md](TDD_F9.md). F10 conserva la auditoría integrada
+en varios motores, lector de pantalla, rendimiento y memoria; F11 prepara la
+distribución y cambia el arranque. No actualizar dependencias por avisos de npm
+ni tratar estos comandos de desarrollo como instrucciones de un PaaS concreto.

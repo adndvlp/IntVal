@@ -42,5 +42,22 @@ for (const [ruta, archivo] of [
       ),
       '/app/',
     );
+    if (ruta === '/app/') {
+      assert.ok(
+        document
+          .querySelector('noscript')
+          ?.textContent.includes('Activa JavaScript para analizar'),
+      );
+      assert.ok(
+        document.body.textContent.includes(
+          'cuatro aproximaciones de valoración',
+        ),
+      );
+      assert.ok(
+        !document.body.textContent.includes(
+          'La nueva interfaz está en preparación',
+        ),
+      );
+    }
   });
 }

@@ -1,0 +1,84 @@
+{
+  "phase": "F9",
+  "dataset_version": "demo-1.0",
+  "reference_date": "2025-01-03",
+  "source": "demo",
+  "base_commit": "93a143a",
+  "working_tree": "Uncommitted F9 implementation; screenshots reviewed before copying",
+  "product_source_sha256": "63742d5ab26aed181f31a98d5a5152ee1301b9c63e4c95a30be6c45d81645273",
+  "source_hash_definition": "Sorted frontend/src files excluding *.test.* and test-* plus package.json/package-lock.json; path UTF-8 + NUL + bytes + NUL per file",
+  "environment": {
+    "os": "macOS ARM64",
+    "browser_channel": "chrome",
+    "browser_version": "157.0.8103.52",
+    "playwright": "1.65.0",
+    "node": "26.13.1",
+    "npm": "11.12.1"
+  },
+  "validation": {
+    "e2e_passed": 12,
+    "duration_seconds": 29.3,
+    "real_api": true,
+    "real_excel_reopened": true,
+    "review": "Desktop, mobile, native controls dialog, and 320px/200% diagnostic reviewed; diagnostics and XLSX remain ignored"
+  },
+  "artifacts": [
+    {
+      "file": "dashboard-desktop.png",
+      "captured_at_utc": "2026-11-13T23:02:29.078799+00:00",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "image": {
+        "width": 1280,
+        "height": 4063
+      },
+      "bytes": 429688,
+      "sha256": "9072859a2fb700526f9f60ceaedeb0682254a7eb4630687e9fb789a2982cb1b3",
+      "png_chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "dashboard-mobile.png",
+      "captured_at_utc": "2026-11-13T23:02:38.551734+00:00",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image": {
+        "width": 390,
+        "height": 5726
+      },
+      "bytes": 318528,
+      "sha256": "cddc4366375449f4d87dbd7b42bad82ad21da8dc3fdc8ebbefd39f5b7ea602af",
+      "png_chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "dashboard-controls-mobile.png",
+      "captured_at_utc": "2026-11-13T23:02:38.707615+00:00",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image": {
+        "width": 390,
+        "height": 5726
+      },
+      "bytes": 310087,
+      "sha256": "252b68f53f20be02ac8514e00eca181208d5301b2de399540c617b1586bdbce8",
+      "png_chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    }
+  ]
+}

@@ -14,7 +14,7 @@ de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
 históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
 posterior se especifica en [SDD_WEB.md](SDD_WEB.md); F6 incorpora los fundamentos
 web descritos al final. F8 añade el transporte de trabajos del ADR-003;
-la continuidad vigente es 21.15 de la SDD general.
+F9 incorpora el dashboard del ADR-004; la continuidad vigente es 21.16 de la SDD general.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -407,13 +407,55 @@ capacidades aditivas consumiendo sólo su subconjunto. No cambia la entrada
 Streamlit ni el contrato financiero 2.0. Las decisiones F6/F7 anteriores
 describen el alcance al cerrar esas fases, ampliado aquí por F8.
 
-## Destino web pendiente después de F8
+## Decisión ADR-004: dashboard React con snapshots de la API
 
 La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
 API FastAPI, manteniendo el motor/proveedores/Excel existentes. F6 implementa
 los fundamentos, F7 la presentación estática y F8 el transporte HTTP completo.
-F9–F11 siguen siendo diseño futuro.
+F9 integra esos contratos en `/app/`. F10–F11 siguen pendientes.
 
 El transporte HTTP tiene cachés propias y preserva snapshots/configuración de
-análisis. El dashboard pendiente consumirá esos contratos. La entrada actual seguirá funcionando
+análisis. La entrada actual seguirá funcionando
 hasta demostrar paridad y cumplir los criterios de transición de F11.
+
+Fecha: 2026-11-13. Base: `93a143a`. Evidencia: [TDD_F9.md](TDD_F9.md).
+El frontend se organiza en `src/features/analysis/`:
+
+| Módulo | Responsabilidad |
+| --- | --- |
+| types.ts | Alias de esquemas generados; no redefine el contrato del motor |
+| transport.ts | Validación runtime de respuestas, errores seguros, abort, UUID, rutas y XLSX |
+| model.ts | Normalización, estado con generaciones/revisiones, filtros, KPI y formato |
+| use-analysis.ts | Catálogo/meta, solicitud, polling, cursores y recuperación de sesión |
+| AnalysisApp.tsx | Composición, estados, diálogo nativo móvil y descarga |
+| AnalysisForm.tsx | Selección, nueve supuestos, validación y envío explícito |
+| ResultsTable.tsx | Tabla semántica, columnas y paginación cliente |
+| CompanyDetail.tsx | Selección válida, adquisición localizada de históricos y trazabilidad |
+| Charts.tsx | Recharts diferido y tablas alternativas, sin cálculos de valoración |
+
+TanStack Query 5.107.1 administra recursos HTTP; TanStack Table 9.3.1 registra
+features de visibilidad y paginación mediante `useTable`, sin adaptar código v8.
+Recharts 3.10.1 se importa al abrir el detalle. Las resoluciones exactas están
+en el lock; axe 4.14.0 sólo se usa en navegador. No se introduce otro cliente de
+transporte ni un servidor Node en producción. Los componentes usan HTML nativo
+con estilos propios: no se añade shadcn/ui sin una necesidad concreta.
+
+La generación aumenta al cambiar fuente/limpiar/iniciar lote. Respuestas de
+otra generación se ignoran y las revisiones anteriores no reemplazan las nuevas.
+Las páginas sólo se incorporan si ID/cursor/generación coinciden. El terminal
+HTTP no implica que el cliente haya terminado de descargar todas las páginas.
+Durante un nuevo lote de la misma fuente se conserva el resultado anterior,
+rotulado, hasta recibir filas del nuevo; los conjuntos no se mezclan.
+
+El snapshot conserva configuración efectiva y fuente aceptadas. Los cambios de
+formulario son un borrador con aviso; filtros y selección sólo cambian la vista.
+La mediana de los KPI usa upside de filas filtradas, excluye null y no mezcla
+importes USD/MXN. La mediana de valoración viene exclusivamente del servicio.
+Los estados de transporte y financieros se presentan por separado.
+
+La persistencia de la pestaña guarda referencias/solicitud, no resultados
+financieros. No equivale a persistencia del servidor ni permite recuperar un
+trabajo perdido tras reiniciar la instancia. El 404/410 requiere una acción
+explícita del usuario. El diálogo móvil usa showModal/close y comportamiento
+nativo de foco/Esc. Las tablas tienen regiones desplazables enfocables; no se
+oculta overflow del documento para hacer pasar las pruebas de reflow.

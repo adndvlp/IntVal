@@ -12,6 +12,7 @@ test('navega con teclado y comprueba la API real desde el build estático', asyn
   ).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  const meta = page.waitForResponse('http://127.0.0.1:8766/api/v1/meta');
   await page.getByRole('link', { name: 'Aplicación', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Tu espacio de análisis.',
@@ -19,10 +20,10 @@ test('navega con teclado y comprueba la API real desde el build estático', asyn
   await expect(page.locator('nav [aria-current="page"]')).toHaveText(
     'Aplicación',
   );
-  const meta = page.waitForResponse('http://127.0.0.1:8766/api/v1/meta');
-  await page.getByRole('button', { name: 'Comprobar conexión' }).click();
   expect((await meta).status()).toBe(200);
-  await expect(page.getByRole('status')).toContainText('Conexión disponible');
+  await expect(
+    page.getByText('Servicio conectado', { exact: true }),
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -48,7 +49,7 @@ test('conserva contenido y enlaces con JavaScript desactivado', async ({
   const aviso = page.locator('noscript p');
   await expect(aviso).toBeVisible();
   await expect(aviso).toContainText(
-    'Activa JavaScript para comprobar la conexión.',
+    'Activa JavaScript para analizar empresas',
     { useInnerText: true },
   );
   await context.close();

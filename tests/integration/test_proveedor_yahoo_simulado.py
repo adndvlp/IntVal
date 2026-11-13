@@ -64,9 +64,9 @@ def test_acciones_prioridad_y_limites(info, fast, historial, precio, esperado):
     assert motor.obtener_acciones(ticker, info, precio) == esperado
 
 
-@pytest.mark.parametrize("origen, destino", [("USD", "USD"), ("mxn", "MXN"), ("", "USD")])
+@pytest.mark.parametrize("origen, destino", [("USD", "USD"), ("mxn", "MXN")])
 def test_fx_identidad_actual_sin_consultas(origen, destino):
-    # Moneda ausente es caracterización del legado, pendiente de MET-11/F3.
+    # F3: sólo monedas identificadas e iguales definen una identidad.
     assert motor.obtener_tipo_cambio(origen, destino) == 1
 
 
@@ -96,3 +96,8 @@ def test_ultimo_cierre(proveedor, historia, esperado):
 def test_precio_historico_no_positivo_o_no_finito_no_es_valido(cierre):
     ticker = TickerSintetico(fast_info={}, history_result=pd.DataFrame({"Close": [cierre]}))
     assert motor.obtener_precio_actual(ticker) is None
+
+
+@pytest.mark.parametrize("origen, destino", [("", "USD"), (None, "USD"), ("USD", "")])
+def test_f3_moneda_ausente_no_define_identidad(origen, destino):
+    assert motor.obtener_tipo_cambio(origen, destino) is None

@@ -26,14 +26,14 @@ def test_formatos_numericos_y_tabla_no_mutan_entradas(interfaz):
     entrada = pd.DataFrame([{"Ticker": "TEST", "Upside mediana": 0.15, "Campo privado": 5}])
     antes = entrada.copy(deep=True)
     tabla = interfaz.preparar_tabla(entrada)
-    assert tabla.columns.tolist() == ["Ticker", "Upside mediana"]
+    assert tabla.columns.tolist() == ["Ticker", "Upside mediana de proxies"]
     pd.testing.assert_frame_equal(entrada, antes)
     assert interfaz.preparar_tabla(pd.DataFrame()).empty
 
 
 def test_grafica_conserva_solo_modelos_disponibles(interfaz):
     figura = interfaz.grafica_valoraciones(pd.Series({"Precio de mercado": 40, "Valor intrínseco FCL": 52, "Moneda": "MXN"}))
-    assert figura.data[0].x.tolist() == ["Mercado", "FCL"]
+    assert figura.data[0].x.tolist() == ["Mercado", "Proxy FCL"]
     assert figura.data[0].y.tolist() == [40, 52]
     assert "MXN" in figura.layout.yaxis.title.text
 
@@ -48,8 +48,8 @@ def test_historicos_en_millones_margenes_y_fechas(interfaz, industrial, config_s
     assert financieros.loc["2024", "Ingresos"] == pytest.approx(0.001)
     assert financieros.loc["2024", "FCL"] == pytest.approx(0.00013)
     assert margenes.loc["2024", "Margen FCL"] == pytest.approx(0.13)
-    # Caracterización de etiqueta EBIT: actualmente usa NOPAT; pendiente de F3.
-    assert margenes.loc["2024", "Margen EBIT"] == pytest.approx(0.16)
+    # F3: la etiqueta identifica la métrica efectivamente calculada.
+    assert margenes.loc["2024", "Margen NOPAT"] == pytest.approx(0.16)
 
 
 @pytest.mark.parametrize("historia", [None, pd.DataFrame()])

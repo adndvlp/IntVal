@@ -1,0 +1,5 @@
+modelo,margen_mediano,margen_conservador,base,pv_flujos,pv_terminal,capital,por_accion
+FCL,0.13,0.104,104,312,208,520,52
+NOPAT,0.16,0.128,128,384,256,440,44
+EBITDA_AJUSTADO,0.16,0.128,128,384,256,440,44
+UTILIDAD_NETA,0.12,0.096,96,288,192,480,48

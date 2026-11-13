@@ -145,7 +145,7 @@ def test_configuracion_exportada_no_cambia_hasta_reanalizar(monkeypatch, industr
     app = analizar(iniciar())
     originales = app.session_state["principales"]
     consultas = len(proveedor[1])
-    widget_por_etiqueta(app.sidebar.slider, "Tasa de descuento (%)").set_value(15.0).run()
+    widget_por_etiqueta(app.sidebar.slider, "Tasa descuento accionista (%)").set_value(15.0).run()
     assert not app.exception
     assert app.session_state["principales"] == originales
     assert exportaciones[-1][1].tasa_descuento == 0.1

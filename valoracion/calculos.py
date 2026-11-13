@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import math
+import json
+from dataclasses import asdict
+from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
 
 from .configuracion import Configuracion
+from .metodologia import MODELOS, VERSION_METODOLOGIA, VERSION_CONTRATO, clasificar_empresa, tipo_cambio_valido
 from .modelos import DatosEmpresa, Diagnostico, ResultadoAnalisis
-from .normalizacion import (alinear_series, convertir_serie, mercado_de_ticker, numero_valido, obtener_fila, ultimo_valor)
+from .normalizacion import (alinear_series, convertir_serie, mercado_de_ticker, numero_valido, obtener_fila, ultimo_valor, normalizar_etiqueta)
 
 
 def calcular_cagr(serie: pd.Series) -> float | None:
@@ -112,21 +116,45 @@ def construir_ebitda(
     alineado.columns = ["ebit", "da"]
     return alineado["ebit"] + alineado["da"].abs(), "Calculado: EBIT + D&A"
 
+def _muestras_margen(metrica, ingresos, config):
+    alineado = alinear_series(metrica, ingresos)
+    if alineado.empty:
+        return pd.Series(dtype=float)
+    alineado.columns = ["metrica", "ingresos"]
+    alineado = alineado[alineado["ingresos"] > 0]
+    margenes = (alineado["metrica"] / alineado["ingresos"]).replace([np.inf, -np.inf], np.nan).dropna()
+    return margenes[(margenes > -2.0) & (margenes < 2.0)].tail(config.max_anos_historicos)
+
+
+def _periodo(indice):
+    if not isinstance(indice, (str, date, datetime, pd.Timestamp, np.datetime64)):
+        return None
+    try:
+        fecha = pd.Timestamp(indice)
+        return None if pd.isna(fecha) else fecha.date().isoformat()
+    except (ValueError, TypeError):
+        return None
+
+
+def _ultimo_periodo(serie):
+    validos = pd.to_numeric(serie, errors="coerce").dropna()
+    return _periodo(validos.index[-1]) if not validos.empty else None
+
+
+def _fuente_fila(marco, nombres, prefijo):
+    for nombre in nombres:
+        for fila in marco.index:
+            if normalizar_etiqueta(fila) == normalizar_etiqueta(nombre):
+                return f"{prefijo}.{fila}"
+    return "No disponible"
+
+
 def margen_normalizado(
     metrica: pd.Series,
     ingresos: pd.Series,
     config: Configuracion,
 ) -> tuple[float | None, int, float | None]:
-    alineado = alinear_series(metrica, ingresos)
-    if alineado.empty:
-        return None, 0, None
-
-    alineado.columns = ["metrica", "ingresos"]
-    alineado = alineado[alineado["ingresos"] > 0]
-    margenes = alineado["metrica"] / alineado["ingresos"]
-    margenes = margenes.replace([np.inf, -np.inf], np.nan).dropna()
-    margenes = margenes[(margenes > -2.0) & (margenes < 2.0)]
-    margenes = margenes.tail(config.max_anos_historicos)
+    margenes = _muestras_margen(metrica, ingresos, config)
 
     if margenes.empty:
         return None, 0, None
@@ -274,14 +302,10 @@ def valorar_empresa(
 
     moneda_financiera = datos.moneda_financiera
     moneda_cotizacion = datos.moneda_cotizacion
-    fx = datos.tipo_cambio
+    fx = tipo_cambio_valido(moneda_financiera, moneda_cotizacion, datos.tipo_cambio)
 
     if fx is None:
-        fx = 1.0
-        notas.append(
-            f"No se encontró FX {moneda_financiera}/{moneda_cotizacion}; "
-            "se usó 1.0."
-        )
+        notas.append(f"FX {moneda_financiera}/{moneda_cotizacion} no verificable; valoraciones bloqueadas.")
     elif moneda_financiera != moneda_cotizacion:
         notas.append(
             f"Estados convertidos de {moneda_financiera} a "
@@ -324,15 +348,18 @@ def valorar_empresa(
 
     ingreso_actual = ultimo_valor(ingresos)
 
+    fuente_crecimiento = "CAGR de ingresos positivos"
     cagr = calcular_cagr(ingresos)
     if cagr is None:
         crecimiento_info = numero_valido(info.get("revenueGrowth"))
         if crecimiento_info is not None:
+            fuente_crecimiento = "info.revenueGrowth"
             cagr = crecimiento_info
             notas.append("CAGR no disponible; se usó revenueGrowth de Yahoo.")
         else:
+            fuente_crecimiento = "Fallback configurado"
             cagr = config.crecimiento_fallback
-            notas.append("Crecimiento no disponible; se usó fallback de 3 %.")
+            notas.append(f"Crecimiento no disponible; se usó fallback de {config.crecimiento_fallback:.1%}.")
 
     crecimiento_1_5 = float(np.clip(
         cagr * config.factor_crecimiento_inicial,
@@ -367,22 +394,36 @@ def valorar_empresa(
         else None
     )
 
+    periodo_deuda = _ultimo_periodo(deuda)
+    periodo_efectivo = _ultimo_periodo(efectivo)
+    fuente_deuda = _fuente_fila(balance, ["Total Debt", "Long Term Debt And Capital Lease Obligation"], "balance")
+    fuente_efectivo = _fuente_fila(balance, ["Cash Cash Equivalents And Short Term Investments", "Cash And Short Term Investments", "Cash And Cash Equivalents"], "balance")
     deuda_actual = ultimo_valor(deuda)
     efectivo_actual = ultimo_valor(efectivo)
 
     if deuda_actual is None:
+        fuente_deuda = "info.totalDebt"
         deuda_actual = numero_valido(info.get("totalDebt"))
         if deuda_actual is not None:
-            deuda_actual *= fx
+            deuda_actual = deuda_actual * fx if fx is not None else None
 
     if efectivo_actual is None:
+        fuente_efectivo = "info.totalCash"
         efectivo_actual = numero_valido(info.get("totalCash"))
         if efectivo_actual is not None:
-            efectivo_actual *= fx
+            efectivo_actual = efectivo_actual * fx if fx is not None else None
 
-    deuda_actual = deuda_actual or 0.0
-    efectivo_actual = efectivo_actual or 0.0
-    deuda_neta = deuda_actual - efectivo_actual
+    deuda_neta = deuda_actual - efectivo_actual if deuda_actual is not None and efectivo_actual is not None else None
+    balance_provisional = deuda_neta is not None and periodo_deuda is None and periodo_efectivo is None
+    if deuda_neta is not None and periodo_deuda != periodo_efectivo:
+        deuda_neta = None
+        notas.append("Deuda y efectivo tienen períodos distintos o no comparables; conciliación bloqueada.")
+    if balance_provisional:
+        notas.append("Deuda y efectivo sin período verificable; conciliación provisional.")
+    if deuda_actual is None:
+        notas.append("Deuda desconocida; no se presume cero.")
+    if efectivo_actual is None:
+        notas.append("Efectivo desconocido; no se presume cero.")
 
     valor_fcl_total, pv_fcl, terminal_fcl = proyectar_valor(
         base_fcl,
@@ -397,7 +438,7 @@ def valorar_empresa(
         base_ebit,
         crecimiento_1_5,
         crecimiento_6_10,
-        config.tasa_descuento,
+        config.descuento_empresa,
         config.anos_proyeccion,
         config.multiplo_terminal_ebit,
     )
@@ -406,7 +447,7 @@ def valorar_empresa(
         base_ebitda,
         crecimiento_1_5,
         crecimiento_6_10,
-        config.tasa_descuento,
+        config.descuento_empresa,
         config.anos_proyeccion,
         config.multiplo_terminal_ebitda,
     )
@@ -426,20 +467,21 @@ def valorar_empresa(
     # EBIT/NOPAT y EBITDA ajustado se consideran valores de empresa.
     valor_ebit_capital = (
         valor_ebit_empresa - deuda_neta
-        if valor_ebit_empresa is not None
+        if valor_ebit_empresa is not None and deuda_neta is not None
         else None
     )
     valor_ebitda_capital = (
         valor_ebitda_empresa - deuda_neta
-        if valor_ebitda_empresa is not None
+        if valor_ebitda_empresa is not None and deuda_neta is not None
         else None
     )
 
-    if financiera:
-        notas.append(
-            "Empresa financiera: deuda, FCL, EBIT y EBITDA no son directamente "
-            "comparables con compañías industriales; priorizar utilidad neta."
-        )
+    clase = clasificar_empresa(info)
+    if clase != "OPERATIVA":
+        notas.append(f"Clase {clase}: no hay un modelo sectorial implementado; proxies no aplicables.")
+        valor_fcl_total = valor_ebit_capital = valor_ebitda_capital = valor_neto_total = None
+        pv_fcl = terminal_fcl = pv_ebit = terminal_ebit = None
+        pv_ebitda = terminal_ebitda = pv_neto = terminal_neto = None
 
     valor_fcl_accion = por_accion(valor_fcl_total, acciones)
     valor_ebit_accion = por_accion(valor_ebit_capital, acciones)
@@ -479,9 +521,9 @@ def valorar_empresa(
         notas.append("Precio objetivo de analistas no disponible.")
 
     estado = "OK"
-    if precio is None or acciones is None or ingreso_actual is None:
+    if precio is None or acciones is None or ingreso_actual is None or fx is None:
         estado = "DATOS INCOMPLETOS"
-    elif len(valores_modelos) < 2:
+    elif len(valores_modelos) < 2 or deuda_neta is None or clase != "OPERATIVA" or balance_provisional:
         estado = "REVISAR"
 
     nombre = (
@@ -512,6 +554,20 @@ def valorar_empresa(
         "Notas": " ".join(notas),
     }
 
+    incluidos = [modelo for modelo, campo in MODELOS.items() if principal[campo] is not None]
+    principal.update({
+        "Versión metodología": VERSION_METODOLOGIA, "Versión contrato": VERSION_CONTRATO,
+        "Modelos en mediana": len(incluidos), "Modelos incluidos": ", ".join(incluidos),
+        "Clase de empresa": clase,
+    })
+
+    fuente_fcl = fuente_fcl.replace("Yahoo: ", "Campo: ")
+    if fuente_fcl.startswith("Calculado"):
+        fuente_fcl += " (" + _fuente_fila(datos.flujo, ["Operating Cash Flow", "Total Cash From Operating Activities", "Cash Flow From Continuing Operating Activities"], "flujo") + "; " + _fuente_fila(datos.flujo, ["Capital Expenditure", "Capital Expenditures", "Purchase Of PPE", "Investments In Property Plant And Equipment"], "flujo") + ")"
+    if fuente_ebitda_ajustado != "No disponible":
+        fuente_directa = _fuente_fila(resultados, ["EBITDA", "Normalized EBITDA"], "resultados")
+        fuente_base = "Campo: " + fuente_directa.removeprefix("resultados.") if fuente_directa != "No disponible" else "Calculado: EBIT + D&A (" + _fuente_fila(datos.flujo, ["Depreciation And Amortization", "Depreciation Amortization Depletion", "Depreciation"], "flujo") + ")"
+        fuente_ebitda_ajustado = fuente_base + "; EBITDA - impuestos EBIT - |CapEx|"
     detalle = {
         "Mercado": mercado,
         "Ticker": ticker,
@@ -560,9 +616,74 @@ def valorar_empresa(
         "Notas": " ".join(notas),
     }
 
+    series_modelos = {"FCL": fcl, "NOPAT": nopat, "EBITDA_AJUSTADO": ebitda_ajustado, "UTILIDAD_NETA": utilidad_neta}
+    fuentes = {
+        "FCL": fuente_fcl,
+        "NOPAT": _fuente_fila(resultados, ["EBIT", "Operating Income", "Operating Income Loss"], "resultados") + " × (1 - impuestos)",
+        "EBITDA_AJUSTADO": fuente_ebitda_ajustado,
+        "UTILIDAD_NETA": _fuente_fila(resultados, ["Net Income Common Stockholders", "Net Income", "Net Income Including Noncontrolling Interests"], "resultados"),
+    }
+    modelos = {}
+    for modelo, serie in series_modelos.items():
+        incluido = modelo in incluidos
+        motivo = None
+        if not incluido:
+            if clase != "OPERATIVA":
+                motivo = f"Clase {clase} sin modelo implementado"
+            elif fx is None:
+                motivo = "Moneda o tipo de cambio no verificable"
+            elif acciones is None or acciones <= 0:
+                motivo = "Acciones no disponibles o no positivas"
+            elif modelo in ("NOPAT", "EBITDA_AJUSTADO") and deuda_neta is None:
+                motivo = "Deuda neta no conciliable"
+            else:
+                motivo = "Base, proyección o capital por acción no positivo o no disponible"
+        modelos[modelo] = {
+            "aplicable": clase == "OPERATIVA", "incluido": incluido, "motivo_exclusion": motivo,
+            "periodos": [p for i in _muestras_margen(serie, ingresos, config).index if (p := _periodo(i)) is not None],
+            "fuente": fuentes[modelo],
+            "tasa_descuento": config.descuento_empresa if modelo in ("NOPAT", "EBITDA_AJUSTADO") else config.tasa_descuento,
+        }
+    traza = datos.trazabilidad
+    fuentes["IMPUESTOS"] = _fuente_fila(resultados, ["Tax Provision", "Income Tax Expense"], "resultados") + " / " + _fuente_fila(resultados, ["Pretax Income", "Income Before Tax", "Earnings Before Tax"], "resultados")
+    fuentes["CAPEX"] = _fuente_fila(datos.flujo, ["Capital Expenditure", "Capital Expenditures", "Purchase Of PPE", "Investments In Property Plant And Equipment"], "flujo")
+    fuentes["ACCIONES"] = {"fuente": traza.fuente_acciones, "fecha": traza.fecha_acciones}
+    fuentes["INGRESOS"] = _fuente_fila(resultados, ["Total Revenue", "Operating Revenue", "Revenue"], "resultados")
+    impuestos_alineados = alinear_series(impuestos, pretax)
+    tasas = pd.Series(dtype=float)
+    if not impuestos_alineados.empty:
+        impuestos_alineados.columns = ["impuestos", "pretax"]
+        positivos = impuestos_alineados[impuestos_alineados["pretax"] > 0]
+        tasas = (positivos["impuestos"] / positivos["pretax"]).replace([np.inf, -np.inf], np.nan).dropna()
+        tasas = tasas[(tasas >= -0.05) & (tasas <= 0.60)].tail(config.max_anos_historicos)
+    traza_impuestos = {"fuente": "Fallback configurado" if tasas.empty else "Mediana Tax Provision / Pretax Income, limitada",
+                       "periodos": [p for i in tasas.index if (p := _periodo(i)) is not None], "tasa": tasa_impuestos}
+    traza_crecimiento = {"fuente": fuente_crecimiento, "valor_bruto": cagr,
+                         "periodos": [p for i in ingresos[ingresos > 0].index if (p := _periodo(i)) is not None],
+                         "anos_1_5": crecimiento_1_5, "anos_6_10": crecimiento_6_10}
+    serializar = lambda valor: json.dumps(valor, ensure_ascii=False, sort_keys=True, allow_nan=False)
+    exclusiones = {modelo: traza_modelo["motivo_exclusion"] for modelo, traza_modelo in modelos.items() if not traza_modelo["incluido"]}
+    detalle.update({
+        "Versión metodología": VERSION_METODOLOGIA, "Versión contrato": VERSION_CONTRATO,
+        "Fuente de datos": traza.fuente, "Obtenido en UTC": traza.obtenido_en,
+        "Fecha del precio": traza.fecha_precio, "Fuente del precio": traza.fuente_precio,
+        "Fuente del objetivo": traza.fuente_objetivo, "Estadístico del objetivo": traza.estadistico_objetivo,
+        "Cobertura de analistas": traza.cobertura_analistas, "Fecha del objetivo": traza.fecha_objetivo,
+        "Horizonte del objetivo": traza.horizonte_objetivo, "Fuente FX": traza.fuente_fx,
+        "Obtenido FX en UTC": traza.fx_obtenido_en, "Fecha FX": traza.fecha_fx,
+        "Período ingresos": _ultimo_periodo(ingresos), "Período deuda": periodo_deuda, "Período efectivo": periodo_efectivo,
+        "Fuente deuda": fuente_deuda, "Fuente efectivo": fuente_efectivo,
+        "Períodos por modelo": serializar({m: v["periodos"] for m, v in modelos.items()}),
+        "Fuentes por métrica": serializar(fuentes), "Configuración efectiva": serializar(asdict(config)),
+        "Tasa descuento accionista": config.tasa_descuento, "Tasa descuento empresa": config.descuento_empresa,
+        "Crecimiento utilizado": serializar(traza_crecimiento), "Impuestos utilizados": serializar(traza_impuestos),
+        "Modelos incluidos": ", ".join(incluidos), "Modelos excluidos": serializar(exclusiones),
+    })
+
     return ResultadoAnalisis(
         principal, detalle, config,
         tuple(Diagnostico(nota) for nota in notas),
+        trazabilidad={"datos": asdict(traza), "modelos": modelos, "crecimiento": traza_crecimiento, "impuestos": traza_impuestos},
     )
 
 
@@ -583,7 +704,9 @@ def preparar_historicos_financieros(
     fcl, _ = construir_fcl(flujo)
     ebitda, _ = construir_ebitda(resultados, flujo, ebit)
 
-    fx = datos.tipo_cambio or 1.0
+    fx = tipo_cambio_valido(datos.moneda_financiera, datos.moneda_cotizacion, datos.tipo_cambio)
+    if fx is None:
+        return pd.DataFrame(), pd.DataFrame()
 
     series = {
         "Ingresos": convertir_serie(ingresos, fx),
@@ -616,8 +739,8 @@ def preparar_historicos_financieros(
     margenes = {}
     for nombre, serie in {
         "Margen FCL": series["FCL"],
-        "Margen EBIT": nopat,
-        "Margen EBITDA": series["EBITDA"],
+        "Margen NOPAT": nopat,
+        "Margen EBITDA bruto": series["EBITDA"],
         "Margen neto": series["Utilidad neta"],
     }.items():
         alineado = alinear_series(serie, ingresos_base)

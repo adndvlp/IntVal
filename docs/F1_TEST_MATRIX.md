@@ -1,6 +1,9 @@
 # Trazabilidad de la matriz de F1
 
 Los 101 IDs originales de la SDD se relacionan aquí con pruebas ejecutables.
+F3 migra deliberadamente expectativas de FX, balance, financieras y etiquetas;
+la justificación está en [metodología](methodology.md) y sus pruebas adicionales
+en [TDD de F3](TDD_F3.md). Esta matriz conserva los IDs de F1.
 Los nombres son funciones de pytest; varias están parametrizadas y generan
 múltiples casos. Las rutas son relativas a la raíz del repositorio.
 
@@ -47,7 +50,7 @@ múltiples casos. Las rutas son relativas a la raíz del repositorio.
 | P-12 | `tests/integration/test_proveedor_yahoo_simulado.py` | `test_ultimo_cierre`, `test_precio_prioridad_y_fallback` |
 | A-01, A-12 | `tests/integration/test_analizar_ticker.py` | `test_industrial_completa_concilia_cuatro_modelos`, `test_balance_fallback_sector_y_nombre` |
 | A-02, A-03 | `tests/integration/test_analizar_ticker.py` | `test_empresa_mx_y_conversion_controlada` |
-| A-04 | `tests/integration/test_analizar_ticker.py` | `test_caracterizacion_fx_ausente_pendiente_de_f3` |
+| A-04 | `tests/integration/test_analizar_ticker.py` | `test_f3_fx_ausente_bloquea_valoracion` |
 | A-05, A-06, A-07 | `tests/integration/test_analizar_ticker.py` | `test_datos_basicos_incompletos` |
 | A-08, A-09 | `tests/integration/test_analizar_ticker.py` | `test_modelos_parciales_excluyen_ausencias_de_mediana` |
 | A-10, A-11 | `tests/integration/test_analizar_ticker.py` | `test_crecimiento_fallback_y_limites` |

@@ -35,10 +35,19 @@ class Configuracion:
     tasa_impuestos_maxima: float = 0.35
 
     pausa_entre_tickers: float = 0.35
+    # None conserva la tasa común de escenarios anteriores. La UI permite
+    # especificar una tasa de empresa independiente de la del accionista.
+    tasa_descuento_empresa: float | None = None
+
+    @property
+    def descuento_empresa(self) -> float:
+        return self.tasa_descuento if self.tasa_descuento_empresa is None else self.tasa_descuento_empresa
 
     def __post_init__(self) -> None:
         for campo in fields(self):
             valor = getattr(self, campo.name)
+            if campo.name == "tasa_descuento_empresa" and valor is None:
+                continue
             if isinstance(valor, bool) or not isinstance(valor, (int, float)) or not math.isfinite(valor):
                 raise ValueError(f"{campo.name} debe ser un número finito.")
         for nombre in ("anos_proyeccion", "max_anos_historicos"):
@@ -47,6 +56,8 @@ class Configuracion:
                 raise ValueError(f"{nombre} debe ser un entero positivo.")
         if self.tasa_descuento <= -1:
             raise ValueError("La tasa de descuento debe ser mayor que -1.")
+        if self.descuento_empresa <= -1:
+            raise ValueError("La tasa de descuento de empresa debe ser mayor que -1.")
         for nombre in ("factor_crecimiento_inicial", "factor_crecimiento_final", "factor_margen_conservador"):
             if not 0 <= getattr(self, nombre) <= 1:
                 raise ValueError(f"{nombre} debe estar entre 0 y 1.")

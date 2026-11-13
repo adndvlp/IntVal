@@ -5,6 +5,12 @@
 Fecha: 2026-11-12. Estado: implementada y verificada localmente.
 Línea base de la migración: commit `b9852e6`, con F1 completa.
 
+Este documento conserva la decisión y evidencia del cierre de F2. F3 añadió
+políticas y trazabilidad sobre esta estructura, detalladas en la
+[metodología](methodology.md) y el [registro TDD](TDD_F3.md). Las afirmaciones de
+equivalencia total y 19/45 columnas de las secciones históricas describen F2;
+el contrato vigente es 2.0, con prefijos heredados y 24/73 campos.
+
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
 gráficos. F2 introduce un paquete en la raíz para separar esas responsabilidades,
@@ -231,3 +237,22 @@ un porcentaje alto. El workflow sigue ejecutando el mismo comando canónico.
 - No se ejecutó CI remoto ni una instalación limpia en Linux en esta sesión.
 - F3, F4 y F5 siguen pendientes. No se incorporó un backend, bloqueo de todas
   las dependencias, demo de producto ni cambios de metodología.
+
+## Extensión de F3
+
+- `metodologia.py` contiene versiones, clasificación y validación de FX, sin I/O.
+- `TrazabilidadDatos` captura procedencia y fechas disponibles desde el adaptador;
+  `ResultadoAnalisis.trazabilidad` asocia esa evidencia con cada proxy.
+- El cálculo conserva la separación de proveedor/servicio/entradas. Comparte la
+  selección de observaciones de margen para calcular y describir períodos.
+- `presentacion/etiquetas.py` traduce claves heredadas a etiquetas de proxy en
+  Streamlit y Excel. Las fórmulas no dependen de esa capa de presentación.
+- El caché de FX conserva adquisición/cierre originales; descargar el análisis
+  otra vez no cambia la fecha de una cotización FX reutilizada.
+- La API tabular agrega versiones y trazabilidad. La migración económica de los
+  ocho snapshots se declara en las pruebas; el JSON original sigue intacto.
+- El ejemplo de `examples/` ejecuta cálculo/exportación sin proveedor, con un
+  oráculo Decimal independiente y datos CSV ficticios.
+
+F4 y F5 permanecen pendientes; el cierre vigente se registra en la sección 21.8
+[de la SDD](SDD.md).

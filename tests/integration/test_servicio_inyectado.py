@@ -49,17 +49,69 @@ class ProveedorMemoria:
         return self.datos
 
 
+def migrar_referencia_f3(referencia, caso):
+    """Políticas documentadas en methodology.md; el JSON de F1 permanece intacto.
+
+    Se comparan todos los campos heredados, incluidos los nuevos ausentes esperados.
+    Las columnas nuevas se prueban en test_metodologia y test_trazabilidad.
+    """
+    principal, detalle = referencia
+    for campo in ("Fuente FCL", "Fuente EBITDA ajustado"):
+        detalle[campo] = detalle[campo].replace("Yahoo: ", "Campo: ")
+    if caso == "crecimiento_fallback":
+        for registro in referencia:
+            registro["Notas"] = "Crecimiento no disponible; se usó fallback de 3.0%."
+    if caso in ("financiera", "fx_ausente"):
+        for campo in principal:
+            if campo.startswith("Valor intrínseco") or campo in (
+                "Upside FCL", "Upside EBIT", "Upside EBITDA", "Upside utilidad neta",
+                "Mediana de modelos", "Upside mediana",
+            ):
+                principal[campo] = None
+        for campo in detalle:
+            if campo.startswith("PV "):
+                detalle[campo] = None
+    if caso == "financiera":
+        principal["Estado"] = "REVISAR"
+        principal["Notas"] = detalle["Notas"] = "Clase FINANCIERA: no hay un modelo sectorial implementado; proxies no aplicables."
+    if caso == "fx_ausente":
+        principal["Estado"] = "DATOS INCOMPLETOS"
+        for campo in detalle:
+            if campo.startswith(("Margen ", "Base ")) or campo in (
+                "Tipo de cambio", "Ingresos actuales", "Deuda", "Efectivo", "Deuda neta",
+            ):
+                detalle[campo] = None
+            elif campo.startswith("Años "):
+                detalle[campo] = 0
+        detalle.update({"Tasa de impuestos": 0.21, "CAGR histórico ingresos": 0.03,
+                        "Crecimiento años 1-5": 0.0075, "Crecimiento años 6-10": 0.00375,
+                        "Fuente EBITDA ajustado": "No disponible"})
+        principal["Notas"] = detalle["Notas"] = " ".join([
+            "FX USD/MXN no verificable; valoraciones bloqueadas.",
+            "Crecimiento no disponible; se usó fallback de 3.0%.",
+            "Deuda desconocida; no se presume cero.", "Efectivo desconocido; no se presume cero.",
+            "Ingresos no disponibles.", "FCL normalizado no positivo o no disponible.",
+            "NOPAT normalizado no positivo o no disponible.",
+            "EBITDA ajustado no positivo o no disponible.",
+            "Utilidad neta normalizada no positiva o no disponible.",
+        ])
+    return referencia
+
+
 @pytest.mark.parametrize("caso", CASOS)
-def test_servicio_inyectado_conserva_resultado_completo_de_f1(caso):
+def test_servicio_inyectado_conserva_f1_con_migracion_explicita_f3(caso):
     servicio = import_module("valoracion.servicio")
     datos, config = datos_del_caso(caso)
     proveedor = ProveedorMemoria(datos)
     esperado = json.loads(Path("tests/fixtures/resultados_f1.json").read_text())[caso]
+    esperado = migrar_referencia_f3(esperado, caso)
     resultado = servicio.analizar_empresa("TEST", config, proveedor=proveedor)
     assert proveedor.llamadas == [("empresa", "TEST")]
     assert asdict(resultado.configuracion) == asdict(config)
     for registro, referencia in zip(resultado.como_registros(), esperado, strict=True):
-        assert list(registro) == list(referencia)
+        assert list(registro)[:len(referencia)] == list(referencia)
+        assert registro["Versión metodología"] == "proxies-1.0"
+        assert registro["Versión contrato"] == "2.0"
         for campo, valor in referencia.items():
             if isinstance(valor, (int, float)) and not isinstance(valor, bool):
                 assert registro[campo] == pytest.approx(valor, rel=1e-12, abs=1e-12), campo
@@ -104,7 +156,7 @@ def test_historicos_usen_el_mismo_contrato_inyectado():
     precios.loc[0, "Cierre"] = 999
     assert proveedor.precios.loc[0, "Cierre"] == 38
     assert financieros.loc["2024", "Ingresos"] == pytest.approx(0.001)
-    assert margenes.loc["2024", "Margen EBIT"] == pytest.approx(0.16)
+    assert margenes.loc["2024", "Margen NOPAT"] == pytest.approx(0.16)
 
 
 def test_mercado_explicito_conserva_prioridad_heredada():
@@ -165,7 +217,7 @@ def test_factory_y_cache_fx_quedan_aislados_entre_proveedores():
 @pytest.mark.parametrize("campo, atributo, estado, mediana", [
     ("income_stmt", "resultados", "DATOS INCOMPLETOS", None),
     ("cashflow", "flujo", "OK", 46),
-    ("balance_sheet", "balance", "OK", 58),
+    ("balance_sheet", "balance", "REVISAR", 50),
 ])
 def test_adaptador_normaliza_estados_nulos_como_el_motor_heredado(campo, atributo, estado, mediana):
     yahoo = import_module("valoracion.proveedores.yahoo")

@@ -67,4 +67,6 @@ def alinear_series(*series: pd.Series) -> pd.DataFrame:
     return pd.concat(limpias, axis=1, join="inner").dropna()
 
 def convertir_serie(serie: pd.Series, fx: float) -> pd.Series:
+    if fx is None:
+        return pd.Series(dtype=float)
     return pd.to_numeric(serie, errors="coerce") * fx

@@ -3,12 +3,12 @@
 Aplicación local en Streamlit que descarga información de Yahoo Finance y compara, por acción:
 
 - Precio de mercado
-- Valor intrínseco con flujo de caja libre
-- Valor intrínseco con EBIT convertido a NOPAT
-- Valor intrínseco con EBITDA ajustado
-- Valor intrínseco con utilidad neta
-- Mediana de los cuatro modelos
-- Precio objetivo promedio de analistas
+- Proxy de flujo de caja libre (FCL)
+- Proxy de NOPAT (EBIT después de impuestos)
+- Proxy de EBITDA ajustado
+- Proxy de utilidad neta
+- Mediana de los proxies disponibles y aplicables, con su cantidad
+- Precio objetivo de analistas, identificando media o mediana cuando está disponible
 
 La app incluye filtros, gráficas históricas y exportación a un archivo Excel con hojas separadas para USA y México.
 
@@ -49,7 +49,7 @@ chmod +x ejecutar_app.sh
 
 1. Selecciona `USA`, `MX` o `Todos`.
 2. Selecciona los tickers.
-3. Ajusta la tasa de descuento, el factor conservador y los múltiplos.
+3. Ajusta las tasas de descuento de accionista/empresa, el factor conservador y los múltiplos.
 4. Pulsa **Analizar empresas**.
 5. Filtra la tabla, revisa las gráficas y descarga el Excel.
 
@@ -65,7 +65,9 @@ chmod +x ejecutar_app.sh
 ## Consideraciones
 
 - Yahoo Finance puede no entregar todos los campos para todos los tickers, especialmente objetivos de analistas de emisoras mexicanas.
-- Las empresas financieras requieren una lectura diferente: la utilidad neta suele ser más útil que FCL, EBIT o EBITDA.
+- Financieras, REIT/FIBRA y vehículos sin modelo implementado quedan fuera de los cuatro proxies y de su mediana.
+- Un FX no verificable bloquea la valoración; deuda/efectivo desconocidos no se rellenan con cero.
+- Las fórmulas son aproximaciones heurísticas, con supuestos manuales; no implementan un DCF completo ni tasas o múltiplos calibrados. La [metodología](docs/methodology.md) documenta las decisiones y sus límites.
 - La lista mexicana prioriza emisoras grandes y líquidas; se encuentra en `data/universo.json`. El catálogo conserva un snapshot local y no certifica la composición actual de un índice.
 - Los resultados son aproximaciones educativas y no constituyen una recomendación de inversión.
 
@@ -95,10 +97,11 @@ python -m pytest -o addopts='' tests/ui/test_app.py -k todos_los_analisis_fallan
 Los cambios de software deben seguir **TDD: prueba, fallo observado, cambio mínimo
 y refactorización con pruebas verdes**. La [evidencia de F1](docs/TDD_F1.md), la
 [evidencia de F2](docs/TDD_F2.md), la
+[evidencia de F3](docs/TDD_F3.md), la
 [matriz de trazabilidad](docs/F1_TEST_MATRIX.md) y los
 [datos de referencia](tests/fixtures/README.md) explican qué se comprobó y con qué
-esperados. Las caracterizaciones de modelos actuales no validan su metodología
-económica; esa revisión sigue pendiente de F3.
+esperados. F3 documenta y restringe la metodología; que la aritmética pase no
+demuestra capacidad predictiva de los proxies.
 
 GitHub Actions ejecutará el mismo comando en push, pull requests y ejecución
 manual, con Python 3.12 y permisos de lectura. El workflow no despliega la app.
@@ -114,9 +117,26 @@ servicio; los cálculos se ejecutan sobre snapshots sin I/O. Se puede inyectar u
 `ProveedorDatos` en el servicio o una factory en `ProveedorYahoo` para probar
 datos alternativos sin cambiar las fórmulas.
 
-F1 y F2 están implementadas y verificadas localmente. La revisión metodológica,
-la formalización completa de dependencias y la demo de producto siguen pendientes
-de F3, F4 y F5, respectivamente.
+F1, F2 y F3 están implementadas y verificadas localmente. La formalización completa
+de dependencias (F4) y la demo/presentación de producto (F5) siguen pendientes.
+
+## Metodología y ejemplo reproducible (F3)
+
+La [metodología `proxies-1.0`](docs/methodology.md) explica fórmulas, unidades,
+fuentes, aplicabilidad, fechas y cambios respecto al comportamiento anterior.
+El contrato `2.0` conserva las claves originales y añade versiones y trazabilidad;
+las etiquetas de UI y Excel identifican las métricas realmente calculadas.
+
+Para conciliar un caso completo con `Decimal`, sin consultar Yahoo:
+
+```bash
+python -m examples.valoracion_independiente
+```
+
+Genera un CSV de conciliación y un Excel en `examples/salida/` (ignorado por Git).
+El [ejemplo documentado](examples/README.md) incluye datos, pasos y esperados
+independientes: 52, 44, 44 y 48 USD por acción; mediana 46. Son cifras ficticias,
+no estimaciones sobre empresas reales.
 
 ## Especificación y plan de desarrollo
 

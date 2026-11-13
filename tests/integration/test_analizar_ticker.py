@@ -46,13 +46,15 @@ def test_empresa_mx_y_conversion_controlada(proveedor, config_simple, extranjera
     assert ("USDMXN=X" in proveedor[1]) is extranjera
 
 
-def test_caracterizacion_fx_ausente_pendiente_de_f3(industrial, proveedor, config_simple):
+def test_f3_fx_ausente_bloquea_valoracion(industrial, proveedor, config_simple):
     industrial.datos["info"].update(currency="MXN", financialCurrency="USD")
     for simbolo in ["USDMXN=X", "MXNUSD=X"]:
         proveedor[0][simbolo] = TickerSintetico(history_result=pd.DataFrame())
     principal, detalle = motor.analizar_ticker("TEST", config_simple)
-    assert detalle["Tipo de cambio"] == 1
-    assert "No se encontró FX USD/MXN; se usó 1.0" in principal["Notas"]
+    assert detalle["Tipo de cambio"] is None
+    assert principal["Mediana de modelos"] is None
+    assert principal["Estado"] == "DATOS INCOMPLETOS"
+    assert "FX USD/MXN no verificable" in principal["Notas"]
 
 
 @pytest.mark.parametrize("falta", ["precio", "acciones", "ingresos"])
@@ -101,9 +103,10 @@ def test_balance_fallback_sector_y_nombre(industrial, config_simple):
     principal, detalle = motor.analizar_ticker("TEST", config_simple)
     assert principal["Empresa"] == "Banco sintético"
     assert detalle["Empresa financiera"] is True
-    assert "Empresa financiera" in principal["Notas"]
+    assert "Clase FINANCIERA" in principal["Notas"]
     assert detalle["Deuda neta"] == 200
-    assert principal["Valor intrínseco EBIT"] == pytest.approx(44)
+    assert principal["Valor intrínseco EBIT"] is None
+    assert principal["Modelos en mediana"] == 0
 
 
 @pytest.mark.parametrize("campo", ["income_stmt", "cashflow", "balance_sheet"])

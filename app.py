@@ -10,6 +10,8 @@ import plotly.express as px
 import streamlit as st
 
 from valoracion.configuracion import Configuracion
+from valoracion.metodologia import VERSION_METODOLOGIA
+from valoracion.presentacion.etiquetas import ETIQUETAS, etiqueta
 from valoracion.exportacion.excel import escribir_excel
 from valoracion.modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE, crear_resultado_error
 from valoracion.normalizacion import mercado_de_ticker
@@ -90,13 +92,18 @@ def historicos_financieros(ticker: str, config_values: tuple) -> tuple[pd.DataFr
 def construir_configuracion() -> Configuracion:
     st.sidebar.subheader("Supuestos")
     tasa_descuento_pct = st.sidebar.slider(
-        "Tasa de descuento (%)",
+        "Tasa descuento accionista (%)",
         min_value=5.0,
         max_value=20.0,
         value=10.0,
         step=0.5,
     )
     tasa_descuento = tasa_descuento_pct / 100.0
+    tasa_empresa_pct = st.sidebar.slider(
+        "Tasa descuento empresa (%)", min_value=5.0, max_value=20.0,
+        value=10.0, step=0.5,
+        help="Supuesto manual para NOPAT y EBITDA ajustado; no es un WACC estimado automáticamente.",
+    )
     factor_margen_pct = st.sidebar.slider(
         "Factor conservador de margen (%)",
         min_value=40,
@@ -124,12 +131,13 @@ def construir_configuracion() -> Configuracion:
         factor_crecimiento_inicial = factor_crecimiento_inicial_pct / 100.0
         factor_crecimiento_final = factor_crecimiento_final_pct / 100.0
         multiplo_fcl = st.number_input("Múltiplo terminal FCL", 4.0, 30.0, 12.0, 0.5)
-        multiplo_ebit = st.number_input("Múltiplo terminal EBIT", 4.0, 30.0, 12.0, 0.5)
-        multiplo_ebitda = st.number_input("Múltiplo terminal EBITDA", 4.0, 30.0, 12.0, 0.5)
+        multiplo_ebit = st.number_input("Múltiplo terminal NOPAT", 4.0, 30.0, 12.0, 0.5)
+        multiplo_ebitda = st.number_input("Múltiplo terminal EBITDA ajustado", 4.0, 30.0, 12.0, 0.5)
         multiplo_neto = st.number_input("Múltiplo terminal utilidad neta", 4.0, 35.0, 15.0, 0.5)
 
     return Configuracion(
         tasa_descuento=tasa_descuento,
+        tasa_descuento_empresa=tasa_empresa_pct / 100.0,
         factor_margen_conservador=factor_margen,
         factor_crecimiento_inicial=factor_crecimiento_inicial,
         factor_crecimiento_final=factor_crecimiento_final,
@@ -146,19 +154,21 @@ def preparar_tabla(df: pd.DataFrame) -> pd.DataFrame:
         "Mercado", "Ticker", "Empresa", "Moneda", "Precio de mercado",
         "Valor intrínseco FCL", "Valor intrínseco EBIT", "Valor intrínseco EBITDA",
         "Valor intrínseco utilidad neta", "Mediana de modelos", "Precio objetivo analistas",
-        "Upside mediana", "Upside analistas", "Estado",
+        "Upside mediana", "Upside analistas", "Estado", "Modelos en mediana", "Clase de empresa",
     ]
     presentes = [col for col in columnas if col in df.columns]
-    return df[presentes].copy()
+    return df[presentes].rename(columns=ETIQUETAS).copy()
 
 
 def render_table(df: pd.DataFrame) -> None:
     tabla = preparar_tabla(df)
     column_config = {}
-    for col in VALOR_COLUMNS:
+    for campo in VALOR_COLUMNS:
+        col = etiqueta(campo)
         if col in tabla.columns:
             column_config[col] = st.column_config.NumberColumn(col, format="$%.2f")
-    for col in UPSIDE_COLUMNS:
+    for campo in UPSIDE_COLUMNS:
+        col = etiqueta(campo)
         if col in tabla.columns:
             tabla[col] = pd.to_numeric(tabla[col], errors="coerce") * 100.0
             column_config[col] = st.column_config.NumberColumn(col, format="%.1f%%")
@@ -188,7 +198,7 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
     cols = st.columns(4)
     cols[0].metric("Precio de mercado", format_money(fila.get("Precio de mercado"), moneda))
     cols[1].metric(
-        "Mediana de modelos",
+        "Mediana de proxies",
         format_money(fila.get("Mediana de modelos"), moneda),
         format_percent(fila.get("Upside mediana")),
     )
@@ -202,6 +212,14 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
     if fila.get("Estado") == "ERROR":
         st.warning(f"{ticker}: {fila.get('Notas') or 'No se pudo analizar la empresa.'}")
         return
+
+    st.caption(
+        f"Metodología {fila.get('Versión metodología', VERSION_METODOLOGIA)} · "
+        f"{fila.get('Modelos en mediana', 0)} proxies en la mediana · "
+        "Mediana descriptiva; no representa modelos independientes ni una probabilidad de retorno."
+    )
+    if fila.get("Estado") != "OK":
+        st.warning(str(fila.get("Notas") or "Revisar disponibilidad y aplicabilidad de los datos."))
 
     col_a, col_b = st.columns([1, 1])
     with col_a:
@@ -269,7 +287,7 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
         datos = {
             "Sector": detalle.get("Sector"),
             "Industria": detalle.get("Industria"),
-            "CAGR histórico": format_percent(detalle.get("CAGR histórico ingresos")),
+            "Crecimiento bruto utilizado": format_percent(detalle.get("CAGR histórico ingresos")),
             "Crecimiento años 1-5": format_percent(detalle.get("Crecimiento años 1-5")),
             "Crecimiento años 6-10": format_percent(detalle.get("Crecimiento años 6-10")),
             "Margen FCL conservador": format_percent(detalle.get("Margen FCL conservador")),
@@ -279,22 +297,32 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
             "Deuda neta": format_money(detalle.get("Deuda neta"), moneda),
             "Notas": fila.get("Notas") or "Sin observaciones.",
         }
+        for campo in [
+            "Versión metodología", "Versión contrato", "Fuente de datos", "Obtenido en UTC",
+            "Fuente del precio", "Fecha del precio", "Fuente del objetivo", "Estadístico del objetivo",
+            "Cobertura de analistas", "Fecha del objetivo", "Horizonte del objetivo", "Fuente FX",
+            "Obtenido FX en UTC", "Fecha FX", "Período ingresos", "Período deuda", "Período efectivo",
+            "Fuente deuda", "Fuente efectivo", "Períodos por modelo", "Fuentes por métrica",
+            "Configuración efectiva", "Crecimiento utilizado", "Impuestos utilizados", "Modelos incluidos", "Modelos excluidos",
+        ]:
+            datos[campo] = detalle.get(campo)
+        datos["Tasa descuento accionista"] = format_percent(detalle.get("Tasa descuento accionista"))
+        datos["Tasa descuento empresa"] = format_percent(detalle.get("Tasa descuento empresa"))
         st.dataframe(
-            pd.DataFrame(datos.items(), columns=["Campo", "Valor"]),
+            pd.DataFrame([(k, "—" if v is None else str(v)) for k, v in datos.items()], columns=["Campo", "Valor"]),
             use_container_width=True,
             hide_index=True,
         )
         if bool(detalle.get("Empresa financiera")):
             st.warning(
-                "Es una empresa financiera. La utilidad neta suele ser más interpretable que FCL, EBIT o EBITDA; "
-                "la deuda forma parte de la operación bancaria."
+                "Es una empresa financiera sin modelo sectorial implementado. Los cuatro proxies se excluyen de la mediana."
             )
 
 
 def main() -> None:
     st.title("Valoración de acciones · USA y México")
     st.caption(
-        "Compara precio de mercado, FCL, EBIT/NOPAT, EBITDA ajustado, utilidad neta y objetivo de analistas. "
+        "Compara precio de mercado, proxies de FCL, NOPAT, EBITDA ajustado y utilidad neta, y objetivo de analistas. "
         "Los cálculos son aproximaciones para análisis, no recomendaciones de inversión."
     )
 

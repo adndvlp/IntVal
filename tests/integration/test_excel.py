@@ -9,6 +9,7 @@ from openpyxl import load_workbook
 
 import valoracion.exportacion.excel as motor
 from valoracion.servicio import analizar_ticker
+from valoracion.presentacion.etiquetas import etiqueta
 
 
 HOJAS = ["Resumen", "USA", "MX", "Detalle", "Supuestos", "Universo", "Fuentes"]
@@ -18,6 +19,7 @@ COLUMNAS_PRINCIPAL = [
     "Valor intrínseco EBITDA", "Upside EBITDA", "Valor intrínseco utilidad neta",
     "Upside utilidad neta", "Mediana de modelos", "Upside mediana",
     "Precio objetivo analistas", "Upside analistas", "Estado", "Notas",
+    "Versión metodología", "Versión contrato", "Modelos en mediana", "Modelos incluidos", "Clase de empresa",
 ]
 
 
@@ -40,7 +42,7 @@ def test_excel_con_errores_o_vacio_conserva_el_esquema(tmp_path, con_error):
     with closing(load_workbook(ruta)) as libro:
         assert libro.sheetnames == HOJAS
         for nombre in ["Resumen", "USA", "MX"]:
-            assert [celda.value for celda in libro[nombre][3]] == COLUMNAS_PRINCIPAL
+            assert [celda.value for celda in libro[nombre][3]] == [etiqueta(c) for c in COLUMNAS_PRINCIPAL]
         assert libro["Detalle"].cell(3, 1).value == "Mercado"
         if con_error:
             assert libro["Resumen"].cell(4, 2).value == "TEST"
@@ -80,7 +82,7 @@ def test_excel_particion_orden_valores_formatos_y_supuestos(tmp_path, industrial
         assert resumen.cell(7, 15).value is None
         supuestos = {fila[0]: fila[1] for fila in libro["Supuestos"].iter_rows(min_row=4, values_only=True)}
         assert supuestos["Años de proyección"] == 3
-        assert supuestos["Tasa de descuento"] == 0
+        assert supuestos["Tasa descuento accionista"] == 0
         assert supuestos["Múltiplo terminal FCL"] == 2
         assert libro["Detalle"].cell(4, 9).value == 1000
 

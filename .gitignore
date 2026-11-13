@@ -41,3 +41,6 @@ test-results.xml
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Salida reproducible del ejemplo F3
+/examples/salida/

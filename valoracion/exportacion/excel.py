@@ -13,6 +13,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from ..configuracion import Configuracion
+from ..metodologia import VERSION_METODOLOGIA, VERSION_CONTRATO
+from ..presentacion.etiquetas import ETIQUETAS, etiqueta
 from ..modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE
 from ..universo import EMPRESAS_USA, EMPRESAS_MX, FUENTES_UNIVERSO
 
@@ -48,7 +50,10 @@ def escribir_excel(
     df_supuestos = pd.DataFrame(
         [
             ("Años de proyección", config.anos_proyeccion, "Años"),
-            ("Tasa de descuento", config.tasa_descuento, "%"),
+            ("Tasa descuento accionista", config.tasa_descuento, "%; supuesto manual"),
+            ("Tasa descuento empresa", config.descuento_empresa, "%; supuesto manual, no WACC calibrado"),
+            ("Versión metodología", VERSION_METODOLOGIA, ""),
+            ("Versión contrato", VERSION_CONTRATO, ""),
             ("Factor crecimiento años 1-5", config.factor_crecimiento_inicial, "% del CAGR histórico"),
             ("Factor crecimiento años 6-10", config.factor_crecimiento_final, "% del crecimiento inicial"),
             ("Crecimiento mínimo", config.crecimiento_minimo, "%"),
@@ -59,10 +64,10 @@ def escribir_excel(
             ("Múltiplo terminal EBIT/NOPAT", config.multiplo_terminal_ebit, "x"),
             ("Múltiplo terminal EBITDA ajustado", config.multiplo_terminal_ebitda, "x"),
             ("Múltiplo terminal utilidad neta", config.multiplo_terminal_utilidad_neta, "x"),
-            ("Tratamiento FCL", "Flujo del accionista; no se resta deuda neta", ""),
-            ("Tratamiento EBIT", "NOPAT; se resta deuda neta", ""),
+            ("Tratamiento FCL", "Proxy del accionista; no es FCFE conciliado; no se resta deuda neta", ""),
+            ("Tratamiento EBIT", "Proxy NOPAT sin reinversión completa; se resta deuda neta", ""),
             ("Tratamiento EBITDA", "EBITDA - impuestos sobre EBIT - |CapEx|; se resta deuda neta", ""),
-            ("Tratamiento utilidad neta", "Flujo del accionista; no se resta deuda neta", ""),
+            ("Tratamiento utilidad neta", "Proxy de utilidad contable, no caja distribuible; no se resta deuda neta", ""),
         ],
         columns=["Supuesto", "Valor", "Unidad / comentario"],
     )
@@ -86,7 +91,7 @@ def escribir_excel(
 
     with pd.ExcelWriter(archivo_salida, engine="openpyxl") as writer:
         for nombre, df in hojas.items():
-            df.to_excel(writer, sheet_name=nombre, index=False, startrow=2)
+            df.rename(columns=ETIQUETAS).to_excel(writer, sheet_name=nombre, index=False, startrow=2)
 
     libro = load_workbook(archivo_salida)
 
@@ -165,12 +170,12 @@ def escribir_excel(
         ws = libro[nombre_hoja]
         encabezados = {celda.value: celda.column for celda in ws[3]}
         for nombre in columnas_moneda:
-            columna = encabezados.get(nombre)
+            columna = encabezados.get(etiqueta(nombre))
             if columna:
                 for fila in range(4, ws.max_row + 1):
                     ws.cell(fila, columna).number_format = formato_moneda
         for nombre in columnas_porcentaje:
-            columna = encabezados.get(nombre)
+            columna = encabezados.get(etiqueta(nombre))
             if columna:
                 letra = get_column_letter(columna)
                 for fila in range(4, ws.max_row + 1):
@@ -211,6 +216,9 @@ def escribir_excel(
         "PV flujos EBITDA", "PV terminal EBITDA", "PV flujos utilidad neta",
         "PV terminal utilidad neta",
     }
+    porcentaje_detalle.update({"Tasa descuento accionista", "Tasa descuento empresa"})
+    porcentaje_detalle = {etiqueta(n) for n in porcentaje_detalle}
+    numero_detalle = {etiqueta(n) for n in numero_detalle}
     for nombre, columna in encabezados_detalle.items():
         if nombre in porcentaje_detalle:
             formato = formato_porcentaje

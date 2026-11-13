@@ -4,21 +4,22 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 1.2 |
+| Versión del documento | 1.3 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1 y F2 implementadas y verificadas localmente; CI remoto no verificado en esta sesión. F3 a F5 pendientes |
+| Estado | F1, F2 y F3 implementadas y verificadas localmente; CI remoto no verificado en esta sesión. F4 y F5 pendientes |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
 | Método de implementación obligatorio | TDD: prueba primero, fallo observado, cambio mínimo y refactorización con pruebas verdes |
 | Refactorización implementada | F2: separación de responsabilidades, a partir de `b9852e6` |
-| Trabajo posterior acordado | F3 a F5: metodología, reproducibilidad y presentación del repositorio |
+| Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
+| Trabajo posterior acordado | F4 y F5: reproducibilidad y presentación del repositorio |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 a F5 siguen pendientes.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; el estado y las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. F4 y F5 siguen pendientes.
 
 ## Índice
 
@@ -65,7 +66,7 @@ La aplicación ya tiene una funcionalidad concreta: comparar precios de acciones
 | 6 | Preparar la presentación del repositorio | Documentar y dejar pendiente | F5 |
 | Previo | Crear `.gitignore` | Ya realizado y comprobado | Completado |
 
-El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, y después F2. Ambas se implementaron en entregas separadas. El encargo actual termina en F2; F3 a F5 siguen pendientes. La evidencia se registra en [TDD de F1](TDD_F1.md) y [TDD de F2](TDD_F2.md).
+El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, después F2 y luego el siguiente punto, F3. Se implementaron en entregas separadas. El encargo actual termina en F3; F4 y F5 siguen pendientes. La evidencia se registra en [TDD de F1](TDD_F1.md), [TDD de F2](TDD_F2.md) y [TDD de F3](TDD_F3.md).
 
 ### 1.3 Restricciones y decisiones de alcance
 
@@ -1195,7 +1196,11 @@ Entregables: paquete organizado, catálogo de datos, pruebas migradas y `docs/ar
 
 ## 16. F3: metodología y trazabilidad
 
-**Estado: pendiente; corresponde al punto 4 original. Depende de F1 y F2.**
+**Estado: implementada y verificada localmente; corresponde al punto 4 original.
+Depende de F1 y F2.** Las tablas siguientes conservan los requisitos acordados;
+las respuestas definitivas están en [methodology.md](methodology.md), el ejemplo
+en [examples](../examples/README.md) y la evidencia de cierre en 21.8. La fase
+explicita proxies y restricciones; no afirma validación empírica de rentabilidades.
 
 ### 16.1 Objetivo
 
@@ -1273,13 +1278,13 @@ Entregables previstos:
 - Diagnósticos y presentación actualizados.
 - Tests específicos para las políticas nuevas y un caso completo conciliado.
 
-- [ ] MET-01 a MET-12 tienen respuesta documentada o limitación explícita que restringe el producto.
-- [ ] Ninguna valoración convertida usa un FX desconocido como si fuera conocido.
-- [ ] No se confunde balance ausente con balance cero sin advertencia ni decisión expresa.
-- [ ] Aplicabilidad por sector implementada conforme a la decisión documentada.
-- [ ] Fórmulas, nombres y unidades coinciden entre código, explicación, gráficos y Excel.
-- [ ] Ejemplo independiente produce los resultados esperados.
-- [ ] Cambios respecto a la versión previa se explican y quedan cubiertos por tests.
+- [x] MET-01 a MET-12 tienen respuesta documentada o limitación explícita que restringe el producto.
+- [x] Ninguna valoración convertida usa un FX desconocido como si fuera conocido.
+- [x] No se confunde balance ausente con balance cero sin advertencia ni decisión expresa.
+- [x] Aplicabilidad por sector implementada conforme a la decisión documentada.
+- [x] Fórmulas, nombres y unidades coinciden entre código, explicación, gráficos y Excel.
+- [x] Ejemplo independiente produce los resultados esperados.
+- [x] Cambios respecto a la versión previa se explican y quedan cubiertos por tests.
 
 No añadir simulaciones avanzadas, optimización de cartera o una matriz de sensibilidad como requisito implícito de esta fase. Pueden proponerse después si aportan valor, con alcance propio.
 
@@ -1465,15 +1470,15 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Dependencias abiertas/lanzadores | F4-R01 a F4-R08 | Instalación limpia, comandos y matriz de CI |
 | Falta de evidencia de producto | F5-R01 a F5-R08 | Demo, documentación, capturas y ejemplo |
 
-### 19.3 Estado de ejecución después de F2
+### 19.3 Estado de ejecución después de F3
 
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 1.2; incorpora evidencia de F1 y F2 |
+| SDD | Actualizada | Versión 1.3; incorpora evidencia de F1, F2 y F3 |
 | F1 | Implementada y verificada localmente; CI remoto pendiente | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; CI remoto no verificado | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
-| F3 | Pendiente | Fórmulas descritas para caracterización; metodología no validada |
+| F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
 | F4 | Pendiente | Dependencias abiertas y lanzadores que instalan al arrancar |
 | F5 | Pendiente | Sin demo, capturas de portafolio ni licencia definida |
 
@@ -1553,7 +1558,7 @@ Es una referencia local de trabajo, no una ruta que deba aparecer en comandos p�
 
 ### 21.2 Instrucción lista para continuar con F1
 
-Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los cierres de las secciones 21.6 y 21.7: F1 y F2 ya están implementadas localmente y no deben rehacerse desde cero. Las correcciones futuras deben seguir TDD; F3 continúa pendiente y requiere una solicitud para iniciarse.
+Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los cierres de las secciones 21.6 a 21.8: F1, F2 y F3 ya están implementadas localmente y no deben rehacerse desde cero. Las correcciones futuras deben seguir TDD; F4 es la siguiente fase pendiente y requiere solicitud para iniciarse.
 
 > Lee `docs/SDD.md` y las instrucciones del repositorio. Implementa únicamente F1: corrige los casos de fallo, crea pruebas deterministas para todas las áreas relevantes y automatízalas en CI en una misma entrega. F2 a F5 siguen pendientes. Empieza por reproducir BUG-001 y BUG-002 mediante tests y corrige sus causas. Usa fixtures sintéticos y un proveedor falso; las pruebas obligatorias no deben consultar Yahoo. Conserva las fórmulas válidas actuales y sus contratos públicos; documenta como caracterización lo que aún requiere revisión metodológica. Sigue la matriz de pruebas, verifica los resultados numéricos de forma independiente, mide cobertura sobre ambos archivos con ramas y usa el umbral inicial de 85 %. Añade el workflow y comandos de desarrollo sin realizar la refactorización completa ni el bloqueo integral de dependencias de fases posteriores. Ejecuta las comprobaciones disponibles, distingue suite local de CI remoto, y actualiza esta SDD con archivos cambiados, comandos, resultados reales y pendientes. No publiques ni despliegues como parte de esta tarea.
 
@@ -1645,6 +1650,8 @@ No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI e
 
 ### 21.6 Registro de implementación de F1
 
+Registro histórico al cerrar F1; el estado vigente está en 21.8.
+
 - Fecha: 2026-11-12.
 - Referencia inicial: commit `635cd15`. Los cambios de F1 están en el árbol de trabajo; no se creó un commit ni se publicó el código como parte de esta implementación.
 - Estado: implementada y verificada localmente; primera ejecución remota de GitHub Actions pendiente.
@@ -1666,6 +1673,8 @@ No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI e
 
 ### 21.7 Registro de implementación de F2
 
+Registro histórico al cerrar F2; el estado vigente está en 21.8.
+
 - Fecha: 2026-11-12.
 - Línea base: `b9852e6`, commit de F1. El árbol estaba limpio al comenzar. Los cambios de F2 permanecen en el árbol de trabajo; no se hizo commit ni se publicó como parte del encargo.
 - Estado: implementada y verificada localmente. F3 a F5 no iniciadas.
@@ -1684,6 +1693,55 @@ No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI e
 - Documentación: `docs/architecture.md`, `docs/TDD_F2.md`, esta SDD, README y explicación de snapshots en `tests/fixtures/README.md`.
 - CI: el workflow sigue ejecutando `python -m pytest`, que ahora mide el paquete nuevo. No se ejecutó un runner remoto ni se afirma un run verde en esta sesión.
 - Siguiente fase: F3, revisión de metodología y trazabilidad; pendiente. F4 y F5 también permanecen pendientes.
+
+### 21.8 Registro de implementación de F3 y punto de continuidad vigente
+
+- Fecha: 2026-11-12. Línea base: `81ed7fb`, commit de F2.
+- Estado: **F1, F2 y F3 implementadas y verificadas localmente. F4 y F5 pendientes.**
+  No se creó commit, se publicó ni se desplegó como parte de esta implementación.
+- Método obligatorio: TDD. Los cinco ciclos RED/GREEN y las migraciones de
+  esperados están registrados en [TDD de F3](TDD_F3.md).
+- Alcance metodológico: respuestas MET-01 a MET-12 con fuentes primarias,
+  fórmulas, unidades, supuestos y limitaciones en [methodology.md](methodology.md).
+  Se mantienen cuatro proxies explícitos; no se afirma un DCF FCFF/FCFE completo
+  ni capacidad predictiva validada.
+- Reglas nuevas: FX no verificable bloquea importes/valoraciones/históricos;
+  ausencia de deuda/efectivo distinta de cero; balance de fechas distintas no
+  conciliado; ambos saldos sin fecha sólo provisionales con `REVISAR`.
+- Aplicabilidad: financieras, REIT/FIBRA, instrumentos no operativos y empresas
+  sin clasificar quedan excluidos de los cuatro proxies. Mediana descriptiva de
+  los elegibles; cantidad, identificadores y motivos de exclusión disponibles.
+- Configuración: tasa del accionista y tasa de empresa separadas. Si la segunda
+  no se especifica en la API, hereda la primera. Ambas se editan en la UI y quedan
+  registradas como efectivas; no se estima un WACC.
+- Versiones: metodología `proxies-1.0`, contrato `2.0`. Resumen de 24 campos y
+  detalle de 73, conservando las primeras 19/45 claves como aliases heredados.
+  UI/Excel usan etiquetas de proxy y NOPAT; permanecen siete hojas.
+- Trazabilidad: proveedor, adquisición UTC, rutas de precio/objetivo/acciones,
+  fechas conocidas sin inventarlas, FX original cacheado, períodos efectivos de
+  márgenes, fuentes contables/derivadas, crecimiento/impuestos, configuración y
+  modelos incluidos/excluidos. Proveedores sin metadata no se atribuyen a Yahoo.
+- Ejemplo: `python -m examples.valoracion_independiente --output /tmp/valoracion-f3-ejemplo`
+  ejecutado fuera de pytest, sin Yahoo. CSV propio y oráculo Decimal con anualidad
+  cerrada; 52/44/44/48 por acción, mediana 46. Generó conciliación y libro Excel.
+- Migración: `resultados_f1.json` permanece intacto. Los ocho escenarios conservan
+  comparación de todos los campos heredados con cambios explícitos de referencia
+  para las políticas de F3, sin regenerar snapshots desde el producto.
+- Ejecución canónica: `python -m pytest`, **313 passed**, sin skips ni xfails,
+  en **37.78 s**. Cobertura combinada de líneas y ramas **98.51 %**; umbral 85 %.
+  Una advertencia de pandas corresponde a la caracterización de fechas inválidas.
+- Comprobaciones complementarias: `python -m pip check` sin requisitos rotos;
+  `git diff --check` limpio; enlaces locales y esquemas/etiquetas verificados.
+- Entorno: macOS, Python 3.12.2 y dependencias de F2; no se agregaron paquetes.
+- CI: conserva el comando canónico y mide todo `valoracion`; ejecución remota no
+  verificada. No se afirma instalación limpia en Linux ni un run remoto verde.
+- Siguiente fase: **F4**, instalación reproducible/herramientas, pendiente. F5
+  también pendiente. No iniciar ninguna sin el siguiente encargo del usuario.
+
+Para continuar en un chat nuevo: leer esta sección, `methodology.md`, `TDD_F3.md`
+y la sección 17. Confirmar el estado del árbol y ejecutar la suite. Preservar TDD,
+los contratos y las limitaciones económicas; no rehacer F1/F2/F3 ni tratar sus
+heurísticas como datos auditados.
 
 ## 22. Fuentes y mantenimiento
 

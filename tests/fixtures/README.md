@@ -56,15 +56,15 @@ crecimiento cero. La tasa fiscal es `40 / 200 = 0.2`.
 | Upside analistas | `60 / 40 - 1` | 0.50 |
 
 Estos esperados protegen la aritmética de la implementación actual; no validan
-la interpretación financiera de los cuatro modelos. La revisión corresponde a
-F3, incluidos la naturaleza de FCL, sectores, deuda desconocida y FX ausente.
+la interpretación financiera de los cuatro modelos. F3 explica y restringe su
+uso en [methodology.md](../../docs/methodology.md).
 
 ## Variantes
 
 Las pruebas modifican explícitamente los datos para construir fallbacks,
 modelos parciales, compañías financieras, errores y ausencias. Para MX se
 conservan los importes en MXN o se usa un FX directo de 20/inverso de 0.05.
-El caso FX ausente está rotulado como caracterización pendiente de F3.
+F3 cambia el caso FX ausente: bloquea la valoración y conserva precio/objetivo.
 
 Las pruebas de UI usan la configuración visible predeterminada; sus importes
 no deben confundirse con los esperados del escenario simplificado anterior.
@@ -85,3 +85,20 @@ Estos archivos son una caracterización de compatibilidad, no datos de mercado
 ni demostración de validez económica. No regenerar los esperados desde el motor
 nuevo para hacer pasar un cambio de comportamiento; cualquier cambio de
 metodología requiere la justificación y pruebas de F3.
+
+## Migración explícita de F3
+
+El JSON de F1 no se regeneró. `migrar_referencia_f3()` en
+`test_servicio_inyectado.py` aplica decisiones documentadas a la referencia antes
+de comparar **todos** sus campos heredados: financiera excluida, FX bloqueado,
+fuente de datos manuales sin atribución a Yahoo y nota de fallback configurable.
+Se verifica el prefijo original de columnas; los campos añadidos se comprueban
+en las pruebas de metodología y trazabilidad. Los errores float de redondeo se
+comparan con tolerancia, sin alterar los esperados económicos.
+
+Con balance ausente y sin fallbacks conocidos, NOPAT/EBITDA dejan de calcularse:
+para el caso simple sobreviven 52 y 48, mediana 50, con estado `REVISAR`. Esto
+sustituye la mediana 58 que resultaba de fabricar deuda neta cero.
+
+El ejemplo público en [examples](../../examples/README.md) es independiente de
+los fixtures: CSV propio, esperados manuales y otra implementación con Decimal.

@@ -65,8 +65,22 @@ Yahoo sigue siendo un proveedor externo con disponibilidad y límites propios.
 Un health check exitoso acredita que Streamlit responde, no que cada ticker tenga
 datos. No se modificó la metodología para el alojamiento.
 
-El modo demo de producto continúa como F5. El ejemplo independiente permite
-comprobar los cálculos sin Yahoo.
+La UI incluye un selector **Fuente de datos → Demostración** que usa archivos
+locales versionados y carga tres casos al activarse. Puede configurarse
+`VALORACION_DEMO=1` para abrir esa vista en sesiones nuevas. Es una variable del
+producto, independiente del proveedor de alojamiento; no cambia los comandos
+de preparación/arranque ni exige una base de datos.
+
+La demo no consulta Yahoo ni descarga históricos. La primera carga de recursos
+de la página sigue necesitando acceder al servicio web. Los resultados son
+deterministas para el dataset, la configuración y la metodología fijados; el
+Excel incorpora la fecha de generación. No confundir el modo de producto con
+la suite de tests ni prometer que todo el servicio web funciona sin conexión.
+
+Al cambiar de fuente se descarta el análisis anterior. Las claves de caché de
+análisis y ambos tipos de históricos incluyen la fuente, y no se mezclan precios
+de mercado con la demo. La configuración guardada al analizar sigue siendo la
+que se exporta hasta solicitar otro análisis.
 
 ## 4. Preparar un entorno de desarrollo
 
@@ -179,6 +193,7 @@ salida, sin abrir un servicio público.
 
 ```bash
 .venv/bin/python -m examples.valoracion_independiente
+.venv/bin/python -m examples.analisis_demo
 ```
 
 El ejemplo funciona sin Yahoo y genera su conciliación CSV/Excel. Para comprobar
@@ -187,5 +202,13 @@ repiten los cuatro comandos de validación. Una descarga previa para la platafor
 permite instalar con `--no-index --find-links RUTA`; la ruta de esa descarga no es
 una dependencia del repositorio.
 
-La [evidencia de F4](TDD_F4.md) registra los resultados reales. La validación local,
-el run de Ubuntu y la URL desplegada son evidencias distintas.
+El [ejemplo público de F5](../examples/demo/README.md) incluye un CSV, un Excel real
+y el manifest de los tres casos de demo. Los datos están descritos en
+[data/demo](../data/demo/README.md). Las salidas por defecto de ambos scripts
+permanecen en `examples/salida/`, ignorado por Git.
+
+La [evidencia de F4](TDD_F4.md) y la [evidencia de F5](TDD_F5.md) registran los
+resultados reales. Se verificó el run de Ubuntu del commit `d90fc2a`, previo a F5:
+[Tests #5, correcto](https://github.com/adndvlp/IntVal/actions/runs/43363574654).
+Ese run no valida cambios posteriores aún sin publicar. La validación local,
+el run remoto correspondiente y la URL desplegada son evidencias distintas.

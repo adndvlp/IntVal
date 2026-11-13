@@ -1,0 +1,21 @@
+{
+  "dataset": "demo-1.0",
+  "referencia": "2025-01-03",
+  "fuente": "Demostración",
+  "viewports": {
+    "demo-resumen.jpg": {
+      "width": 1920,
+      "height": 1080
+    },
+    "demo-detalle.jpg": {
+      "width": 1920,
+      "height": 1800
+    }
+  },
+  "capturas": [
+    "demo-resumen.jpg",
+    "demo-detalle.jpg"
+  ],
+  "errores_navegador": [],
+  "creada_en_utc": "2026-11-13T04:55:44.765Z"
+}

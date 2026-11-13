@@ -1,0 +1,31 @@
+{
+  "datos_sinteticos": true,
+  "version_datos": "demo-1.0",
+  "fecha_referencia": "2025-01-03",
+  "version_metodologia": "proxies-1.0",
+  "version_contrato": "2.0",
+  "configuracion": {
+    "anos_proyeccion": 10,
+    "tasa_descuento": 0.1,
+    "factor_crecimiento_inicial": 0.25,
+    "factor_crecimiento_final": 0.5,
+    "crecimiento_minimo": -0.02,
+    "crecimiento_maximo": 0.12,
+    "crecimiento_fallback": 0.03,
+    "factor_margen_conservador": 0.8,
+    "max_anos_historicos": 5,
+    "multiplo_terminal_fcl": 12.0,
+    "multiplo_terminal_ebit": 12.0,
+    "multiplo_terminal_ebitda": 12.0,
+    "multiplo_terminal_utilidad_neta": 15.0,
+    "tasa_impuestos_fallback": 0.21,
+    "tasa_impuestos_minima": 0.0,
+    "tasa_impuestos_maxima": 0.35,
+    "pausa_entre_tickers": 0,
+    "tasa_descuento_empresa": 0.1
+  },
+  "archivos": [
+    "analisis_demo.csv",
+    "analisis_demo.xlsx"
+  ]
+}

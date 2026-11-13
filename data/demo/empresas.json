@@ -1,0 +1,31 @@
+{
+  "version": "demo-1.0",
+  "fecha_referencia": "2025-01-03",
+  "descripcion": "Datos íntegramente sintéticos creados para demostrar el software. No son empresas, precios ni objetivos de analistas reales.",
+  "empresas": [
+    {
+      "ticker": "DEMO-USA",
+      "nombre": "Industrial Aurora (demo)",
+      "moneda": "USD",
+      "acciones": 10,
+      "precio": 100,
+      "objetivo": 120
+    },
+    {
+      "ticker": "DEMO-MX.MX",
+      "nombre": "Manufacturas Horizonte (demo)",
+      "moneda": "MXN",
+      "acciones": 100,
+      "precio": 200,
+      "objetivo": 240
+    },
+    {
+      "ticker": "DEMO-INCOMPLETA",
+      "nombre": "Empresa con datos insuficientes (demo)",
+      "moneda": "USD",
+      "acciones": null,
+      "precio": 80,
+      "objetivo": null
+    }
+  ]
+}

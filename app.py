@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pandas as pd
@@ -17,6 +18,7 @@ from valoracion.normalizacion import mercado_de_ticker
 from valoracion.presentacion.etiquetas import ETIQUETAS, etiqueta
 from valoracion.presentacion.formatos import format_money, format_percent
 from valoracion.presentacion.graficas import grafica_valoraciones
+from valoracion.proveedores.demo import ProveedorDemo
 from valoracion.servicio import (
     analizar_ticker,
     obtener_historicos_financieros,
@@ -71,20 +73,46 @@ UPSIDE_COLUMNS = [
 ]
 
 
+def _proveedor_para(fuente: str):
+    if fuente == "Demostración":
+        return ProveedorDemo()
+    if fuente == "Mercado":
+        return None
+    raise ValueError(f"Fuente de datos no disponible: {fuente}")
+
+
+def _limpiar_resultados() -> None:
+    for clave in ("principales", "detalles", "config", "fuente_resultados", "detalle_ticker"):
+        st.session_state.pop(clave, None)
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
-def analizar_cached(ticker: str, config_values: tuple) -> tuple[dict, dict]:
+def analizar_cached(
+    ticker: str, config_values: tuple, fuente: str = "Mercado"
+) -> tuple[dict, dict]:
     config = Configuracion(**dict(config_values))
+    proveedor = _proveedor_para(fuente)
+    if proveedor is not None:
+        return analizar_ticker(ticker, config, mercado_de_ticker(ticker), proveedor=proveedor)
     return analizar_ticker(ticker, config, mercado_de_ticker(ticker))
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
-def precio_historico(ticker: str, periodo: str) -> pd.DataFrame:
+def precio_historico(ticker: str, periodo: str, fuente: str = "Mercado") -> pd.DataFrame:
+    proveedor = _proveedor_para(fuente)
+    if proveedor is not None:
+        return obtener_precio_historico(ticker, periodo, proveedor=proveedor)
     return obtener_precio_historico(ticker, periodo)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def historicos_financieros(ticker: str, config_values: tuple) -> tuple[pd.DataFrame, pd.DataFrame]:
+def historicos_financieros(
+    ticker: str, config_values: tuple, fuente: str = "Mercado"
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     config = Configuracion(**dict(config_values))
+    proveedor = _proveedor_para(fuente)
+    if proveedor is not None:
+        return obtener_historicos_financieros(ticker, config, proveedor=proveedor)
     return obtener_historicos_financieros(ticker, config)
 
 
@@ -196,7 +224,10 @@ def render_table(df: pd.DataFrame) -> None:
 
 
 def mostrar_detalle(
-    df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config_tuple: tuple
+    df_principal: pd.DataFrame,
+    df_detalle: pd.DataFrame,
+    config_tuple: tuple,
+    fuente: str = "Mercado",
 ) -> None:
     st.subheader("Detalle de empresa")
     if df_principal.empty:
@@ -245,7 +276,7 @@ def mostrar_detalle(
     with col_b:
         periodo = st.selectbox("Periodo del precio", ["1y", "2y", "5y", "10y"], index=2)
         try:
-            historia = precio_historico(ticker, periodo)
+            historia = precio_historico(ticker, periodo, fuente)
         except Exception as exc:
             st.warning(f"No se pudo cargar el historial de precio: {exc}")
             historia = pd.DataFrame()
@@ -262,7 +293,7 @@ def mostrar_detalle(
             st.plotly_chart(fig, use_container_width=True)
 
     try:
-        financieros, margenes = historicos_financieros(ticker, config_tuple)
+        financieros, margenes = historicos_financieros(ticker, config_tuple, fuente)
     except Exception as exc:
         st.warning(f"No se pudieron cargar los estados financieros del detalle: {exc}")
         financieros, margenes = pd.DataFrame(), pd.DataFrame()
@@ -373,15 +404,42 @@ def main() -> None:
         "Los cálculos son aproximaciones para análisis, no recomendaciones de inversión."
     )
 
-    st.sidebar.title("Universo y análisis")
-    mercado = st.sidebar.radio("Mercado", ["USA", "MX", "Todos"], horizontal=True)
-    universo = (
-        EMPRESAS_USA
-        if mercado == "USA"
-        else EMPRESAS_MX
-        if mercado == "MX"
-        else EMPRESAS_USA + EMPRESAS_MX
+    fuente = st.sidebar.radio(
+        "Fuente de datos",
+        ["Mercado", "Demostración"],
+        index=1 if os.environ.get("VALORACION_DEMO") == "1" else 0,
+        key="fuente_datos",
     )
+    demo = _proveedor_para(fuente)
+    cambio_fuente = st.session_state.get("fuente_activa") != fuente
+    if cambio_fuente:
+        _limpiar_resultados()
+        st.session_state["fuente_activa"] = fuente
+    cargar_demo = demo is not None and cambio_fuente
+    if demo is not None:
+        st.info(
+            f"Demostración · Datos sintéticos · referencia {demo.fecha_referencia} · {demo.version}. No son empresas ni cotizaciones reales."
+        )
+        st.sidebar.caption(f"Datos sintéticos · {demo.fecha_referencia}")
+
+    st.sidebar.title("Universo y análisis")
+    mercado = st.sidebar.radio(
+        "Mercado",
+        ["USA", "MX", "Todos"],
+        index=2 if demo is not None else 0,
+        horizontal=True,
+        key=f"mercado_{fuente}",
+    )
+    if demo is not None:
+        universo = demo.tickers(mercado)
+    else:
+        universo = (
+            EMPRESAS_USA
+            if mercado == "USA"
+            else EMPRESAS_MX
+            if mercado == "MX"
+            else EMPRESAS_USA + EMPRESAS_MX
+        )
 
     seleccionar_todas = st.sidebar.checkbox("Seleccionar todo el mercado", value=False)
     predeterminadas = universo[:6] if mercado != "MX" else universo[:10]
@@ -398,33 +456,38 @@ def main() -> None:
         "Ticker adicional",
         placeholder="Ej.: MELI o KOFUBL.MX",
         help="Separa varios tickers con comas.",
+        disabled=demo is not None,
+        key=f"ticker_extra_{fuente}",
     )
-    extras = [x.strip().upper() for x in ticker_extra.split(",") if x.strip()]
+    extras = (
+        [x.strip().upper() for x in ticker_extra.split(",") if x.strip()] if demo is None else []
+    )
     tickers = list(dict.fromkeys(seleccion + extras))
 
     config = construir_configuracion()
+    if demo is not None:
+        config = replace(config, pausa_entre_tickers=0)
     config_tuple = tuple(asdict(config).items())
 
     analizar = st.sidebar.button("Analizar empresas", type="primary", use_container_width=True)
     borrar = st.sidebar.button("Limpiar resultados", use_container_width=True)
 
-    with st.sidebar.expander("Universo mexicano", expanded=False):
-        st.markdown(
-            "La selección MX prioriza emisoras grandes y líquidas del mercado mexicano. "
-            "Los símbolos terminan en `.MX` para Yahoo Finance."
-        )
-        st.markdown(
-            "[S&P/BMV IPC](https://www.spglobal.com/spdji/en/indices/equity/sp-bmv-ipc/) · "
-            "[Componentes INMEX en Yahoo](https://es.finance.yahoo.com/quote/INMEX.MX/components/)"
-        )
+    if demo is None:
+        with st.sidebar.expander("Universo mexicano", expanded=False):
+            st.markdown(
+                "La selección MX prioriza emisoras grandes y líquidas del mercado mexicano. "
+                "Los símbolos terminan en `.MX` para Yahoo Finance."
+            )
+            st.markdown(
+                "[S&P/BMV IPC](https://www.spglobal.com/spdji/en/indices/equity/sp-bmv-ipc/) · "
+                "[Componentes INMEX en Yahoo](https://es.finance.yahoo.com/quote/INMEX.MX/components/)"
+            )
 
     if borrar:
-        st.session_state.pop("principales", None)
-        st.session_state.pop("detalles", None)
-        st.session_state.pop("config", None)
+        _limpiar_resultados()
         st.rerun()
 
-    if analizar:
+    if analizar or cargar_demo:
         if not tickers:
             st.warning("Selecciona al menos un ticker.")
         else:
@@ -436,7 +499,7 @@ def main() -> None:
             for i, ticker in enumerate(tickers, start=1):
                 estado.write(f"Analizando **{ticker}** ({i}/{len(tickers)})")
                 try:
-                    principal, detalle = analizar_cached(ticker, config_tuple)
+                    principal, detalle = analizar_cached(ticker, config_tuple, fuente)
                 except Exception as exc:
                     principal, detalle = crear_resultado_error(ticker, exc)
                 principales.append(principal)
@@ -447,6 +510,7 @@ def main() -> None:
             st.session_state["principales"] = principales
             st.session_state["detalles"] = detalles
             st.session_state["config"] = config_tuple
+            st.session_state["fuente_resultados"] = fuente
             estado.empty()
             progreso.empty()
             conteos = pd.Series([fila["Estado"] for fila in principales]).value_counts()
@@ -461,12 +525,20 @@ def main() -> None:
 
     if "principales" not in st.session_state:
         st.info(
-            "Selecciona las empresas en la barra lateral y pulsa **Analizar empresas**. "
+            "Selecciona las empresas y pulsa **Analizar empresas**."
+            if demo is not None
+            else "Selecciona las empresas en la barra lateral y pulsa **Analizar empresas**. "
             "Conviene probar primero con 5–10 tickers porque Yahoo Finance puede limitar consultas masivas."
         )
         col1, col2, col3 = st.columns(3)
-        col1.metric("Empresas USA disponibles", len(EMPRESAS_USA))
-        col2.metric("Empresas MX disponibles", len(EMPRESAS_MX))
+        col1.metric(
+            "Empresas USA disponibles",
+            len(demo.tickers("USA")) if demo is not None else len(EMPRESAS_USA),
+        )
+        col2.metric(
+            "Empresas MX disponibles",
+            len(demo.tickers("MX")) if demo is not None else len(EMPRESAS_MX),
+        )
         col3.metric("Métodos de valoración", 4)
         return
 
@@ -517,13 +589,15 @@ def main() -> None:
         st.download_button(
             "Descargar Excel completo",
             data=excel_bytes,
-            file_name="valoraciones_USA_MX.xlsx",
+            file_name="demo_valoraciones_USA_MX.xlsx"
+            if demo is not None
+            else "valoraciones_USA_MX.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=False,
         )
 
     st.divider()
-    mostrar_detalle(df_principal, df_detalle, config_tuple_actual)
+    mostrar_detalle(df_principal, df_detalle, config_tuple_actual, fuente)
 
 
 if __name__ == "__main__":

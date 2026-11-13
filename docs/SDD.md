@@ -4,23 +4,23 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 1.6 |
+| Versión del documento | 1.8 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1 a F4 implementadas y verificadas localmente. Servicio web agnóstico sobre Linux; 327 pruebas, cobertura local 98.51 %. CI remoto y publicación pendientes; F5 pendiente |
+| Estado | F1 a F5 implementadas y verificadas localmente; 345 pruebas, cobertura 98.59 %, dos capturas reales revisadas y MIT. Continuidad en 21.11. CI del commit previo a F5 verificado; CI de esta entrega y publicación pendientes |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
 | Método de implementación obligatorio | TDD: prueba primero, fallo observado, cambio mínimo y refactorización con pruebas verdes |
 | Refactorización implementada | F2: separación de responsabilidades, a partir de `b9852e6` |
 | Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
 | Entorno implementado | F4: servicio web agnóstico, Python 3.12, resoluciones pip-tools, arranque mediante PORT, configuración central y Ruff |
-| Trabajo posterior acordado | F5: presentación del repositorio |
+| Presentación implementada | F5: demo sintética, ejemplo público, documentación, capturas reales revisadas y licencia MIT elegida por el usuario |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; el estado y las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md); F5 sigue pendiente.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). **El punto de continuidad actual es 21.11**, junto con [TDD de F5](TDD_F5.md): F1 a F5 completas; no rehacerlas ni confundir verificación local, CI remoto y publicación del servicio.
 
 ## Índice
 
@@ -67,7 +67,7 @@ La aplicación ya tiene una funcionalidad concreta: comparar precios de acciones
 | 6 | Preparar la presentación del repositorio | Documentar y dejar pendiente | F5 |
 | Previo | Crear `.gitignore` | Ya realizado y comprobado | Completado |
 
-El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, después F2 y luego el siguiente punto, F3. Se implementaron en entregas separadas. Después se autorizó F4. El encargo actual termina en F4; F5 sigue pendiente. La evidencia se registra en [TDD de F1](TDD_F1.md), [TDD de F2](TDD_F2.md), [TDD de F3](TDD_F3.md) y [TDD de F4](TDD_F4.md).
+El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, después F2 y F3. Se implementaron en entregas separadas. Después se autorizó F4, precisando que el servicio debía ser agnóstico del alojamiento, y finalmente F5. La evidencia se registra en los documentos TDD de cada fase. El usuario precisó que el titular es el dueño del repositorio: `adndvlp`, propietario verificado de `adndvlp/IntVal`, y eligió MIT. El archivo LICENSE conserva esa atribución; no se infirió de la carpeta ni del autor de Git.
 
 ### 1.3 Restricciones y decisiones de alcance
 
@@ -1363,7 +1363,9 @@ No se exige un Blueprint ni un manifiesto de una plataforma para completar F4.
 
 ## 18. F5: presentación del repositorio
 
-**Estado: pendiente; corresponde al punto 6 original. Depende de F1 a F4.**
+**Estado: implementada y verificada localmente, incluidas las dos capturas reales
+revisadas y la licencia MIT elegida por el usuario. Corresponde al punto 6 original
+y parte del commit `d90fc2a`, con F1 a F4 completas. Evidencia en 21.11 y TDD_F5.md.**
 
 ### 18.1 Objetivo
 
@@ -1388,16 +1390,16 @@ Las insignias de CI y cobertura deben apuntar a evidencias existentes. No invent
 
 ### 18.3 Requisitos
 
-| ID | Requisito |
-| --- | --- |
-| F5-R01 | README orientado a evaluar y ejecutar el proyecto, con enlaces válidos. |
-| F5-R02 | Capturas reales de la versión actual, con datos identificados como sintéticos si corresponde. |
-| F5-R03 | Modo de demostración determinista sin depender de Yahoo. |
-| F5-R04 | Ejemplo de análisis y exportación que pueda reproducirse desde datos versionados. |
-| F5-R05 | Licencia decidida por el titular y añadida con atribución correcta; no inventar identidad del autor. |
-| F5-R06 | Guía breve de contribución con comandos, pruebas y criterio para cambios metodológicos. |
-| F5-R07 | Estado de fases y roadmap coherentes con lo que realmente se ha implementado. |
-| F5-R08 | Material de portafolio sin exponer secretos, rutas personales, datos privados o afirmaciones no comprobadas. |
+| ID | Requisito | Estado y evidencia |
+| --- | --- | --- |
+| F5-R01 | README orientado a evaluar y ejecutar el proyecto, con enlaces válidos. | Implementado: README, contrato de ejecución y ejemplos enlazados; sin URL pública inventada |
+| F5-R02 | Capturas reales de la versión actual, con datos identificados como sintéticos si corresponde. | Completado: resumen y detalle con cuatro gráficas revisados, enlazados en README y con procedencia en `docs/images/README.md` |
+| F5-R03 | Modo de demostración determinista sin depender de Yahoo. | Implementado: ProveedorDemo, archivos versionados y pruebas de proveedor/UI con red bloqueada |
+| F5-R04 | Ejemplo de análisis y exportación que pueda reproducirse desde datos versionados. | Implementado: `examples/analisis_demo.py`, CSV/Excel/manifest públicos y pruebas de integración |
+| F5-R05 | Licencia decidida por el titular y añadida con atribución correcta; no inventar identidad del autor. | Completado: usuario eligió MIT, titular adndvlp confirmado; LICENSE con Copyright (c) 2026 adndvlp |
+| F5-R06 | Guía breve de contribución con comandos, pruebas y criterio para cambios metodológicos. | Implementado: CONTRIBUTING.md, TDD obligatorio y guía de dependencias |
+| F5-R07 | Estado de fases y roadmap coherentes con lo que realmente se ha implementado. | Completado: secciones 19.3/21.11, arquitectura y README reflejan F1–F5 y separan el despliegue y CI de esta entrega pendientes |
+| F5-R08 | Material de portafolio sin exponer secretos, rutas personales, datos privados o afirmaciones no comprobadas. | Completado: documentos, exportación y capturas finales revisados; sin rutas privadas, secretos ni afirmaciones de rentabilidad o despliegue |
 
 ### 18.4 Diseño del modo de demostración
 
@@ -1414,33 +1416,76 @@ El modo debe:
 
 Los fixtures de tests de F1 y los datos de demo pueden compartir origen, pero no deben acoplar el código de producto a imports desde `tests/`. Extraer los datos de demostración a un lugar adecuado y conservar fixtures de prueba independientes.
 
-### 18.5 Artefactos previstos
+Implementación adoptada:
+
+- `ProveedorDemo` lee tres archivos de `data/demo` mediante rutas relativas a su
+  módulo. Dataset `demo-1.0`, referencia 2025-01-03; todos los datos son ficticios.
+- Símbolos: DEMO-USA (USD, completo), DEMO-MX.MX (MXN, completo) y DEMO-INCOMPLETA
+  (sin acciones ni cuentas suficientes). Sus estados y precios son archivos de
+  producto; no se importan fixtures ni se recalculan datos con el reloj.
+- La UI ofrece **Fuente de datos** y admite `VALORACION_DEMO=1` para el valor
+  inicial de una sesión nueva. Entrar en demo analiza sus casos una vez; limpiar
+  no dispara otra carga automática. El usuario puede volver a analizar con otros
+  supuestos o cambiar al modo Mercado.
+- El catálogo y ticker adicional se separan por fuente; el adicional se desactiva
+  en demo. Un símbolo/período desconocido falla localmente, sin fallback a Yahoo.
+- El servicio recibe el proveedor inyectado y mantiene el mismo cálculo,
+  gráficos y exportador. La demo elimina la pausa entre consultas, sin alterar
+  los supuestos financieros. La configuración del resultado se conserva hasta
+  reanalizar.
+- Fuente incluida en las claves de las tres cachés; TTL conservados. Cambiarla
+  descarta resultados, configuración almacenada y selector de detalle. Se prueba
+  aislamiento incluso con idéntico símbolo en ambos proveedores.
+- Fuente, versión y referencia sintéticas aparecen en el aviso de UI, Detalle y
+  Notas exportadas. El archivo descargado se llama `demo_valoraciones_USA_MX.xlsx`.
+  Universo/Fuentes conservan el catálogo de mercado y se explica su alcance.
+- El ejemplo público usa las tasas iniciales de la UI (10 %/10 %), mediana USA
+  116.1879930510067 USD y MX aproximadamente 209.138387491812 MXN. El caso
+  incompleto no aporta proxies ni mediana. El ejemplo Decimal de F3 permanece
+  separado y conserva la mediana 46 con su configuración simplificada.
+- Sin dependencias nuevas, cambios de fórmulas, esquema, catálogo de mercado,
+  snapshots históricos ni integración con un proveedor de alojamiento.
+
+### 18.5 Artefactos de F5
 
 ```text
 README.md
-LICENSE                         # Tras decidir su contenido
+LICENSE                         # MIT, Copyright (c) 2026 adndvlp
 CONTRIBUTING.md
 docs/
 ├── SDD.md
 ├── architecture.md
 ├── methodology.md
-└── images/                     # Capturas reales y optimizadas
+├── TDD_F5.md
+└── images/                     # Resumen y detalle aceptados, JSON de procedencia y README
+data/demo/
+├── README.md
+├── empresas.json
+├── estados.csv
+└── precios.csv
+valoracion/proveedores/demo.py
 examples/
-└── analisis_reproducible/       # Datos, explicación y salida representativa
+├── analisis_demo.py
+└── demo/                       # README, CSV, Excel y manifest públicos
+tests/
+├── integration/test_proveedor_demo.py
+├── integration/test_ejemplo_demo.py
+└── ui/test_demo.py
 ```
 
 No son requisitos automáticos un sitio de marketing, dominio, despliegue, changelog extenso, plantillas de incidencias o múltiples documentos de gobernanza. Añadirlos sólo si existe una necesidad concreta.
 
 ### 18.6 Criterios de aceptación
 
-- [ ] Una persona puede seguir el README desde una instalación limpia.
-- [ ] La demo completa funciona con las consultas de mercado bloqueadas.
-- [ ] Capturas corresponden al producto y datos de demo actuales.
-- [ ] Ejemplo reproducible concuerda con metodología y Excel.
-- [ ] Pruebas y CI mencionados existen; enlaces no contienen repositorios ficticios.
-- [ ] Licencia y atribución se han resuelto sin suposiciones sobre derechos o autoría.
-- [ ] Las limitaciones son específicas y visibles, sin convertir la documentación en promesas de rentabilidad.
-- [ ] SDD, arquitectura y roadmap reflejan el estado final real.
+- [x] README explica la preparación resuelta de F4 y la ejecución; comandos y enlaces revisados.
+- [x] La demo completa funciona con las consultas de mercado bloqueadas.
+- [x] Captura del resumen real revisada y enlazada; muestra datos sintéticos y referencia.
+- [x] Capturas corresponden al producto y datos de demo actuales; detalle con cuatro gráficas completas.
+- [x] Ejemplo reproducible concuerda con metodología y Excel.
+- [x] Pruebas y CI mencionados existen; enlaces no contienen repositorios ficticios.
+- [x] Licencia y atribución resueltas por el usuario; MIT con titular adndvlp en LICENSE.
+- [x] Las limitaciones son específicas y visibles, sin convertir la documentación en promesas de rentabilidad.
+- [x] SDD, arquitectura y roadmap reflejan el cierre real y las verificaciones externas pendientes.
 
 ## 19. Trazabilidad y dependencias
 
@@ -1479,17 +1524,17 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Dependencias abiertas/arranque | F4-R01 a F4-R08 | Instalación limpia, preparación/arranque agnósticos, comandos y CI Ubuntu |
 | Falta de evidencia de producto | F5-R01 a F5-R08 | Demo, documentación, capturas y ejemplo |
 
-### 19.3 Estado de ejecución después de F4
+### 19.3 Estado de ejecución de F5
 
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 1.5; incorpora F1 a F4 y corrección de CI |
-| F1 | Implementada y verificada localmente; CI remoto pendiente | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
-| F2 | Implementada y verificada localmente; CI remoto no verificado | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
+| SDD | Actualizada | Versión 1.8; continuidad vigente en 21.11 |
+| F1 | Implementada y verificada localmente; incluida en CI previo a F5 | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
+| F2 | Implementada y verificada localmente; incluida en CI previo a F5 | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
-| F4 | Implementada y verificada localmente; publicación pendiente | Resoluciones, entorno limpio, Ruff, arranque agnóstico y CI Ubuntu; cierre en 21.10 |
-| F5 | Pendiente | Sin demo, capturas de portafolio ni licencia definida |
+| F4 | Implementada; CI remoto del commit d90fc2a correcto; publicación pendiente | Resoluciones, entorno limpio, Ruff, arranque agnóstico y [Tests #5](https://github.com/adndvlp/IntVal/actions/runs/43363574654); cierre histórico en 21.10 |
+| F5 | Implementada y verificada localmente | Demo, ejemplo CSV/Excel/manifest, README, CONTRIBUTING, capturas reales revisadas y MIT; cierre en 21.11. CI de F5 aún no ejecutado |
 
 ## 20. Decisiones y riesgos
 
@@ -1506,8 +1551,8 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | D-007 | Python 3.12 en primer CI; soporte completo se cierra en F4 | Propuesta basada en entorno local comprobado |
 | D-008 | Un esquema común de resultado y error | Diseño de F1 para resolver fallos de UI y exportación |
 | D-009 | Dependencias resueltas con estrategia única basada en pip | Propuesta de F4; no migrar de herramienta por preferencia aislada |
-| D-010 | Modo demo usa el motor real y proveedor local | Propuesta de F5; no duplicar resultados precalculados en otra interfaz |
-| D-011 | Licencia por decidir con su titular | Pendiente para F5; no bloquea F1 ni autoriza atribuciones inventadas |
+| D-010 | Modo demo usa el motor real y proveedor local | Implementada en F5 con inyección de ProveedorDemo; cachés separadas por fuente |
+| D-011 | Licencia decidida por el titular | Resuelta en F5: usuario eligió MIT y confirmó al dueño del repo, adndvlp, como titular; texto en LICENSE |
 | D-012 | Si se necesita servicio externo, preferencia por coste cero | Restricción del usuario; verificar alternativas cuando exista necesidad real |
 | D-013 | TDD obligatorio para los cambios de software de todas las fases | Instrucción explícita posterior del usuario; ciclos de F1 documentados |
 | D-014 | Bloqueo de red en fixture automática, sin pytest-socket | Ajuste de diseño de F1: proveedor, sockets Python y DNS bloqueados con monkeypatch y verificados mediante tests |
@@ -1557,17 +1602,13 @@ Las decisiones pendientes de una fase futura no impiden realizar las correccione
 6. Ejecutar los comandos que realmente existan. Si F1 sigue pendiente, no afirmar que `python -m pytest` ejecuta una suite del proyecto.
 7. Implementar la fase solicitada, respetando el orden y el alcance. No continuar automáticamente a fases posteriores por haber terminado una.
 
-La carpeta usada en esta sesión fue:
-
-```text
-/Users/andresitopacheco/Desktop/I/acc/Acciones/valoracion_app
-```
-
-Es una referencia local de trabajo, no una ruta que deba aparecer en comandos públicos, tests o documentación de instalación para otros usuarios.
+Trabajar desde la raíz del checkout disponible. La ruta personal usada en la
+sesión original se retiró al preparar F5; no es parte del contrato ni debe
+copiarse a comandos públicos, tests o documentación para otras personas.
 
 ### 21.2 Instrucción lista para continuar con F1
 
-Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los cierres de las secciones 21.6 a 21.10: F1 a F4 ya están implementadas localmente y no deben rehacerse desde cero. Las correcciones futuras deben seguir TDD; F5 es la siguiente fase pendiente y requiere solicitud para iniciarse.
+Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los registros de las secciones 21.6 a 21.11: F1 a F5 están implementadas y verificadas localmente. F5 incluye las dos capturas revisadas y MIT; no quedan pendientes de implementación de estas fases. Las correcciones futuras deben seguir TDD; no reiniciar las fases ni tratar el texto histórico como un encargo nuevo. El run remoto de esta entrega y una URL pública se verifican al publicarse, por separado.
 
 > Lee `docs/SDD.md` y las instrucciones del repositorio. Implementa únicamente F1: corrige los casos de fallo, crea pruebas deterministas para todas las áreas relevantes y automatízalas en CI en una misma entrega. F2 a F5 siguen pendientes. Empieza por reproducir BUG-001 y BUG-002 mediante tests y corrige sus causas. Usa fixtures sintéticos y un proveedor falso; las pruebas obligatorias no deben consultar Yahoo. Conserva las fórmulas válidas actuales y sus contratos públicos; documenta como caracterización lo que aún requiere revisión metodológica. Sigue la matriz de pruebas, verifica los resultados numéricos de forma independiente, mide cobertura sobre ambos archivos con ramas y usa el umbral inicial de 85 %. Añade el workflow y comandos de desarrollo sin realizar la refactorización completa ni el bloqueo integral de dependencias de fases posteriores. Ejecuta las comprobaciones disponibles, distingue suite local de CI remoto, y actualiza esta SDD con archivos cambiados, comandos, resultados reales y pendientes. No publiques ni despliegues como parte de esta tarea.
 
@@ -1659,7 +1700,7 @@ No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI e
 
 ### 21.6 Registro de implementación de F1
 
-Registro histórico al cerrar F1; el estado vigente está en 21.10.
+Registro histórico al cerrar F1; el estado vigente está en 21.11.
 
 - Fecha: 2026-11-12.
 - Referencia inicial: commit `635cd15`. Los cambios de F1 están en el árbol de trabajo; no se creó un commit ni se publicó el código como parte de esta implementación.
@@ -1682,7 +1723,7 @@ Registro histórico al cerrar F1; el estado vigente está en 21.10.
 
 ### 21.7 Registro de implementación de F2
 
-Registro histórico al cerrar F2; el estado vigente está en 21.10.
+Registro histórico al cerrar F2; el estado vigente está en 21.11.
 
 - Fecha: 2026-11-12.
 - Línea base: `b9852e6`, commit de F1. El árbol estaba limpio al comenzar. Los cambios de F2 permanecen en el árbol de trabajo; no se hizo commit ni se publicó como parte del encargo.
@@ -1754,7 +1795,7 @@ heurísticas como datos auditados.
 
 ### 21.9 Corrección posterior a F3: ruta de AppTest en CI
 
-Registro previo a F4; el punto de continuidad vigente está en 21.10.
+Registro previo a F4; el punto de continuidad vigente está en 21.11.
 
 - Línea base: `43d6725`; fecha 2026-11-12. El usuario compartió un run anterior
   con 20 pruebas de UI fallidas, 250 pasadas y cobertura 84.39 %. AppTest buscaba
@@ -1775,7 +1816,11 @@ Registro previo a F4; el punto de continuidad vigente está en 21.10.
 - Punto de continuidad: se mantienen las decisiones y contratos de 21.8, más
   esta corrección. **F4 y F5 siguen pendientes** y requieren el siguiente encargo.
 
-### 21.10 Registro de implementación de F4 y continuidad vigente
+### 21.10 Registro histórico de implementación de F4
+
+El punto de continuidad vigente es 21.11. Este apartado conserva la evidencia
+y los pendientes que existían al terminar F4; el CI de ese commit se verificó
+posteriormente al implementar F5.
 
 - Fecha: 2026-11-12. Línea base: `c149bd7`, corrección de AppTest posterior a F3.
   Línea base verificada: 315 pruebas, cobertura 98.51 %, 42.53 s.
@@ -1829,6 +1874,110 @@ Mantener TDD y las resoluciones. No rehacer F1 a F4 ni cambiar fórmulas/catálo
 para presentar el proyecto. La publicación se configura con los comandos y las
 variables del contrato en el entorno elegido, y se valida en su URL. La licencia
 sigue necesitando decisión de su titular. No inventar un run remoto ni publicación.
+
+### 21.11 Implementación de F5 y continuidad vigente
+
+- Fecha: 2026-11-12. Línea base: commit `d90fc2a`, F4. Antes del cambio:
+  **327 passed**, 1 warning, 40.13 s y cobertura con ramas 98.51 %.
+- Encargo autorizado: F5, presentación del repositorio y demo, con **TDD
+  obligatorio**. F1 a F4 no se rehacen. El alojamiento sigue siendo agnóstico;
+  no se añade un manifiesto ni se publica la aplicación.
+- Estado actual: **F1 a F5 implementadas y verificadas localmente; demo, ejemplo,
+  documentación, dos capturas reales revisadas y licencia MIT completados**. No se hizo
+  commit, push ni cambio de configuración de un servicio externo.
+- Software nuevo: `valoracion/proveedores/demo.py`, dataset en `data/demo/` y
+  `examples/analisis_demo.py`. UI adaptada en `app.py`. El proveedor satisface las
+  tres operaciones del protocolo existente, devuelve copias y sólo lee archivos
+  locales. No importa tests ni consulta Yahoo ante errores.
+- Datos: `demo-1.0`, referencia fija 2025-01-03. DEMO-USA y DEMO-MX.MX completos;
+  DEMO-INCOMPLETA sin acciones/cuentas suficientes. Estados 2020–2024, precios
+  ficticios versionados, sin aleatoriedad ni actualización por reloj en ejecución.
+  Unidades y procedencia en `data/demo/README.md`.
+- UI: selector Mercado/Demostración; `VALORACION_DEMO=1` selecciona demo al abrir
+  una sesión. Primera activación analiza los tres casos; limpiar conserva el modo
+  y no recarga hasta analizar. Se conservan filtros, detalle, cuatro gráficas y
+  Excel. Un aviso persistente identifica datos sintéticos y referencia. Adicionales
+  desactivados en demo; catálogo de mercado separado.
+- Cachés: análisis, precios y estados incluyen la fuente en sus claves; TTL
+  anteriores conservados. Cambiar fuente borra resultados/configuración/selector
+  de detalle. La configuración exportada permanece ligada al análisis almacenado
+  hasta reanalizar, aunque cambien los controles.
+- Cálculo: mismo servicio y metodología `proxies-1.0`; contrato `2.0` con 24/73
+  campos. Sin cambios de fórmulas, fachada, CLI, catálogo de mercado, snapshots
+  de F1 ni dependencias. Demo sólo elimina la pausa entre consultas de mercado.
+- Ejemplo público: `examples/demo/analisis_demo.csv`, `.xlsx`, `manifest.json`
+  y README. Tasas iniciales de la UI 10 %/10 %, medianas USA 116.1879930510067
+  USD y MX aproximadamente 209.138387491812 MXN; incompleta sin mediana. El libro
+  conserva siete hojas y fuente sintética en Detalle/Notas. Universo/Fuentes
+  siguen describiendo el catálogo de mercado; se explica en la documentación.
+- Regeneración: `python -m examples.analisis_demo` produce salidas ignoradas en
+  `examples/salida/demo/`; `--output examples/demo` actualiza intencionalmente el
+  ejemplo versionado. No se compara Excel por bytes: incluye fecha de generación.
+  El ejemplo Decimal independiente de F3 permanece intacto.
+- TDD: ciclo proveedor **11 failed → 11 passed**; ciclo UI **5 failed → 5 passed**;
+  ciclo ejemplo **2 failed → 2 passed**. Pruebas en
+  `tests/integration/test_proveedor_demo.py`, `test_ejemplo_demo.py` y
+  `tests/ui/test_demo.py`. Los esperados simplificados se concilian de forma
+  independiente y la fixture mantiene red/Yahoo sin preparar bloqueados.
+- Verificación local final: **345 passed**, cero skips/xfails, 1 warning previo,
+  **49.63 s**, cobertura total con ramas **98.59 %**. Pip check correcto, Ruff
+  sin incidencias y 73 archivos con formato correcto. No se redujo el umbral
+  del 85 % ni el alcance de cobertura. Evidencia completa en [TDD_F5.md](TDD_F5.md).
+- Interrupción de infraestructura: una ejecución falló al agotarse el disco.
+  Se retiraron únicamente dos entornos y una copia de ruedas temporales de F4
+  creados por el agente; el entorno del proyecto y los archivos del usuario se
+  conservaron. La suite se repitió tras recuperar espacio y pasó. Ese fallo no
+  se registra como RED de software.
+- Revisión manual: libro público reabierto, valores conciliados con CSV y XML
+  sin rutas personales/patrones de credenciales. Catálogo, snapshots F1 y documento
+  de metodología iguales byte a byte a HEAD. Enlaces locales y diff revisados.
+- Documentación: README de portafolio, CONTRIBUTING con TDD y cambios económicos,
+  descripción del dataset, ejemplo, arquitectura, guía de desarrollo y esta SDD.
+  No se atribuyen precisión financiera, rentabilidad, usuarios ni una URL pública.
+- CI remoto verificado por API del repositorio real: run
+  [Tests #5](https://github.com/adndvlp/IntVal/actions/runs/43363574654), SHA
+  `d90fc2aab0b99b662054f10f849cf9b008df65fa`, `completed/success`. Corresponde
+  al commit previo de F4, no a cambios de F5 aún sin publicar. La insignia enlaza
+  el workflow real. Verificar el run del commit de F5 cuando se publique.
+
+**Cierre de los requisitos de capturas y licencia:**
+
+1. F5-R02: **completado**. El usuario ejecutó la captura asistida fuera de la
+   restricción de esta sesión, sólo en localhost. La primera revisión rechazó
+   el encuadre del detalle; se corrigió el scroll y se comprobó la presencia de
+   las cuatro gráficas antes de guardar. El usuario repitió el proceso y las
+   imágenes finales tienen fecha **2026-11-13T04:55:44.765Z**, sin errores de
+   navegador. Se inspeccionaron ambas: resumen 1920 × 1080 y detalle 1920 × 1800,
+   con DEMO-MX.MX, precio 200 MXN, mediana 209,14 MXN y las cuatro gráficas.
+   Fuente sintética y referencia visibles, sin datos privados, EXIF ni comentarios.
+   Ambas están en README y su procedencia en `docs/images/README.md` y
+   `docs/images/captura-demo.json`. El procedimiento manual permite repetirlas
+   sin depender del script temporal. La captura verifica una instancia local,
+   no un despliegue público.
+2. F5-R05: **completado**. El usuario confirmó al dueño del repositorio como
+   titular: adndvlp, propietario verificado de `adndvlp/IntVal`. Tras recomendar
+   MIT y consultar su [texto oficial](https://opensource.org/license/mit), el
+   usuario la eligió. Se añadió LICENSE con el texto estándar y
+   `Copyright (c) 2026 adndvlp`; README enlaza la licencia.
+3. F5-R01 a F5-R08 y las casillas de 18.6 están completados. El cierre sólo
+   cambió documentos y artefactos; el software conserva el resultado de las
+   345 pruebas y cobertura 98.59 %. Se revisaron enlaces, metadatos, licencia y
+   diff. No se repitió toda la suite por estos cambios documentales.
+
+**Para continuar en otro chat:** leer primero esta sección, la sección 18,
+`TDD_F5.md`, `data/demo/README.md`, `examples/demo/README.md` y las instrucciones
+del repositorio; comprobar el árbol disponible antes de actuar. Mantener TDD,
+metodología, contrato, catálogo y resoluciones. **F1 a F5 están completas**:
+no volver a pedir licencia, titular ni capturas, y no rehacer esas fases. No hay
+una F6 definida; el siguiente trabajo debe responder al encargo del usuario. Una
+corrección de software debe tener su regresión antes del cambio. Tras cambios de
+software ejecutar los checks pertinentes y el cierre canónico; no repetir toda
+la suite sólo por modificar texto/capturas si no aparece una preocupación nueva.
+
+Publicar en un alojamiento, hacer push o modificar recursos externos no formó
+parte de este encargo. Cuando se solicite, usar el contrato de `development.md`
+y verificar HTTP/WebSockets, demo, consulta de mercado y descarga en la URL real.
+No exigir Render, un Blueprint, VPS ni servicios adicionales para cerrar el repo.
 
 ## 22. Fuentes y mantenimiento
 

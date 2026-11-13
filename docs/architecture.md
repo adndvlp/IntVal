@@ -1,4 +1,4 @@
-# Arquitectura — F2
+# Arquitectura
 
 ## Decisión ADR-001: separar adquisición, cálculo, orquestación y presentación
 
@@ -9,7 +9,9 @@ Este documento conserva la decisión y evidencia del cierre de F2. F3 añadió
 políticas y trazabilidad sobre esta estructura, detalladas en la
 [metodología](methodology.md) y el [registro TDD](TDD_F3.md). Las afirmaciones de
 equivalencia total y 19/45 columnas de las secciones históricas describen F2;
-el contrato vigente es 2.0, con prefijos heredados y 24/73 campos.
+el contrato vigente es 2.0, con prefijos heredados y 24/73 campos. Las extensiones
+de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
+históricos. El punto de continuidad actual es 21.11 de la SDD.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -38,7 +40,8 @@ valoracion/
 ├── proveedores/
 │   ├── __init__.py
 │   ├── base.py                 # Protocolo ProveedorDatos
-│   └── yahoo.py                # Único módulo que importa yfinance
+│   ├── yahoo.py                # Único módulo que importa yfinance
+│   └── demo.py                 # F5: archivos sintéticos, mismo protocolo
 ├── exportacion/
 │   ├── __init__.py
 │   └── excel.py                # Libro Excel a partir de resultados
@@ -47,7 +50,8 @@ valoracion/
     ├── formatos.py
     └── graficas.py
 data/
-└── universo.json
+├── universo.json
+└── demo/                       # F5: catálogo, estados y precios ficticios
 ```
 
 El paquete usa la estructura plana prevista en la SDD. No exige instalar el
@@ -254,8 +258,8 @@ un porcentaje alto. El workflow sigue ejecutando el mismo comando canónico.
 - El ejemplo de `examples/` ejecuta cálculo/exportación sin proveedor, con un
   oráculo Decimal independiente y datos CSV ficticios.
 
-F4 y F5 permanecen pendientes; el cierre vigente se registra en la sección 21.8
-[de la SDD](SDD.md).
+Al cerrar F3, F4 y F5 permanecían pendientes; ese registro histórico está en la
+sección 21.8 [de la SDD](SDD.md). La continuidad actual se encuentra en 21.11.
 
 ## Entorno y arranque agnóstico en F4
 
@@ -277,4 +281,42 @@ el mismo alcance y umbral.
 
 La [guía de despliegue y desarrollo](development.md) documenta el contrato genérico.
 [TDD de F4](TDD_F4.md) registra instalación limpia y límites. La continuidad está
-en 21.10 de la SDD; F5 y la validación de una URL publicada siguen pendientes.
+en 21.10 de la SDD. La validación de una URL publicada sigue pendiente.
+
+## Proveedor local y demostración en F5
+
+`ProveedorDemo` implementa `ProveedorDatos` leyendo `data/demo/empresas.json`,
+`estados.csv` y `precios.csv`. Resuelve las rutas respecto a su módulo, no al
+directorio de ejecución. Los datos son propios del producto y no importan
+fixtures de tests. La versión `demo-1.0` y la referencia fija 2025-01-03 se
+conservan en la procedencia de los snapshots y en los diagnósticos exportados.
+
+El servicio existente recibe `proveedor=ProveedorDemo()`. No se añaden fórmulas
+ni un servicio paralelo: cálculo, presentación y Excel son los mismos. Cada
+snapshot copia sus cuentas; modificar un DataFrame entregado no altera la
+siguiente consulta. Un símbolo o período desconocido falla localmente y no
+recurre al proveedor de mercado. La historia se filtra respecto a la referencia
+del dataset, no al reloj del servidor.
+
+La UI ofrece Mercado/Demostración. `VALORACION_DEMO=1` selecciona la demo al abrir
+una sesión nueva, sin cambiar el contrato de arranque ni depender del alojamiento.
+Entrar en Demostración carga sus tres casos con los supuestos visibles y sin la
+pausa entre consultas de mercado. Limpiar resultados conserva la fuente elegida
+y deja la pantalla vacía hasta volver a analizar; un rerun no repite esa carga.
+
+La fuente forma parte de la clave de las tres cachés de Streamlit: análisis,
+precio y estados históricos. Los TTL anteriores se conservan. Al cambiar de
+fuente se limpian resultados, configuración del análisis y selector de detalle.
+El ticker adicional está desactivado en demo y los catálogos son independientes.
+Esto impide que un resultado o un histórico de Mercado se presenten bajo el aviso
+de datos sintéticos, incluso si ambos proveedores reciben el mismo símbolo.
+
+`examples/analisis_demo.py` vuelve a ejecutar ese servicio para producir el CSV,
+el Excel de siete hojas y un manifest de configuración. Sus valores iniciales
+coinciden con los de la UI; el ejemplo Decimal de F3 conserva su caso independiente.
+El exportador sigue incluyendo el catálogo de mercado en Universo/Fuentes; la
+fuente sintética del análisis se identifica en Detalle/Notas.
+
+La [evidencia de F5](TDD_F5.md) reúne regresiones del proveedor, flujo AppTest sin
+red, aislamiento de caché y conciliación del ejemplo público. No cambia metodología,
+contrato, fachada, CLI de mercado, catálogo ni snapshots históricos.

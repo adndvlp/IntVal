@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 1.3 |
+| Versión del documento | 1.4 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1, F2 y F3 implementadas y verificadas localmente; CI remoto no verificado en esta sesión. F4 y F5 pendientes |
+| Estado | F1, F2 y F3 implementadas. Fallo previo de CI reportado por el usuario y corregido localmente; nuevo run remoto pendiente. F4 y F5 pendientes |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
 | Método de implementación obligatorio | TDD: prueba primero, fallo observado, cambio mínimo y refactorización con pruebas verdes |
@@ -19,7 +19,7 @@
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; el estado y las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. F4 y F5 siguen pendientes.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; el estado y las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. F4 y F5 siguen pendientes. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md).
 
 ## Índice
 
@@ -1475,7 +1475,7 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 1.3; incorpora evidencia de F1, F2 y F3 |
+| SDD | Actualizada | Versión 1.4; incorpora evidencia de F1, F2, F3 y corrección de CI |
 | F1 | Implementada y verificada localmente; CI remoto pendiente | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; CI remoto no verificado | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
@@ -1742,6 +1742,27 @@ Para continuar en un chat nuevo: leer esta sección, `methodology.md`, `TDD_F3.m
 y la sección 17. Confirmar el estado del árbol y ejecutar la suite. Preservar TDD,
 los contratos y las limitaciones económicas; no rehacer F1/F2/F3 ni tratar sus
 heurísticas como datos auditados.
+
+### 21.9 Corrección posterior a F3: ruta de AppTest en CI
+
+- Línea base: `43d6725`; fecha 2026-11-12. El usuario compartió un run anterior
+  con 20 pruebas de UI fallidas, 250 pasadas y cobertura 84.39 %. AppTest buscaba
+  `tests/ui/app.py` al resolver una ruta relativa desde el test llamador.
+- Se reprodujo mediante TDD con dos casos reales: arrancar desde otra carpeta,
+  sin `app.py` y con un `app.py` ajeno. RED: 2 failed; GREEN: 2 passed.
+- Corrección: ruta absoluta calculada desde `__file__`; todas las pruebas de UI
+  reutilizan `iniciar()`, incluida la prueba de proveedor inyectado de F2.
+- Verificación local: `python -m pytest`, **315 passed**, sin skips/xfails,
+  **98.51 %** de cobertura combinada de líneas y ramas, **40.54 s**.
+- Entorno: macOS, Python 3.12.2, Streamlit 1.60.0. La versión de Streamlit del
+  run fallido no aparece en el log compartido. La diferencia de resolución está
+  demostrada por el código local y el traceback, sin atribuir una versión exacta.
+- Evidencia y comandos en [TDD de la corrección de AppTest](TDD_CI_APPTEST.md).
+  No se cambió el producto, las dependencias, el workflow ni el umbral de cobertura.
+- El nuevo run de GitHub sigue pendiente: no confundir la verificación local con
+  una ejecución remota exitosa. No se hizo commit, push ni despliegue.
+- Punto de continuidad: se mantienen las decisiones y contratos de 21.8, más
+  esta corrección. **F4 y F5 siguen pendientes** y requieren el siguiente encargo.
 
 ## 22. Fuentes y mantenimiento
 

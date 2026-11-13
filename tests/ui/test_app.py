@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from io import BytesIO
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -14,12 +15,15 @@ from valoracion.exportacion import excel
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 
+RUTA_APP = Path(__file__).resolve().parents[2] / "app.py"
+
+
 def widget_por_etiqueta(elementos, etiqueta):
     return next(elemento for elemento in elementos if elemento.label == etiqueta)
 
 
 def iniciar():
-    return AppTest.from_file("app.py", default_timeout=20).run()
+    return AppTest.from_file(RUTA_APP, default_timeout=20).run()
 
 
 def analizar(app, texto="TEST"):
@@ -44,7 +48,7 @@ def test_todos_los_analisis_fallan_sin_romper_la_interfaz(monkeypatch):
         raise RuntimeError("Fallo simulado del proveedor")
 
     monkeypatch.setattr(servicio, "analizar_ticker", fallar)
-    app = AppTest.from_file("app.py", default_timeout=20).run()
+    app = iniciar()
     widget_por_etiqueta(app.sidebar.multiselect, "Tickers").set_value(["A"])
     widget_por_etiqueta(app.sidebar.button, "Analizar empresas").click().run()
 
@@ -61,6 +65,25 @@ def test_arranque_no_consulta_el_proveedor(proveedor):
     assert not app.exception
     assert proveedor[1] == []
     assert app.info
+
+
+@pytest.mark.parametrize("con_app_ajena", [False, True])
+def test_arranque_encuentra_la_app_del_repositorio_desde_otro_directorio(
+    monkeypatch, tmp_path, proveedor, con_app_ajena,
+):
+    if con_app_ajena:
+        (tmp_path / "app.py").write_text(
+            "import streamlit as st\nst.error('Esta no es la aplicación del repositorio')\n",
+            encoding="utf-8",
+        )
+    monkeypatch.chdir(tmp_path)
+
+    app = iniciar()
+
+    assert not app.exception
+    assert app.title[0].value == "Valoración de acciones · USA y México"
+    assert app.info
+    assert proveedor[1] == []
 
 
 def test_flujo_completo_con_motor_real_y_excel(monkeypatch, industrial):

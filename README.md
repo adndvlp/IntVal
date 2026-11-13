@@ -180,6 +180,8 @@ no la validez predictiva de una valoración.
 ## Documentación y estado
 
 - [SDD y continuidad](docs/SDD.md): requisitos, decisiones, fases y trabajo pendiente.
+- [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
+  FastAPI, especificados para F6–F11 y todavía sin implementar.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
@@ -188,9 +190,10 @@ no la validez predictiva de una valoración.
 
 F1–F5 están implementadas y verificadas localmente. La demo, el ejemplo público,
 las capturas reales revisadas y la licencia MIT completan la presentación del
-repositorio. El CI del commit previo a F5 está verificado; el run correspondiente
-a esta entrega se comprobará cuando se publique. El despliegue público y la
-validación de su URL quedan pendientes.
+repositorio. El [CI del commit F5](https://github.com/adndvlp/IntVal/actions/runs/43370891010)
+está verificado. F6–F11 describen la evolución web futura en la nueva SDD y siguen
+pendientes de implementación. El despliegue público y la validación de su URL
+quedan pendientes.
 
 ## Licencia
 

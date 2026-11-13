@@ -11,7 +11,8 @@ políticas y trazabilidad sobre esta estructura, detalladas en la
 equivalencia total y 19/45 columnas de las secciones históricas describen F2;
 el contrato vigente es 2.0, con prefijos heredados y 24/73 campos. Las extensiones
 de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
-históricos. El punto de continuidad actual es 21.11 de la SDD.
+históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
+posterior está especificada en 21.12 y [SDD_WEB.md](SDD_WEB.md), sin implementar.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -259,7 +260,8 @@ un porcentaje alto. El workflow sigue ejecutando el mismo comando canónico.
   oráculo Decimal independiente y datos CSV ficticios.
 
 Al cerrar F3, F4 y F5 permanecían pendientes; ese registro histórico está en la
-sección 21.8 [de la SDD](SDD.md). La continuidad actual se encuentra en 21.11.
+sección 21.8 [de la SDD](SDD.md). La continuidad actual se encuentra en 21.12 y
+SDD_WEB.md.
 
 ## Entorno y arranque agnóstico en F4
 
@@ -320,3 +322,13 @@ fuente sintética del análisis se identifica en Detalle/Notas.
 La [evidencia de F5](TDD_F5.md) reúne regresiones del proveedor, flujo AppTest sin
 red, aislamiento de caché y conciliación del ejemplo público. No cambia metodología,
 contrato, fachada, CLI de mercado, catálogo ni snapshots históricos.
+
+## Destino web especificado después de F5
+
+La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
+API FastAPI, manteniendo el motor/proveedores/Excel existentes. Es diseño futuro;
+no cambia el diagrama ni las entradas implementadas descritas arriba.
+
+La migración separará cachés/sesión de Streamlit del transporte HTTP y preservará
+los snapshots/configuración de análisis. La entrada actual seguirá funcionando
+hasta demostrar paridad y cumplir los criterios de transición de F11.

@@ -10,6 +10,11 @@ referencia es **CPython 3.12** en `.python-version`, compartida con CI. La
 verificación local usa macOS ARM64/Python 3.12.2; CI apunta a Ubuntu. La ejecución
 remota de CI y la validación de una URL publicada son evidencias independientes.
 
+La siguiente etapa está especificada en la [SDD web](SDD_WEB.md): Astro estático,
+React y FastAPI, fases F6–F11 pendientes. Los comandos de esta guía siguen
+describiendo el software actual de Streamlit; el arranque no cambia por redactar
+el plan. Las herramientas/scripts frontend se añadirán y verificarán en F6.
+
 ## 1. Contrato de ejecución
 
 | Requisito | Contrato |
@@ -212,3 +217,8 @@ resultados reales. Se verificó el run de Ubuntu del commit `d90fc2a`, previo a 
 [Tests #5, correcto](https://github.com/adndvlp/IntVal/actions/runs/43363574654).
 Ese run no valida cambios posteriores aún sin publicar. La validación local,
 el run remoto correspondiente y la URL desplegada son evidencias distintas.
+
+Durante la especificación de la siguiente etapa se verificó también el
+[run de F5 para 345aa0a](https://github.com/adndvlp/IntVal/actions/runs/43370891010),
+completado correctamente. Es la línea base de SDD_WEB.md; no acredita las fases
+F6–F11 todavía sin implementar.

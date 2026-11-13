@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 
 import valoracion.servicio as motor
-from valoracion.modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE
 from tests.fixtures.datos_sinteticos import TickerSintetico
+from valoracion.modelos import COLUMNAS_DETALLE, COLUMNAS_PRINCIPAL
 
 
 def test_industrial_completa_concilia_cuatro_modelos(industrial, config_simple):
@@ -16,13 +16,23 @@ def test_industrial_completa_concilia_cuatro_modelos(industrial, config_simple):
     assert principal["Estado"] == "OK"
     assert principal["Moneda"] == "USD"
     assert principal["Precio de mercado"] == 40
-    assert [principal[c] for c in ["Valor intrínseco FCL", "Valor intrínseco EBIT", "Valor intrínseco EBITDA", "Valor intrínseco utilidad neta"]] == pytest.approx([52, 44, 44, 48])
+    assert [
+        principal[c]
+        for c in [
+            "Valor intrínseco FCL",
+            "Valor intrínseco EBIT",
+            "Valor intrínseco EBITDA",
+            "Valor intrínseco utilidad neta",
+        ]
+    ] == pytest.approx([52, 44, 44, 48])
     assert principal["Mediana de modelos"] == pytest.approx(46)
     assert principal["Upside mediana"] == pytest.approx(0.15)
     assert principal["Upside analistas"] == pytest.approx(0.5)
     assert detalle["Tasa de impuestos"] == pytest.approx(0.2)
     assert detalle["Deuda neta"] == 200
-    assert [detalle[c] for c in ["Base FCL", "Base NOPAT", "Base EBITDA ajustado", "Base utilidad neta"]] == pytest.approx([104, 128, 128, 96])
+    assert [
+        detalle[c] for c in ["Base FCL", "Base NOPAT", "Base EBITDA ajustado", "Base utilidad neta"]
+    ] == pytest.approx([104, 128, 128, 96])
     assert detalle["PV flujos FCL"] == pytest.approx(312)
     assert detalle["PV terminal FCL"] == pytest.approx(208)
     assert list(principal) == COLUMNAS_PRINCIPAL
@@ -76,16 +86,23 @@ def test_datos_basicos_incompletos(industrial, config_simple, falta):
 @pytest.mark.parametrize("modelos", [0, 1, 2])
 def test_modelos_parciales_excluyen_ausencias_de_mediana(industrial, config_simple, modelos):
     industrial.datos["income_stmt"] = industrial.income_stmt.loc[["Total Revenue", "Net Income"]]
-    industrial.datos["cashflow"] = industrial.cashflow.loc[["Free Cash Flow"]] if modelos == 2 else pd.DataFrame()
+    industrial.datos["cashflow"] = (
+        industrial.cashflow.loc[["Free Cash Flow"]] if modelos == 2 else pd.DataFrame()
+    )
     if modelos == 0:
         industrial.datos["income_stmt"] = industrial.income_stmt.loc[["Total Revenue"]]
     principal, _ = motor.analizar_ticker("TEST", config_simple)
     assert principal["Estado"] == ("OK" if modelos == 2 else "REVISAR")
     esperado = {0: None, 1: 48, 2: 50}[modelos]
-    assert principal["Mediana de modelos"] == (pytest.approx(esperado) if esperado is not None else None)
+    assert principal["Mediana de modelos"] == (
+        pytest.approx(esperado) if esperado is not None else None
+    )
 
 
-@pytest.mark.parametrize("crecimiento, g1, g2", [(None, 0.0075, 0.00375), (0.1, 0.025, 0.0125), (0.5, 0.12, 0.06), (-0.2, -0.02, -0.01)])
+@pytest.mark.parametrize(
+    "crecimiento, g1, g2",
+    [(None, 0.0075, 0.00375), (0.1, 0.025, 0.0125), (0.5, 0.12, 0.06), (-0.2, -0.02, -0.01)],
+)
 def test_crecimiento_fallback_y_limites(industrial, config_simple, crecimiento, g1, g2):
     industrial.datos["income_stmt"] = industrial.income_stmt.iloc[:, -1:]
     if crecimiento is not None:
@@ -93,12 +110,18 @@ def test_crecimiento_fallback_y_limites(industrial, config_simple, crecimiento, 
     principal, detalle = motor.analizar_ticker("TEST", config_simple)
     assert detalle["Crecimiento años 1-5"] == pytest.approx(g1)
     assert detalle["Crecimiento años 6-10"] == pytest.approx(g2)
-    assert "CAGR no disponible" in principal["Notas"] if crecimiento is not None else "fallback" in principal["Notas"]
+    assert (
+        "CAGR no disponible" in principal["Notas"]
+        if crecimiento is not None
+        else "fallback" in principal["Notas"]
+    )
 
 
 def test_balance_fallback_sector_y_nombre(industrial, config_simple):
     industrial.datos["balance_sheet"] = pd.DataFrame()
-    industrial.datos["info"].update(totalDebt=300, totalCash=100, sector="Financial Services", longName="Banco sintético")
+    industrial.datos["info"].update(
+        totalDebt=300, totalCash=100, sector="Financial Services", longName="Banco sintético"
+    )
     industrial.datos["info"].pop("shortName")
     principal, detalle = motor.analizar_ticker("TEST", config_simple)
     assert principal["Empresa"] == "Banco sintético"

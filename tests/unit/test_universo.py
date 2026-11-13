@@ -1,8 +1,8 @@
 """F2-R06: catálogo local validado, independiente del directorio de ejecución."""
 
+import json
 from copy import deepcopy
 from importlib import import_module
-import json
 
 import pytest
 
@@ -14,10 +14,14 @@ def documento():
         "fecha_verificacion_fuentes": None,
         "descripcion": "Catálogo sintético para tests, no composición actual de un índice.",
         "mercados": {"USA": ["TEST"], "MX": ["TEST.MX"]},
-        "fuentes": [{
-            "Mercado": "MX", "Fuente": "Referencia sintética",
-            "Descripción": "No se consulta durante la carga.", "URL": "https://example.com",
-        }],
+        "fuentes": [
+            {
+                "Mercado": "MX",
+                "Fuente": "Referencia sintética",
+                "Descripción": "No se consulta durante la carga.",
+                "URL": "https://example.com",
+            }
+        ],
     }
 
 
@@ -39,11 +43,19 @@ def test_cargar_catalogo_local_valida_identidad_y_preserva_orden(tmp_path):
     assert dict(catalogo.fuentes[0]) == datos["fuentes"][0]
 
 
-@pytest.mark.parametrize("campo, valor", [
-    ("version", 2), ("version", True), ("fecha_snapshot", "invalida"),
-    ("fecha_verificacion_fuentes", "ayer"), ("descripcion", ""),
-    ("mercados", []), ("mercados", {"OTRO": []}), ("fuentes", {}),
-])
+@pytest.mark.parametrize(
+    "campo, valor",
+    [
+        ("version", 2),
+        ("version", True),
+        ("fecha_snapshot", "invalida"),
+        ("fecha_verificacion_fuentes", "ayer"),
+        ("descripcion", ""),
+        ("mercados", []),
+        ("mercados", {"OTRO": []}),
+        ("fuentes", {}),
+    ],
+)
 def test_rechazar_estructura_y_metadatos_invalidos(tmp_path, campo, valor):
     datos = documento()
     datos[campo] = valor
@@ -51,12 +63,20 @@ def test_rechazar_estructura_y_metadatos_invalidos(tmp_path, campo, valor):
         cargar(tmp_path, datos)
 
 
-@pytest.mark.parametrize("mercado, tickers", [
-    ("USA", ["TEST", "TEST"]), ("MX", ["TEST.MX", "TEST.MX"]),
-    ("USA", [""]), ("USA", [" test"]), ("USA", ["test"]),
-    ("USA", [None]), ("MX", ["TEST"]), ("USA", ["TEST.MX"]),
-    ("USA", "TEST"),
-])
+@pytest.mark.parametrize(
+    "mercado, tickers",
+    [
+        ("USA", ["TEST", "TEST"]),
+        ("MX", ["TEST.MX", "TEST.MX"]),
+        ("USA", [""]),
+        ("USA", [" test"]),
+        ("USA", ["test"]),
+        ("USA", [None]),
+        ("MX", ["TEST"]),
+        ("USA", ["TEST.MX"]),
+        ("USA", "TEST"),
+    ],
+)
 def test_rechazar_tickers_duplicados_o_inconsistentes(tmp_path, mercado, tickers):
     datos = documento()
     datos["mercados"][mercado] = tickers

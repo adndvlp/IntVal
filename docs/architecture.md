@@ -256,3 +256,25 @@ un porcentaje alto. El workflow sigue ejecutando el mismo comando canónico.
 
 F4 y F5 permanecen pendientes; el cierre vigente se registra en la sección 21.8
 [de la SDD](SDD.md).
+
+## Entorno y arranque agnóstico en F4
+
+La separación de producto de F2/F3 permanece. F4 centraliza herramientas en
+`pyproject.toml` y resuelve dependencias desde `.in` con pip-tools. El producto se
+ejecuta como servicio web Python/Streamlit sobre Linux; el entorno del Mac sirve
+para desarrollar y verificar. El alojamiento es una decisión externa al código.
+
+`iniciar_servicio.sh` utiliza el Python preparado y `PORT`, escucha en `0.0.0.0`
+y conserva el proceso con `exec`. La preparación usa `requirements.txt`; el
+arranque no instala paquetes. No se exige un manifiesto, SDK o recurso de un
+proveedor. CI se limita a Ubuntu y comprueba el repositorio sin publicarlo.
+
+Ruff normalizó formato/imports; el análisis AST confirmó que no cambiaron
+expresiones de producto salvo una lambda local convertida en función equivalente.
+La excepción F401 de la fachada protege sus reexportaciones. Metodología,
+contrato, catálogo y snapshots conservan sus valores. La cobertura usa TOML con
+el mismo alcance y umbral.
+
+La [guía de despliegue y desarrollo](development.md) documenta el contrato genérico.
+[TDD de F4](TDD_F4.md) registra instalación limpia y límites. La continuidad está
+en 21.10 de la SDD; F5 y la validación de una URL publicada siguen pendientes.

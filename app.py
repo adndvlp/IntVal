@@ -10,16 +10,19 @@ import plotly.express as px
 import streamlit as st
 
 from valoracion.configuracion import Configuracion
-from valoracion.metodologia import VERSION_METODOLOGIA
-from valoracion.presentacion.etiquetas import ETIQUETAS, etiqueta
 from valoracion.exportacion.excel import escribir_excel
-from valoracion.modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE, crear_resultado_error
+from valoracion.metodologia import VERSION_METODOLOGIA
+from valoracion.modelos import COLUMNAS_DETALLE, COLUMNAS_PRINCIPAL, crear_resultado_error
 from valoracion.normalizacion import mercado_de_ticker
+from valoracion.presentacion.etiquetas import ETIQUETAS, etiqueta
 from valoracion.presentacion.formatos import format_money, format_percent
 from valoracion.presentacion.graficas import grafica_valoraciones
-from valoracion.servicio import analizar_ticker, obtener_precio_historico, obtener_historicos_financieros
-from valoracion.universo import EMPRESAS_USA, EMPRESAS_MX
-
+from valoracion.servicio import (
+    analizar_ticker,
+    obtener_historicos_financieros,
+    obtener_precio_historico,
+)
+from valoracion.universo import EMPRESAS_MX, EMPRESAS_USA
 
 st.set_page_config(
     page_title="Valoración de acciones USA y México",
@@ -85,10 +88,6 @@ def historicos_financieros(ticker: str, config_values: tuple) -> tuple[pd.DataFr
     return obtener_historicos_financieros(ticker, config)
 
 
-
-
-
-
 def construir_configuracion() -> Configuracion:
     st.sidebar.subheader("Supuestos")
     tasa_descuento_pct = st.sidebar.slider(
@@ -100,8 +99,11 @@ def construir_configuracion() -> Configuracion:
     )
     tasa_descuento = tasa_descuento_pct / 100.0
     tasa_empresa_pct = st.sidebar.slider(
-        "Tasa descuento empresa (%)", min_value=5.0, max_value=20.0,
-        value=10.0, step=0.5,
+        "Tasa descuento empresa (%)",
+        min_value=5.0,
+        max_value=20.0,
+        value=10.0,
+        step=0.5,
         help="Supuesto manual para NOPAT y EBITDA ajustado; no es un WACC estimado automáticamente.",
     )
     factor_margen_pct = st.sidebar.slider(
@@ -151,10 +153,22 @@ def construir_configuracion() -> Configuracion:
 
 def preparar_tabla(df: pd.DataFrame) -> pd.DataFrame:
     columnas = [
-        "Mercado", "Ticker", "Empresa", "Moneda", "Precio de mercado",
-        "Valor intrínseco FCL", "Valor intrínseco EBIT", "Valor intrínseco EBITDA",
-        "Valor intrínseco utilidad neta", "Mediana de modelos", "Precio objetivo analistas",
-        "Upside mediana", "Upside analistas", "Estado", "Modelos en mediana", "Clase de empresa",
+        "Mercado",
+        "Ticker",
+        "Empresa",
+        "Moneda",
+        "Precio de mercado",
+        "Valor intrínseco FCL",
+        "Valor intrínseco EBIT",
+        "Valor intrínseco EBITDA",
+        "Valor intrínseco utilidad neta",
+        "Mediana de modelos",
+        "Precio objetivo analistas",
+        "Upside mediana",
+        "Upside analistas",
+        "Estado",
+        "Modelos en mediana",
+        "Clase de empresa",
     ]
     presentes = [col for col in columnas if col in df.columns]
     return df[presentes].rename(columns=ETIQUETAS).copy()
@@ -181,9 +195,9 @@ def render_table(df: pd.DataFrame) -> None:
     )
 
 
-
-
-def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config_tuple: tuple) -> None:
+def mostrar_detalle(
+    df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config_tuple: tuple
+) -> None:
     st.subheader("Detalle de empresa")
     if df_principal.empty:
         st.info("No hay empresas disponibles para mostrar el detalle.")
@@ -191,7 +205,11 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
     opciones = df_principal.sort_values(["Mercado", "Ticker"])["Ticker"].tolist()
     ticker = st.selectbox("Empresa", opciones, key="detalle_ticker")
     fila = df_principal[df_principal["Ticker"] == ticker].iloc[0]
-    detalle = df_detalle[df_detalle["Ticker"] == ticker].iloc[0] if ticker in set(df_detalle["Ticker"]) else pd.Series(dtype=object)
+    detalle = (
+        df_detalle[df_detalle["Ticker"] == ticker].iloc[0]
+        if ticker in set(df_detalle["Ticker"])
+        else pd.Series(dtype=object)
+    )
     moneda = str(fila.get("Moneda") or "")
 
     st.markdown(f"### {fila.get('Empresa', ticker)} · `{ticker}` · {fila.get('Mercado', '')}")
@@ -269,8 +287,10 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
         if margenes.empty:
             st.info("No hay márgenes históricos suficientes para graficar.")
         else:
-            df_plot = (margenes * 100).reset_index().melt(
-                id_vars="Año", var_name="Margen", value_name="Porcentaje"
+            df_plot = (
+                (margenes * 100)
+                .reset_index()
+                .melt(id_vars="Año", var_name="Margen", value_name="Porcentaje")
             )
             fig = px.line(df_plot, x="Año", y="Porcentaje", color="Margen", markers=True)
             fig.update_layout(
@@ -292,24 +312,51 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
             "Crecimiento años 6-10": format_percent(detalle.get("Crecimiento años 6-10")),
             "Margen FCL conservador": format_percent(detalle.get("Margen FCL conservador")),
             "Margen NOPAT conservador": format_percent(detalle.get("Margen NOPAT conservador")),
-            "Margen EBITDA ajustado": format_percent(detalle.get("Margen EBITDA ajustado conservador")),
+            "Margen EBITDA ajustado": format_percent(
+                detalle.get("Margen EBITDA ajustado conservador")
+            ),
             "Margen neto conservador": format_percent(detalle.get("Margen neto conservador")),
             "Deuda neta": format_money(detalle.get("Deuda neta"), moneda),
             "Notas": fila.get("Notas") or "Sin observaciones.",
         }
         for campo in [
-            "Versión metodología", "Versión contrato", "Fuente de datos", "Obtenido en UTC",
-            "Fuente del precio", "Fecha del precio", "Fuente del objetivo", "Estadístico del objetivo",
-            "Cobertura de analistas", "Fecha del objetivo", "Horizonte del objetivo", "Fuente FX",
-            "Obtenido FX en UTC", "Fecha FX", "Período ingresos", "Período deuda", "Período efectivo",
-            "Fuente deuda", "Fuente efectivo", "Períodos por modelo", "Fuentes por métrica",
-            "Configuración efectiva", "Crecimiento utilizado", "Impuestos utilizados", "Modelos incluidos", "Modelos excluidos",
+            "Versión metodología",
+            "Versión contrato",
+            "Fuente de datos",
+            "Obtenido en UTC",
+            "Fuente del precio",
+            "Fecha del precio",
+            "Fuente del objetivo",
+            "Estadístico del objetivo",
+            "Cobertura de analistas",
+            "Fecha del objetivo",
+            "Horizonte del objetivo",
+            "Fuente FX",
+            "Obtenido FX en UTC",
+            "Fecha FX",
+            "Período ingresos",
+            "Período deuda",
+            "Período efectivo",
+            "Fuente deuda",
+            "Fuente efectivo",
+            "Períodos por modelo",
+            "Fuentes por métrica",
+            "Configuración efectiva",
+            "Crecimiento utilizado",
+            "Impuestos utilizados",
+            "Modelos incluidos",
+            "Modelos excluidos",
         ]:
             datos[campo] = detalle.get(campo)
-        datos["Tasa descuento accionista"] = format_percent(detalle.get("Tasa descuento accionista"))
+        datos["Tasa descuento accionista"] = format_percent(
+            detalle.get("Tasa descuento accionista")
+        )
         datos["Tasa descuento empresa"] = format_percent(detalle.get("Tasa descuento empresa"))
         st.dataframe(
-            pd.DataFrame([(k, "—" if v is None else str(v)) for k, v in datos.items()], columns=["Campo", "Valor"]),
+            pd.DataFrame(
+                [(k, "—" if v is None else str(v)) for k, v in datos.items()],
+                columns=["Campo", "Valor"],
+            ),
             use_container_width=True,
             hide_index=True,
         )
@@ -328,14 +375,24 @@ def main() -> None:
 
     st.sidebar.title("Universo y análisis")
     mercado = st.sidebar.radio("Mercado", ["USA", "MX", "Todos"], horizontal=True)
-    universo = EMPRESAS_USA if mercado == "USA" else EMPRESAS_MX if mercado == "MX" else EMPRESAS_USA + EMPRESAS_MX
+    universo = (
+        EMPRESAS_USA
+        if mercado == "USA"
+        else EMPRESAS_MX
+        if mercado == "MX"
+        else EMPRESAS_USA + EMPRESAS_MX
+    )
 
     seleccionar_todas = st.sidebar.checkbox("Seleccionar todo el mercado", value=False)
     predeterminadas = universo[:6] if mercado != "MX" else universo[:10]
-    seleccion = universo if seleccionar_todas else st.sidebar.multiselect(
-        "Tickers",
-        options=universo,
-        default=predeterminadas,
+    seleccion = (
+        universo
+        if seleccionar_todas
+        else st.sidebar.multiselect(
+            "Tickers",
+            options=universo,
+            default=predeterminadas,
+        )
     )
     ticker_extra = st.sidebar.text_input(
         "Ticker adicional",
@@ -429,8 +486,7 @@ def main() -> None:
     minimo_upside = st.slider("Upside mínimo de la mediana", -100, 200, -100, 5) / 100
 
     filtrado = df_principal[
-        df_principal["Mercado"].isin(filtro_mercado)
-        & df_principal["Estado"].isin(filtro_estado)
+        df_principal["Mercado"].isin(filtro_mercado) & df_principal["Estado"].isin(filtro_estado)
     ].copy()
     upside = pd.to_numeric(filtrado["Upside mediana"], errors="coerce")
     filtrado = filtrado[upside.isna() | (upside >= minimo_upside)]

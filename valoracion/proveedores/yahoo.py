@@ -10,7 +10,6 @@ import yfinance as yf
 from ..modelos import DatosEmpresa, TrazabilidadDatos
 from ..normalizacion import numero_valido
 
-
 CACHE_FX: dict[tuple[str, str], float | None] = {}
 
 
@@ -24,6 +23,7 @@ def obtener_info_segura(accion: yf.Ticker) -> dict:
             return info if isinstance(info, dict) else {}
         except Exception:
             return {}
+
 
 def _fecha_indice(indice, posicion=-1) -> str | None:
     if isinstance(indice, pd.DatetimeIndex) and len(indice):
@@ -63,6 +63,7 @@ def _precio_con_fuente(accion):
 def obtener_precio_actual(accion: yf.Ticker) -> float | None:
     return _precio_con_fuente(accion)[0]
 
+
 def _objetivo_con_fuente(accion, info):
     try:
         objetivos = accion.analyst_price_targets
@@ -82,6 +83,7 @@ def _objetivo_con_fuente(accion, info):
 
 def obtener_objetivo_analistas(accion: yf.Ticker, info: dict) -> float | None:
     return _objetivo_con_fuente(accion, info)[0]
+
 
 def _acciones_con_fuente(accion: yf.Ticker, info: dict, precio: float | None):
     for clave in ("sharesOutstanding", "impliedSharesOutstanding"):
@@ -117,6 +119,7 @@ def _acciones_con_fuente(accion: yf.Ticker, info: dict, precio: float | None):
 
     return None, None, None
 
+
 def obtener_acciones(accion: yf.Ticker, info: dict, precio: float | None) -> float | None:
     return _acciones_con_fuente(accion, info, precio)[0]
 
@@ -136,7 +139,10 @@ def _cierre_con_fecha(simbolo: str, *, ticker_factory=None):
 def ultimo_cierre_simbolo(simbolo: str, *, ticker_factory=None) -> float | None:
     return _cierre_con_fecha(simbolo, ticker_factory=ticker_factory)[0]
 
-def _obtener_tipo_cambio(moneda_financiera: str, moneda_cotizacion: str, cache: dict, obtener_cierre) -> float | None:
+
+def _obtener_tipo_cambio(
+    moneda_financiera: str, moneda_cotizacion: str, cache: dict, obtener_cierre
+) -> float | None:
     """
     Devuelve cuántas unidades de la moneda de cotización equivalen a una unidad
     de la moneda financiera.
@@ -168,7 +174,9 @@ def _obtener_tipo_cambio(moneda_financiera: str, moneda_cotizacion: str, cache: 
 
 
 def obtener_tipo_cambio(moneda_financiera: str, moneda_cotizacion: str) -> float | None:
-    return _obtener_tipo_cambio(moneda_financiera, moneda_cotizacion, CACHE_FX, ultimo_cierre_simbolo)
+    return _obtener_tipo_cambio(
+        moneda_financiera, moneda_cotizacion, CACHE_FX, ultimo_cierre_simbolo
+    )
 
 
 def _estado_seguro(accion, nombre: str) -> pd.DataFrame:
@@ -180,7 +188,11 @@ def _estado_seguro(accion, nombre: str) -> pd.DataFrame:
 
 
 def _monedas(info: dict) -> tuple[str | None, str | None]:
-    financiera = str(info.get("financialCurrency")).strip().upper() if info.get("financialCurrency") else None
+    financiera = (
+        str(info.get("financialCurrency")).strip().upper()
+        if info.get("financialCurrency")
+        else None
+    )
     cotizacion = str(info.get("currency")).strip().upper() if info.get("currency") else None
     return financiera, cotizacion
 
@@ -198,34 +210,66 @@ class ProveedorYahoo:
         clave = (financiera, cotizacion)
         cacheado = clave in self._cache_fx
         consultas = []
+
         def cierre(simbolo):
             valor, fecha = _cierre_con_fecha(simbolo, ticker_factory=self._ticker)
             consultas.append((simbolo, valor, fecha))
             return valor
+
         valor = _obtener_tipo_cambio(financiera, cotizacion, self._cache_fx, cierre)
         if financiera and financiera == cotizacion:
             meta = dict(fuente=f"Identidad {financiera}/{cotizacion}", obtenido_en=None, fecha=None)
         elif cacheado:
             anterior = self._trazas_fx.get(clave)
-            meta = anterior if anterior and anterior.get('valor') == valor else dict(fuente="Caché suministrada; fecha desconocida", obtenido_en=None, fecha=None)
+            meta = (
+                anterior
+                if anterior and anterior.get("valor") == valor
+                else dict(
+                    fuente="Caché suministrada; fecha desconocida", obtenido_en=None, fecha=None
+                )
+            )
         elif valor is not None:
             simbolo, _, fecha = next(c for c in consultas if c[1] is not None and c[1] > 0)
-            meta = dict(fuente=f"history.Close {simbolo}" + (" (inverso)" if simbolo != f"{financiera}{cotizacion}=X" else ""), obtenido_en=_ahora_utc(), fecha=fecha)
+            meta = dict(
+                fuente=f"history.Close {simbolo}"
+                + (" (inverso)" if simbolo != f"{financiera}{cotizacion}=X" else ""),
+                obtenido_en=_ahora_utc(),
+                fecha=fecha,
+            )
         else:
             meta = dict(fuente="FX no disponible", obtenido_en=None, fecha=None)
-        self._trazas_fx[clave] = {**meta, 'valor': valor}
+        self._trazas_fx[clave] = {**meta, "valor": valor}
         return valor
 
-    def _trazabilidad(self, info, financiera, cotizacion, fuente_precio=None, fecha_precio=None, fuente_objetivo=None, estadistico=None, fuente_acciones=None, fecha_acciones=None):
+    def _trazabilidad(
+        self,
+        info,
+        financiera,
+        cotizacion,
+        fuente_precio=None,
+        fecha_precio=None,
+        fuente_objetivo=None,
+        estadistico=None,
+        fuente_acciones=None,
+        fecha_acciones=None,
+    ):
         fx = self._trazas_fx.get((financiera, cotizacion), {})
-        cobertura = numero_valido(info.get('numberOfAnalystOpinions'))
+        cobertura = numero_valido(info.get("numberOfAnalystOpinions"))
         return TrazabilidadDatos(
-            fuente="Yahoo Finance vía yfinance", obtenido_en=_ahora_utc(),
-            fuente_precio=fuente_precio, fecha_precio=fecha_precio,
-            fuente_objetivo=fuente_objetivo, estadistico_objetivo=estadistico,
-            fuente_acciones=fuente_acciones, fecha_acciones=fecha_acciones,
-            cobertura_analistas=int(cobertura) if cobertura is not None and cobertura > 0 and cobertura.is_integer() else None,
-            fuente_fx=fx.get('fuente'), fx_obtenido_en=fx.get('obtenido_en'), fecha_fx=fx.get('fecha'),
+            fuente="Yahoo Finance vía yfinance",
+            obtenido_en=_ahora_utc(),
+            fuente_precio=fuente_precio,
+            fecha_precio=fecha_precio,
+            fuente_objetivo=fuente_objetivo,
+            estadistico_objetivo=estadistico,
+            fuente_acciones=fuente_acciones,
+            fecha_acciones=fecha_acciones,
+            cobertura_analistas=int(cobertura)
+            if cobertura is not None and cobertura > 0 and cobertura.is_integer()
+            else None,
+            fuente_fx=fx.get("fuente"),
+            fx_obtenido_en=fx.get("obtenido_en"),
+            fecha_fx=fx.get("fecha"),
         )
 
     def obtener_empresa(self, ticker: str) -> DatosEmpresa:
@@ -240,10 +284,28 @@ class ProveedorYahoo:
         financiera, cotizacion = _monedas(info)
         fx = self._tipo_cambio(financiera, cotizacion)
         return DatosEmpresa(
-            ticker=ticker, info=info, precio=precio, objetivo_analistas=objetivo,
-            acciones=acciones, resultados=resultados, flujo=flujo, balance=balance,
-            moneda_financiera=financiera, moneda_cotizacion=cotizacion, tipo_cambio=fx,
-            trazabilidad=self._trazabilidad(info, financiera, cotizacion, fuente_precio, fecha_precio, fuente_objetivo, estadistico, fuente_acciones, fecha_acciones),
+            ticker=ticker,
+            info=info,
+            precio=precio,
+            objetivo_analistas=objetivo,
+            acciones=acciones,
+            resultados=resultados,
+            flujo=flujo,
+            balance=balance,
+            moneda_financiera=financiera,
+            moneda_cotizacion=cotizacion,
+            tipo_cambio=fx,
+            trazabilidad=self._trazabilidad(
+                info,
+                financiera,
+                cotizacion,
+                fuente_precio,
+                fecha_precio,
+                fuente_objetivo,
+                estadistico,
+                fuente_acciones,
+                fecha_acciones,
+            ),
         )
 
     def obtener_estados_historicos(self, ticker: str) -> DatosEmpresa:
@@ -254,8 +316,13 @@ class ProveedorYahoo:
         financiera, cotizacion = _monedas(info)
         fx = self._tipo_cambio(financiera, cotizacion)
         return DatosEmpresa(
-            ticker=ticker, info=info, resultados=resultados, flujo=flujo,
-            moneda_financiera=financiera, moneda_cotizacion=cotizacion, tipo_cambio=fx,
+            ticker=ticker,
+            info=info,
+            resultados=resultados,
+            flujo=flujo,
+            moneda_financiera=financiera,
+            moneda_cotizacion=cotizacion,
+            tipo_cambio=fx,
             trazabilidad=self._trazabilidad(info, financiera, cotizacion),
         )
 

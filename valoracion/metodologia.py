@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from .normalizacion import numero_valido
 
-
 VERSION_METODOLOGIA = "proxies-1.0"
 VERSION_CONTRATO = "2.0"
 MODELOS = {
@@ -31,10 +30,22 @@ def clasificar_empresa(info: dict) -> str:
     tipo = str(info.get("quoteType") or "").upper()
     if tipo in {"ETF", "MUTUALFUND", "INDEX", "CRYPTOCURRENCY", "CURRENCY", "FUTURE"}:
         return "NO_OPERATIVA"
-    texto = " ".join(str(info.get(k) or "") for k in ("sector", "industry", "shortName", "longName")).lower()
+    texto = " ".join(
+        str(info.get(k) or "") for k in ("sector", "industry", "shortName", "longName")
+    ).lower()
     if "reit" in texto or "fibra" in texto:
         return "REIT_FIBRA"
-    if any(p in texto for p in ("financial", "bank", "insurance", "capital markets", "credit services", "asset management")):
+    if any(
+        p in texto
+        for p in (
+            "financial",
+            "bank",
+            "insurance",
+            "capital markets",
+            "credit services",
+            "asset management",
+        )
+    ):
         return "FINANCIERA"
     if info.get("sector") or tipo == "EQUITY":
         return "OPERATIVA"

@@ -1,0 +1,39 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "--strict-markers",
+    "--cov=app",
+    "--cov=motor_valoracion",
+    "--cov=valoracion",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--junitxml=test-results.xml",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["app", "motor_valoracion", "valoracion"]
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+fail_under = 85
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["examples/salida"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# La fachada reexporta la API anterior de forma deliberada.
+"motor_valoracion.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

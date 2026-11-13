@@ -10,7 +10,15 @@ import plotly.graph_objects as go
 def grafica_valoraciones(fila: pd.Series) -> go.Figure:
     datos = pd.DataFrame(
         {
-            "Método": ["Mercado", "Proxy FCL", "Proxy NOPAT", "Proxy EBITDA ajustado", "Proxy utilidad neta", "Mediana de proxies", "Analistas"],
+            "Método": [
+                "Mercado",
+                "Proxy FCL",
+                "Proxy NOPAT",
+                "Proxy EBITDA ajustado",
+                "Proxy utilidad neta",
+                "Mediana de proxies",
+                "Analistas",
+            ],
             "Valor": [
                 fila.get("Precio de mercado"),
                 fila.get("Valor intrínseco FCL"),

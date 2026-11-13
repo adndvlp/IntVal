@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import date
-import json
 from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
@@ -27,9 +27,17 @@ class CatalogoEmpresas:
 
 
 def cargar_universo(ruta: Path | None = None) -> CatalogoEmpresas:
-    ruta = Path(ruta) if ruta is not None else Path(__file__).resolve().parent.parent / "data" / "universo.json"
+    ruta = (
+        Path(ruta)
+        if ruta is not None
+        else Path(__file__).resolve().parent.parent / "data" / "universo.json"
+    )
     datos = json.loads(ruta.read_text(encoding="utf-8"))
-    if not isinstance(datos, dict) or type(datos.get("version")) is not int or datos["version"] != 1:
+    if (
+        not isinstance(datos, dict)
+        or type(datos.get("version")) is not int
+        or datos["version"] != 1
+    ):
         raise ValueError("El catálogo debe declarar la versión 1.")
     for campo in ("fecha_snapshot", "fecha_verificacion_fuentes"):
         valor = datos.get(campo)
@@ -50,7 +58,12 @@ def cargar_universo(ruta: Path | None = None) -> CatalogoEmpresas:
         if not isinstance(tickers, list):
             raise ValueError(f"Los tickers de {mercado} deben formar una lista.")
         for ticker in tickers:
-            if not isinstance(ticker, str) or not ticker or ticker != ticker.strip().upper() or any(c.isspace() for c in ticker):
+            if (
+                not isinstance(ticker, str)
+                or not ticker
+                or ticker != ticker.strip().upper()
+                or any(c.isspace() for c in ticker)
+            ):
                 raise ValueError(f"Identidad de ticker inválida en {mercado}: {ticker!r}")
             if mercado_de_ticker(ticker) != mercado:
                 raise ValueError(f"El ticker {ticker} no corresponde al mercado {mercado}.")
@@ -67,7 +80,8 @@ def cargar_universo(ruta: Path | None = None) -> CatalogoEmpresas:
             if not isinstance(fuente.get(campo), str) or not fuente[campo].strip():
                 raise ValueError(f"Falta {campo} en una fuente del catálogo.")
     return CatalogoEmpresas(
-        usa=tuple(mercados["USA"]), mx=tuple(mercados["MX"]),
+        usa=tuple(mercados["USA"]),
+        mx=tuple(mercados["MX"]),
         fuentes=tuple(MappingProxyType(dict(fuente)) for fuente in fuentes),
         fecha_snapshot=datos["fecha_snapshot"],
         fecha_verificacion_fuentes=datos.get("fecha_verificacion_fuentes"),

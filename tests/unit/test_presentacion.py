@@ -32,7 +32,9 @@ def test_formatos_numericos_y_tabla_no_mutan_entradas(interfaz):
 
 
 def test_grafica_conserva_solo_modelos_disponibles(interfaz):
-    figura = interfaz.grafica_valoraciones(pd.Series({"Precio de mercado": 40, "Valor intrínseco FCL": 52, "Moneda": "MXN"}))
+    figura = interfaz.grafica_valoraciones(
+        pd.Series({"Precio de mercado": 40, "Valor intrínseco FCL": 52, "Moneda": "MXN"})
+    )
     assert figura.data[0].x.tolist() == ["Mercado", "Proxy FCL"]
     assert figura.data[0].y.tolist() == [40, 52]
     assert "MXN" in figura.layout.yaxis.title.text
@@ -43,7 +45,9 @@ def test_historicos_en_millones_margenes_y_fechas(interfaz, industrial, config_s
     assert historia.columns.tolist() == ["Fecha", "Cierre"]
     assert historia["Cierre"].tolist() == [38, 39, 40]
     assert historia["Fecha"].dt.tz is None
-    financieros, margenes = interfaz.historicos_financieros("TEST", tuple(asdict(config_simple).items()))
+    financieros, margenes = interfaz.historicos_financieros(
+        "TEST", tuple(asdict(config_simple).items())
+    )
     assert financieros.index.name == "Año"
     assert financieros.loc["2024", "Ingresos"] == pytest.approx(0.001)
     assert financieros.loc["2024", "FCL"] == pytest.approx(0.00013)

@@ -5,7 +5,6 @@ from copy import deepcopy
 import pandas as pd
 import pytest
 
-
 FECHAS = pd.date_range("2020-01-01", periods=5, freq="YS")
 
 
@@ -17,19 +16,32 @@ class TickerSintetico:
     def __init__(self, **cambios):
         self.datos = {
             "info": {
-                "shortName": "Industrial sintética", "currency": "USD",
-                "financialCurrency": "USD", "sharesOutstanding": 10,
-                "sector": "Industrials", "industry": "Manufacturing",
+                "shortName": "Industrial sintética",
+                "currency": "USD",
+                "financialCurrency": "USD",
+                "sharesOutstanding": 10,
+                "sector": "Industrials",
+                "industry": "Manufacturing",
             },
             "fast_info": {"last_price": 40, "shares": 10},
-            "income_stmt": estado({
-                "Total Revenue": 1000, "EBIT": 200, "Net Income": 120,
-                "Tax Provision": 40, "Pretax Income": 200, "EBITDA": 250,
-            }),
-            "cashflow": estado({
-                "Operating Cash Flow": 180, "Capital Expenditure": -50,
-                "Free Cash Flow": 130, "Depreciation And Amortization": 50,
-            }),
+            "income_stmt": estado(
+                {
+                    "Total Revenue": 1000,
+                    "EBIT": 200,
+                    "Net Income": 120,
+                    "Tax Provision": 40,
+                    "Pretax Income": 200,
+                    "EBITDA": 250,
+                }
+            ),
+            "cashflow": estado(
+                {
+                    "Operating Cash Flow": 180,
+                    "Capital Expenditure": -50,
+                    "Free Cash Flow": 130,
+                    "Depreciation And Amortization": 50,
+                }
+            ),
             "balance_sheet": estado({"Total Debt": 300, "Cash And Cash Equivalents": 100}),
             "analyst_price_targets": {"mean": 60, "median": 55},
             "history_result": pd.DataFrame(

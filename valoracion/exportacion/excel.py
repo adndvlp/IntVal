@@ -13,10 +13,10 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from ..configuracion import Configuracion
-from ..metodologia import VERSION_METODOLOGIA, VERSION_CONTRATO
+from ..metodologia import VERSION_CONTRATO, VERSION_METODOLOGIA
+from ..modelos import COLUMNAS_DETALLE, COLUMNAS_PRINCIPAL
 from ..presentacion.etiquetas import ETIQUETAS, etiqueta
-from ..modelos import COLUMNAS_PRINCIPAL, COLUMNAS_DETALLE
-from ..universo import EMPRESAS_USA, EMPRESAS_MX, FUENTES_UNIVERSO
+from ..universo import EMPRESAS_MX, EMPRESAS_USA, FUENTES_UNIVERSO
 
 
 def escribir_excel(
@@ -51,23 +51,51 @@ def escribir_excel(
         [
             ("Años de proyección", config.anos_proyeccion, "Años"),
             ("Tasa descuento accionista", config.tasa_descuento, "%; supuesto manual"),
-            ("Tasa descuento empresa", config.descuento_empresa, "%; supuesto manual, no WACC calibrado"),
+            (
+                "Tasa descuento empresa",
+                config.descuento_empresa,
+                "%; supuesto manual, no WACC calibrado",
+            ),
             ("Versión metodología", VERSION_METODOLOGIA, ""),
             ("Versión contrato", VERSION_CONTRATO, ""),
-            ("Factor crecimiento años 1-5", config.factor_crecimiento_inicial, "% del CAGR histórico"),
-            ("Factor crecimiento años 6-10", config.factor_crecimiento_final, "% del crecimiento inicial"),
+            (
+                "Factor crecimiento años 1-5",
+                config.factor_crecimiento_inicial,
+                "% del CAGR histórico",
+            ),
+            (
+                "Factor crecimiento años 6-10",
+                config.factor_crecimiento_final,
+                "% del crecimiento inicial",
+            ),
             ("Crecimiento mínimo", config.crecimiento_minimo, "%"),
             ("Crecimiento máximo", config.crecimiento_maximo, "%"),
             ("Crecimiento fallback", config.crecimiento_fallback, "%"),
-            ("Factor margen conservador", config.factor_margen_conservador, "% de la mediana histórica"),
+            (
+                "Factor margen conservador",
+                config.factor_margen_conservador,
+                "% de la mediana histórica",
+            ),
             ("Múltiplo terminal FCL", config.multiplo_terminal_fcl, "x"),
             ("Múltiplo terminal EBIT/NOPAT", config.multiplo_terminal_ebit, "x"),
             ("Múltiplo terminal EBITDA ajustado", config.multiplo_terminal_ebitda, "x"),
             ("Múltiplo terminal utilidad neta", config.multiplo_terminal_utilidad_neta, "x"),
-            ("Tratamiento FCL", "Proxy del accionista; no es FCFE conciliado; no se resta deuda neta", ""),
+            (
+                "Tratamiento FCL",
+                "Proxy del accionista; no es FCFE conciliado; no se resta deuda neta",
+                "",
+            ),
             ("Tratamiento EBIT", "Proxy NOPAT sin reinversión completa; se resta deuda neta", ""),
-            ("Tratamiento EBITDA", "EBITDA - impuestos sobre EBIT - |CapEx|; se resta deuda neta", ""),
-            ("Tratamiento utilidad neta", "Proxy de utilidad contable, no caja distribuible; no se resta deuda neta", ""),
+            (
+                "Tratamiento EBITDA",
+                "EBITDA - impuestos sobre EBIT - |CapEx|; se resta deuda neta",
+                "",
+            ),
+            (
+                "Tratamiento utilidad neta",
+                "Proxy de utilidad contable, no caja distribuible; no se resta deuda neta",
+                "",
+            ),
         ],
         columns=["Supuesto", "Valor", "Unidad / comentario"],
     )
@@ -91,7 +119,9 @@ def escribir_excel(
 
     with pd.ExcelWriter(archivo_salida, engine="openpyxl") as writer:
         for nombre, df in hojas.items():
-            df.rename(columns=ETIQUETAS).to_excel(writer, sheet_name=nombre, index=False, startrow=2)
+            df.rename(columns=ETIQUETAS).to_excel(
+                writer, sheet_name=nombre, index=False, startrow=2
+            )
 
     libro = load_workbook(archivo_salida)
 
@@ -103,12 +133,12 @@ def escribir_excel(
     rojo_claro = "FCE4D6"
     borde_fino = Side(style="thin", color="D9E1F2")
 
-    formato_moneda = '$#,##0.00;[Red]($#,##0.00);-'
-    formato_numero = '#,##0.00;[Red](#,##0.00);-'
-    formato_entero = '#,##0;[Red](#,##0);-'
-    formato_porcentaje = '0.0%;[Red](0.0%);-'
-    formato_multiplo = '0.0x'
-    formato_fx = '0.000000'
+    formato_moneda = "$#,##0.00;[Red]($#,##0.00);-"
+    formato_numero = "#,##0.00;[Red](#,##0.00);-"
+    formato_entero = "#,##0;[Red](#,##0);-"
+    formato_porcentaje = "0.0%;[Red](0.0%);-"
+    formato_multiplo = "0.0x"
+    formato_fx = "0.000000"
 
     fecha_generacion = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
     tablas = {
@@ -157,13 +187,21 @@ def escribir_excel(
                 celda.alignment = Alignment(vertical="top")
 
     columnas_moneda = {
-        "Precio de mercado", "Valor intrínseco FCL", "Valor intrínseco EBIT",
-        "Valor intrínseco EBITDA", "Valor intrínseco utilidad neta",
-        "Mediana de modelos", "Precio objetivo analistas",
+        "Precio de mercado",
+        "Valor intrínseco FCL",
+        "Valor intrínseco EBIT",
+        "Valor intrínseco EBITDA",
+        "Valor intrínseco utilidad neta",
+        "Mediana de modelos",
+        "Precio objetivo analistas",
     }
     columnas_porcentaje = {
-        "Upside FCL", "Upside EBIT", "Upside EBITDA", "Upside utilidad neta",
-        "Upside mediana", "Upside analistas",
+        "Upside FCL",
+        "Upside EBIT",
+        "Upside EBITDA",
+        "Upside utilidad neta",
+        "Upside mediana",
+        "Upside analistas",
     }
 
     for nombre_hoja in ("Resumen", "USA", "MX"):
@@ -184,9 +222,15 @@ def escribir_excel(
                     ws.conditional_formatting.add(
                         f"{letra}4:{letra}{ws.max_row}",
                         ColorScaleRule(
-                            start_type="num", start_value=-0.30, start_color="F8696B",
-                            mid_type="num", mid_value=0.00, mid_color="FFEB84",
-                            end_type="num", end_value=0.50, end_color="63BE7B",
+                            start_type="num",
+                            start_value=-0.30,
+                            start_color="F8696B",
+                            mid_type="num",
+                            mid_value=0.00,
+                            mid_color="FFEB84",
+                            end_type="num",
+                            end_value=0.50,
+                            end_color="63BE7B",
                         ),
                     )
         columna_estado = encabezados.get("Estado")
@@ -203,17 +247,36 @@ def escribir_excel(
     ws_detalle = libro["Detalle"]
     encabezados_detalle = {celda.value: celda.column for celda in ws_detalle[3]}
     porcentaje_detalle = {
-        "Tasa de impuestos", "CAGR histórico ingresos", "Crecimiento años 1-5",
-        "Crecimiento años 6-10", "Margen FCL mediano", "Margen FCL conservador",
-        "Margen NOPAT mediano", "Margen NOPAT conservador",
-        "Margen EBITDA ajustado mediano", "Margen EBITDA ajustado conservador",
-        "Margen neto mediano", "Margen neto conservador",
+        "Tasa de impuestos",
+        "CAGR histórico ingresos",
+        "Crecimiento años 1-5",
+        "Crecimiento años 6-10",
+        "Margen FCL mediano",
+        "Margen FCL conservador",
+        "Margen NOPAT mediano",
+        "Margen NOPAT conservador",
+        "Margen EBITDA ajustado mediano",
+        "Margen EBITDA ajustado conservador",
+        "Margen neto mediano",
+        "Margen neto conservador",
     }
     numero_detalle = {
-        "Ingresos actuales", "Acciones en circulación", "Deuda", "Efectivo", "Deuda neta",
-        "Base FCL", "Base NOPAT", "Base EBITDA ajustado", "Base utilidad neta",
-        "PV flujos FCL", "PV terminal FCL", "PV flujos EBIT", "PV terminal EBIT",
-        "PV flujos EBITDA", "PV terminal EBITDA", "PV flujos utilidad neta",
+        "Ingresos actuales",
+        "Acciones en circulación",
+        "Deuda",
+        "Efectivo",
+        "Deuda neta",
+        "Base FCL",
+        "Base NOPAT",
+        "Base EBITDA ajustado",
+        "Base utilidad neta",
+        "PV flujos FCL",
+        "PV terminal FCL",
+        "PV flujos EBIT",
+        "PV terminal EBIT",
+        "PV flujos EBITDA",
+        "PV terminal EBITDA",
+        "PV flujos utilidad neta",
         "PV terminal utilidad neta",
     }
     porcentaje_detalle.update({"Tasa descuento accionista", "Tasa descuento empresa"})

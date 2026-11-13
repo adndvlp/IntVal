@@ -41,14 +41,22 @@ class Configuracion:
 
     @property
     def descuento_empresa(self) -> float:
-        return self.tasa_descuento if self.tasa_descuento_empresa is None else self.tasa_descuento_empresa
+        return (
+            self.tasa_descuento
+            if self.tasa_descuento_empresa is None
+            else self.tasa_descuento_empresa
+        )
 
     def __post_init__(self) -> None:
         for campo in fields(self):
             valor = getattr(self, campo.name)
             if campo.name == "tasa_descuento_empresa" and valor is None:
                 continue
-            if isinstance(valor, bool) or not isinstance(valor, (int, float)) or not math.isfinite(valor):
+            if (
+                isinstance(valor, bool)
+                or not isinstance(valor, (int, float))
+                or not math.isfinite(valor)
+            ):
                 raise ValueError(f"{campo.name} debe ser un número finito.")
         for nombre in ("anos_proyeccion", "max_anos_historicos"):
             valor = getattr(self, nombre)
@@ -58,17 +66,32 @@ class Configuracion:
             raise ValueError("La tasa de descuento debe ser mayor que -1.")
         if self.descuento_empresa <= -1:
             raise ValueError("La tasa de descuento de empresa debe ser mayor que -1.")
-        for nombre in ("factor_crecimiento_inicial", "factor_crecimiento_final", "factor_margen_conservador"):
+        for nombre in (
+            "factor_crecimiento_inicial",
+            "factor_crecimiento_final",
+            "factor_margen_conservador",
+        ):
             if not 0 <= getattr(self, nombre) <= 1:
                 raise ValueError(f"{nombre} debe estar entre 0 y 1.")
         if min(self.crecimiento_minimo, self.crecimiento_maximo, self.crecimiento_fallback) <= -1:
             raise ValueError("Las tasas de crecimiento deben ser mayores que -1.")
         if self.crecimiento_minimo > self.crecimiento_maximo:
             raise ValueError("El crecimiento mínimo no puede superar al máximo.")
-        for nombre in ("multiplo_terminal_fcl", "multiplo_terminal_ebit", "multiplo_terminal_ebitda", "multiplo_terminal_utilidad_neta"):
+        for nombre in (
+            "multiplo_terminal_fcl",
+            "multiplo_terminal_ebit",
+            "multiplo_terminal_ebitda",
+            "multiplo_terminal_utilidad_neta",
+        ):
             if getattr(self, nombre) <= 0:
                 raise ValueError(f"{nombre} debe ser positivo.")
-        if not 0 <= self.tasa_impuestos_minima <= self.tasa_impuestos_fallback <= self.tasa_impuestos_maxima <= 1:
+        if (
+            not 0
+            <= self.tasa_impuestos_minima
+            <= self.tasa_impuestos_fallback
+            <= self.tasa_impuestos_maxima
+            <= 1
+        ):
             raise ValueError("Las tasas de impuestos deben tener límites coherentes entre 0 y 1.")
         if self.pausa_entre_tickers < 0:
             raise ValueError("La pausa entre tickers no puede ser negativa.")

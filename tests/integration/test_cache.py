@@ -5,7 +5,10 @@ from importlib import import_module
 
 import motor_valoracion as motor
 
-def test_cache_analisis_usa_ticker_y_configuracion_y_devuelve_copias(industrial, proveedor, config_simple):
+
+def test_cache_analisis_usa_ticker_y_configuracion_y_devuelve_copias(
+    industrial, proveedor, config_simple
+):
     interfaz = import_module("app")
     config = tuple(asdict(config_simple).items())
     primero, _ = interfaz.analizar_cached("TEST", config)
@@ -30,7 +33,10 @@ def test_cache_historico_distingue_periodos_y_preserva_datos(industrial, proveed
     assert segundo["Cierre"].tolist() == [38, 39, 40]
     interfaz.precio_historico("TEST", "5y")
     assert proveedor[1] == ["TEST", "TEST"]
-    assert [kwargs["period"] for nombre, kwargs in industrial.llamadas if nombre == "history"] == ["1y", "5y"]
+    assert [kwargs["period"] for nombre, kwargs in industrial.llamadas if nombre == "history"] == [
+        "1y",
+        "5y",
+    ]
 
 
 def test_caches_se_limpian_para_otra_prueba(industrial, proveedor, config_simple):

@@ -9,11 +9,10 @@ import pytest
 from openpyxl import load_workbook
 from streamlit.testing.v1 import AppTest
 
-from valoracion import servicio, universo
-from valoracion.proveedores import yahoo
-from valoracion.exportacion import excel
 from tests.fixtures.datos_sinteticos import TickerSintetico
-
+from valoracion import servicio, universo
+from valoracion.exportacion import excel
+from valoracion.proveedores import yahoo
 
 RUTA_APP = Path(__file__).resolve().parents[2] / "app.py"
 
@@ -36,9 +35,11 @@ def analizar(app, texto="TEST"):
 def espiar_exportacion(monkeypatch):
     original = excel.escribir_excel
     exportaciones = []
+
     def escribir(principales, detalles, ruta, config):
         original(principales, detalles, ruta, config)
         exportaciones.append((principales, config, ruta.read_bytes()))
+
     monkeypatch.setattr(excel, "escribir_excel", escribir)
     return exportaciones
 
@@ -69,7 +70,10 @@ def test_arranque_no_consulta_el_proveedor(proveedor):
 
 @pytest.mark.parametrize("con_app_ajena", [False, True])
 def test_arranque_encuentra_la_app_del_repositorio_desde_otro_directorio(
-    monkeypatch, tmp_path, proveedor, con_app_ajena,
+    monkeypatch,
+    tmp_path,
+    proveedor,
+    con_app_ajena,
 ):
     if con_app_ajena:
         (tmp_path / "app.py").write_text(
@@ -175,7 +179,10 @@ def test_configuracion_exportada_no_cambia_hasta_reanalizar(monkeypatch, industr
     assert len(proveedor[1]) == consultas
     widget_por_etiqueta(app.sidebar.button, "Analizar empresas").click().run()
     assert exportaciones[-1][1].tasa_descuento == 0.15
-    assert app.session_state["principales"][0]["Mediana de modelos"] != originales[0]["Mediana de modelos"]
+    assert (
+        app.session_state["principales"][0]["Mediana de modelos"]
+        != originales[0]["Mediana de modelos"]
+    )
 
 
 def test_nuevo_lote_restablece_selector_de_empresa(industrial, proveedor):
@@ -186,23 +193,31 @@ def test_nuevo_lote_restablece_selector_de_empresa(industrial, proveedor):
     assert widget_por_etiqueta(app.selectbox, "Empresa").value == "NUEVO"
 
 
-@pytest.mark.parametrize("historia", [pd.DataFrame(), RuntimeError("Histórico simulado"), pd.DataFrame({"Incorrecto": [1]})])
+@pytest.mark.parametrize(
+    "historia",
+    [pd.DataFrame(), RuntimeError("Histórico simulado"), pd.DataFrame({"Incorrecto": [1]})],
+)
 def test_historico_vacio_o_fallido_no_rompe_resumen(industrial, historia):
     industrial.datos["history_result"] = historia
     app = analizar(iniciar())
     assert not app.exception
     assert len(app.dataframe[0].value) == 1
     assert len(app.get("download_button")) == 1
-    assert any("historial" in mensaje.value.lower() or "histórico" in mensaje.value.lower() for mensaje in [*app.info, *app.warning])
+    assert any(
+        "historial" in mensaje.value.lower() or "histórico" in mensaje.value.lower()
+        for mensaje in [*app.info, *app.warning]
+    )
 
 
 def test_fallo_al_obtener_estados_del_detalle_es_localizado(monkeypatch, industrial):
     llamadas = []
+
     def ticker(_):
         llamadas.append(1)
         if len(llamadas) >= 3:
             raise RuntimeError("Estados simulados no disponibles")
         return industrial
+
     monkeypatch.setattr(yahoo.yf, "Ticker", ticker)
     app = analizar(iniciar())
     assert not app.exception
@@ -213,6 +228,7 @@ def test_fallo_al_obtener_estados_del_detalle_es_localizado(monkeypatch, industr
 def test_error_exportacion_conserva_resultados(monkeypatch, industrial):
     def fallar(*args, **kwargs):
         raise PermissionError("No se puede escribir el Excel")
+
     monkeypatch.setattr(excel, "escribir_excel", fallar)
     app = analizar(iniciar())
     assert not app.exception

@@ -10,7 +10,9 @@ import valoracion.normalizacion as motor
 from valoracion.proveedores import yahoo
 
 
-@pytest.mark.parametrize("ticker, esperado", [("TEST.MX", "MX"), ("test.mx", "MX"), ("TEST", "USA")])
+@pytest.mark.parametrize(
+    "ticker, esperado", [("TEST.MX", "MX"), ("test.mx", "MX"), ("TEST", "USA")]
+)
 def test_mercado(ticker, esperado):
     assert motor.mercado_de_ticker(ticker) == esperado
 
@@ -19,7 +21,18 @@ def test_duplicados_conservan_orden():
     assert motor.eliminar_duplicados(["B", "A", "B", "C", "A"]) == ["B", "A", "C"]
 
 
-@pytest.mark.parametrize("valor, esperado", [(3, 3), ("2.5", 2.5), (None, None), ("x", None), (np.nan, None), (np.inf, None), (-np.inf, None)])
+@pytest.mark.parametrize(
+    "valor, esperado",
+    [
+        (3, 3),
+        ("2.5", 2.5),
+        (None, None),
+        ("x", None),
+        (np.nan, None),
+        (np.inf, None),
+        (-np.inf, None),
+    ],
+)
 def test_numero_valido(valor, esperado):
     assert motor.numero_valido(valor) == esperado
 
@@ -51,7 +64,15 @@ def test_alinear_conserva_fechas_comunes_y_limpia_ausencias():
     assert motor.alinear_series(a, pd.Series([9], index=["z"])).empty
 
 
-@pytest.mark.parametrize("serie, esperado", [(None, None), (pd.Series(dtype=float), None), (pd.Series([None]), None), (pd.Series([1, None, 2]), 2)])
+@pytest.mark.parametrize(
+    "serie, esperado",
+    [
+        (None, None),
+        (pd.Series(dtype=float), None),
+        (pd.Series([None]), None),
+        (pd.Series([1, None, 2]), 2),
+    ],
+)
 def test_ultimo_valor(serie, esperado):
     assert motor.ultimo_valor(serie) == esperado
 

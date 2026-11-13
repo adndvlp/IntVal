@@ -13,6 +13,7 @@ from .proveedores.base import ProveedorDatos
 def _resolver_proveedor(proveedor: ProveedorDatos | None) -> ProveedorDatos:
     if proveedor is None:
         from .proveedores.yahoo import PROVEEDOR_YAHOO
+
         return PROVEEDOR_YAHOO
     return proveedor
 
@@ -39,13 +40,19 @@ def analizar_ticker(
 
 
 def obtener_precio_historico(
-    ticker: str, periodo: str, *, proveedor: ProveedorDatos | None = None,
+    ticker: str,
+    periodo: str,
+    *,
+    proveedor: ProveedorDatos | None = None,
 ) -> pd.DataFrame:
     return _resolver_proveedor(proveedor).obtener_precio_historico(ticker, periodo).copy(deep=True)
 
 
 def obtener_historicos_financieros(
-    ticker: str, config: Configuracion, *, proveedor: ProveedorDatos | None = None,
+    ticker: str,
+    config: Configuracion,
+    *,
+    proveedor: ProveedorDatos | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     datos = _resolver_proveedor(proveedor).obtener_estados_historicos(ticker)
     return preparar_historicos_financieros(datos, config)

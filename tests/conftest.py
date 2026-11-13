@@ -6,10 +6,10 @@ from types import SimpleNamespace
 import pytest
 import streamlit as st
 
+from tests.fixtures.datos_sinteticos import TickerSintetico
+from valoracion import cli
 from valoracion.configuracion import Configuracion
 from valoracion.proveedores import yahoo
-from valoracion import cli
-from tests.fixtures.datos_sinteticos import TickerSintetico
 
 
 @pytest.fixture
@@ -40,9 +40,12 @@ def industrial(proveedor):
 @pytest.fixture
 def config_simple():
     return Configuracion(
-        anos_proyeccion=3, tasa_descuento=0,
-        multiplo_terminal_fcl=2, multiplo_terminal_ebit=2,
-        multiplo_terminal_ebitda=2, multiplo_terminal_utilidad_neta=2,
+        anos_proyeccion=3,
+        tasa_descuento=0,
+        multiplo_terminal_fcl=2,
+        multiplo_terminal_ebit=2,
+        multiplo_terminal_ebitda=2,
+        multiplo_terminal_utilidad_neta=2,
         pausa_entre_tickers=0,
     )
 

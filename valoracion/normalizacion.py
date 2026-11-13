@@ -12,9 +12,11 @@ import pandas as pd
 def mercado_de_ticker(ticker: str) -> str:
     return "MX" if ticker.upper().endswith(".MX") else "USA"
 
+
 def eliminar_duplicados(items: Iterable[str]) -> list[str]:
     """Elimina duplicados sin cambiar el orden."""
     return list(dict.fromkeys(items))
+
 
 def numero_valido(valor) -> float | None:
     try:
@@ -23,8 +25,10 @@ def numero_valido(valor) -> float | None:
         return None
     return numero if math.isfinite(numero) else None
 
+
 def normalizar_etiqueta(texto: object) -> str:
     return "".join(caracter.lower() for caracter in str(texto) if caracter.isalnum())
+
 
 def obtener_fila(
     estado: pd.DataFrame | None,
@@ -47,6 +51,7 @@ def obtener_fila(
 
     return pd.Series(dtype=float)
 
+
 def ultimo_valor(serie: pd.Series) -> float | None:
     if serie is None or serie.empty:
         return None
@@ -54,6 +59,7 @@ def ultimo_valor(serie: pd.Series) -> float | None:
     if serie.empty:
         return None
     return numero_valido(serie.iloc[-1])
+
 
 def alinear_series(*series: pd.Series) -> pd.DataFrame:
     limpias = []
@@ -65,6 +71,7 @@ def alinear_series(*series: pd.Series) -> pd.DataFrame:
     if not limpias:
         return pd.DataFrame()
     return pd.concat(limpias, axis=1, join="inner").dropna()
+
 
 def convertir_serie(serie: pd.Series, fx: float) -> pd.Series:
     if fx is None:

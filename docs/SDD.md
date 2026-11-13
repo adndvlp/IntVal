@@ -4,22 +4,23 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 1.4 |
+| Versión del documento | 1.6 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1, F2 y F3 implementadas. Fallo previo de CI reportado por el usuario y corregido localmente; nuevo run remoto pendiente. F4 y F5 pendientes |
+| Estado | F1 a F4 implementadas y verificadas localmente. Servicio web agnóstico sobre Linux; 327 pruebas, cobertura local 98.51 %. CI remoto y publicación pendientes; F5 pendiente |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
 | Método de implementación obligatorio | TDD: prueba primero, fallo observado, cambio mínimo y refactorización con pruebas verdes |
 | Refactorización implementada | F2: separación de responsabilidades, a partir de `b9852e6` |
 | Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
-| Trabajo posterior acordado | F4 y F5: reproducibilidad y presentación del repositorio |
+| Entorno implementado | F4: servicio web agnóstico, Python 3.12, resoluciones pip-tools, arranque mediante PORT, configuración central y Ruff |
+| Trabajo posterior acordado | F5: presentación del repositorio |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; el estado y las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. F4 y F5 siguen pendientes. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md).
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; el estado y las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md); F5 sigue pendiente.
 
 ## Índice
 
@@ -66,14 +67,14 @@ La aplicación ya tiene una funcionalidad concreta: comparar precios de acciones
 | 6 | Preparar la presentación del repositorio | Documentar y dejar pendiente | F5 |
 | Previo | Crear `.gitignore` | Ya realizado y comprobado | Completado |
 
-El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, después F2 y luego el siguiente punto, F3. Se implementaron en entregas separadas. El encargo actual termina en F3; F4 y F5 siguen pendientes. La evidencia se registra en [TDD de F1](TDD_F1.md), [TDD de F2](TDD_F2.md) y [TDD de F3](TDD_F3.md).
+El usuario pidió primero redactar esta SDD y posteriormente autorizó F1, con TDD obligatorio, después F2 y luego el siguiente punto, F3. Se implementaron en entregas separadas. Después se autorizó F4. El encargo actual termina en F4; F5 sigue pendiente. La evidencia se registra en [TDD de F1](TDD_F1.md), [TDD de F2](TDD_F2.md), [TDD de F3](TDD_F3.md) y [TDD de F4](TDD_F4.md).
 
 ### 1.3 Restricciones y decisiones de alcance
 
 - Mantener Python y Streamlit como base del proyecto.
 - TDD es obligatorio para los cambios de software en todas las fases, por instrucción expresa del usuario. Las refactorizaciones se realizan con la suite en verde; no se fabrican fallos en comportamiento ya correcto para aparentar un ciclo RED.
 - No hay una necesidad demostrada de crear un backend HTTP separado para realizar F1 a F5.
-- Si más adelante se requiere un servicio remoto, el usuario prefiere una alternativa gratuita; mencionó Render como ejemplo. Esto expresa una restricción de coste, no una decisión de despliegue ni una garantía sobre planes comerciales vigentes.
+- El usuario precisó durante F4 que el despliegue debe ser **agnóstico del proveedor**. El producto es un servicio web Python/Streamlit sobre Linux; el alojamiento previsto es PaaS, con preferencia de coste gratuito, sin una plataforma o plan obligatorios en el código. El entorno local sirve para desarrollar/verificar. La publicación y la elección de proveedor quedan fuera de la lógica de la aplicación.
 - No se necesita desplegar ni contratar servicios para formalizar el repositorio.
 - No introducir cuentas, autenticación, base de datos o infraestructura sin un requisito concreto.
 - No cambiar las fórmulas financieras al mismo tiempo que se añade la primera base de pruebas.
@@ -1290,13 +1291,15 @@ No añadir simulaciones avanzadas, optimización de cartera o una matriz de sens
 
 ## 17. F4: instalación y herramientas
 
-**Estado: pendiente; corresponde al punto 5 original. Depende de las fases anteriores.**
+**Estado: implementada y verificada localmente; corresponde al punto 5 original.**
+La [guía de desarrollo](development.md), el [registro TDD](TDD_F4.md) y la sección
+21.10 describen la implementación y sus límites de verificación remota.
 
-### 17.1 Problema actual
+### 17.1 Problema resuelto
 
-`requirements.txt` permite que se instalen versiones futuras de los paquetes. Los scripts `.sh` y `.bat` actualizan pip e instalan dependencias cada vez que se inicia la app. Esto hace que arrancar la aplicación pueda modificar su entorno y depender de la red aunque ya estuviera instalada.
+Antes de F4, `requirements.txt` permitía versiones futuras y los scripts actualizaban pip e instalaban dependencias al arrancar. F4 fija las versiones y convierte el arranque en una operación sobre un entorno preparado explícitamente.
 
-### 17.2 Diseño propuesto
+### 17.2 Diseño implementado
 
 Mantener el flujo basado en pip y separar las definiciones de dependencias de los archivos resueltos:
 
@@ -1308,9 +1311,9 @@ requirements-dev.txt      # Resolución versionada de desarrollo
 pyproject.toml            # Configuración de herramientas y metadatos que correspondan
 ```
 
-Se propone `pip-tools` para generar las resoluciones; su documentación explica las entradas `.in` y la compilación de archivos fijados en [pip-tools](https://pip-tools.pypa.io/en/stable/).
+Se adoptó `pip-tools` 7.6.2 para generar las resoluciones; su documentación explica las entradas `.in` y la compilación de archivos fijados en [pip-tools](https://pip-tools.pypa.io/en/stable/).
 
-El archivo de desarrollo debe respetar la resolución de ejecución para no instalar otra versión del producto al añadir herramientas. Documentar cómo regenerar ambos y bajo qué Python/plataforma se resolvieron. Si se adopta otra herramienta, elegir una sola estrategia y migrar los comandos coherentemente.
+El archivo de desarrollo incluye las entradas de ejecución y las restringe con `-c requirements.txt`. Se generó con CPython 3.12 en el Mac de desarrollo, fijando explícitamente watchdog requerido en Linux. El contrato de ejecución es Linux/Python, agnóstico del proveedor; CI usa Ubuntu. No se presume despliegue remoto ni soporte de instalaciones locales de usuario final.
 
 No mantener la misma lista manual de dependencias en `.in`, `pyproject.toml` y otros archivos con autoridades contradictorias. Si posteriormente se empaqueta el proyecto, revisar y documentar la fuente única correspondiente.
 
@@ -1321,36 +1324,42 @@ No mantener la misma lista manual de dependencias en `.in`, `pyproject.toml` y o
 | F4-R01 | Definir y probar las versiones de Python soportadas; alinear README, resolución y CI. |
 | F4-R02 | Instalar versiones resueltas y versionadas; documentar actualización deliberada de dependencias. |
 | F4-R03 | Separar preparación del entorno y arranque. Un arranque normal no actualiza pip ni reinstala todo. |
-| F4-R04 | Conservar comandos claros para macOS/Linux y Windows, con rutas entrecomilladas y `python -m pip` asociado al intérprete correcto. |
+| F4-R04 | Despliegue agnóstico del proveedor: Python del entorno, `PORT`, host 0.0.0.0 y preparación/arranque separados, sin manifiestos ni APIs de alojamiento obligatorios; el entorno local es sólo de desarrollo. |
 | F4-R05 | Consolidar configuración de pytest/cobertura y herramientas en `pyproject.toml` cuando sea apropiado, sin duplicaciones. |
 | F4-R06 | Añadir lint y formato mediante Ruff con reglas explícitas y una ejecución en CI. |
 | F4-R07 | Una instalación limpia, comprobación de dependencias y suite completa deben pasar utilizando sólo archivos versionados. |
 | F4-R08 | Documentar qué necesita red al instalar y qué pruebas/modo de demostración pueden ejecutarse sin proveedor externo. |
 
-Ruff se propone como herramienta de lint y formato según su [documentación oficial](https://docs.astral.sh/ruff/). Introducir primero reglas de errores e imports relevantes; evitar una reescritura masiva sin relación con la calidad funcional.
+Se adoptó Ruff 0.17.2 como herramienta de lint y formato según su [documentación oficial](https://docs.astral.sh/ruff/). Introducir primero reglas de errores e imports relevantes; evitar una reescritura masiva sin relación con la calidad funcional.
 
-### 17.4 Comportamiento de los lanzadores
+### 17.4 Contrato de preparación y arranque agnóstico
 
-Después de la fase:
+La aplicación se consume por URL. El proveedor, su plan, credenciales, reglas de
+publicación y configuración de infraestructura son decisiones externas al código.
+No se exige un Blueprint ni un manifiesto de una plataforma para completar F4.
 
-- Si no existe un entorno preparado, indicar cómo instalarlo o invocar explícitamente un modo de instalación documentado.
-- Si existe, iniciar Streamlit sin actualizar dependencias.
-- Un cambio de dependencias requiere un paso de actualización explícito.
-- Los lanzadores deben funcionar desde otra carpeta, resolviendo correctamente la ubicación del proyecto.
-- No pedir credenciales o secretos para iniciar la pantalla inicial o ejecutar la suite.
-
-No es obligatorio crear múltiples scripts nuevos si bastan comandos claros en el README. Sí es obligatorio que los scripts existentes dejen de modificar silenciosamente el entorno en cada arranque.
+- Preparación: `python -m pip install --no-deps -r requirements.txt`, seguida de
+  `python -m pip check` en el entorno de ejecución.
+- Arranque: `bash iniciar_servicio.sh`, usando Python del entorno preparado,
+  dirección `0.0.0.0` y variable `PORT`. No crea `.venv`, instala ni actualiza pip.
+- El servicio utiliza HTTP/WebSockets; el health check de Streamlit es
+  `/_stcore/health`.
+- El entorno de desarrollo se documenta aparte. CI usa Ubuntu y no publica la app.
+- No se añadió un backend separado, base de datos, persistencia o administración
+  de VPS como requisito. El servicio puede configurarse en el PaaS elegido.
+- La validación de una URL pública requiere publicar en ese entorno; no ocurrió
+  en esta sesión y no condiciona F4 a un proveedor concreto.
 
 ### 17.5 Criterios de aceptación
 
-- [ ] Instalación limpia con los archivos resueltos, seguida de `pip check`, sin conflictos.
-- [ ] Suite y cobertura pasan con el entorno resuelto.
-- [ ] Versiones declaradas de Python verificadas en CI o limitaciones explícitas de soporte.
-- [ ] Comandos de instalación y arranque separados y probados.
-- [ ] Lanzadores no reinstalan ni actualizan paquetes en un arranque normal.
-- [ ] Ruff y formato tienen comandos documentados y CI coherente.
-- [ ] Regeneración de resoluciones reproducible y documentada para plataformas soportadas.
-- [ ] No se promete que una resolución generada para un entorno sea universal sin comprobarlo.
+- [x] Instalación limpia con los archivos resueltos, seguida de `pip check`, sin conflictos.
+- [x] Suite y cobertura pasan con el entorno resuelto.
+- [x] CPython 3.12 declarado; CI Ubuntu configurado y límites de verificación remota explícitos.
+- [x] Preparación y arranque agnósticos separados y probados; desarrollo documentado aparte.
+- [x] El servicio usa Python/PORT del entorno y no reinstala al arrancar.
+- [x] Ruff y formato tienen comandos documentados y CI coherente.
+- [x] Regeneración reproducible documentada, con marcadores de Linux comprobados y entorno de compilación identificado.
+- [x] No se promete que una resolución generada para un entorno sea universal sin comprobarlo.
 
 ## 18. F5: presentación del repositorio
 
@@ -1467,19 +1476,19 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | CLI | F1-R16 | CLI-01 a CLI-06 |
 | Código mezclado | F2-R01 a F2-R08 | Suite F1 migrada y equivalencia de resultados |
 | Dudas económicas y datos | F3-R01 a F3-R10 | MET-01 a MET-12, nuevos casos conciliados |
-| Dependencias abiertas/lanzadores | F4-R01 a F4-R08 | Instalación limpia, comandos y matriz de CI |
+| Dependencias abiertas/arranque | F4-R01 a F4-R08 | Instalación limpia, preparación/arranque agnósticos, comandos y CI Ubuntu |
 | Falta de evidencia de producto | F5-R01 a F5-R08 | Demo, documentación, capturas y ejemplo |
 
-### 19.3 Estado de ejecución después de F3
+### 19.3 Estado de ejecución después de F4
 
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 1.4; incorpora evidencia de F1, F2, F3 y corrección de CI |
+| SDD | Actualizada | Versión 1.5; incorpora F1 a F4 y corrección de CI |
 | F1 | Implementada y verificada localmente; CI remoto pendiente | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; CI remoto no verificado | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
-| F4 | Pendiente | Dependencias abiertas y lanzadores que instalan al arrancar |
+| F4 | Implementada y verificada localmente; publicación pendiente | Resoluciones, entorno limpio, Ruff, arranque agnóstico y CI Ubuntu; cierre en 21.10 |
 | F5 | Pendiente | Sin demo, capturas de portafolio ni licencia definida |
 
 ## 20. Decisiones y riesgos
@@ -1558,7 +1567,7 @@ Es una referencia local de trabajo, no una ruta que deba aparecer en comandos p�
 
 ### 21.2 Instrucción lista para continuar con F1
 
-Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los cierres de las secciones 21.6 a 21.8: F1, F2 y F3 ya están implementadas localmente y no deben rehacerse desde cero. Las correcciones futuras deben seguir TDD; F4 es la siguiente fase pendiente y requiere solicitud para iniciarse.
+Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar los cierres de las secciones 21.6 a 21.10: F1 a F4 ya están implementadas localmente y no deben rehacerse desde cero. Las correcciones futuras deben seguir TDD; F5 es la siguiente fase pendiente y requiere solicitud para iniciarse.
 
 > Lee `docs/SDD.md` y las instrucciones del repositorio. Implementa únicamente F1: corrige los casos de fallo, crea pruebas deterministas para todas las áreas relevantes y automatízalas en CI en una misma entrega. F2 a F5 siguen pendientes. Empieza por reproducir BUG-001 y BUG-002 mediante tests y corrige sus causas. Usa fixtures sintéticos y un proveedor falso; las pruebas obligatorias no deben consultar Yahoo. Conserva las fórmulas válidas actuales y sus contratos públicos; documenta como caracterización lo que aún requiere revisión metodológica. Sigue la matriz de pruebas, verifica los resultados numéricos de forma independiente, mide cobertura sobre ambos archivos con ramas y usa el umbral inicial de 85 %. Añade el workflow y comandos de desarrollo sin realizar la refactorización completa ni el bloqueo integral de dependencias de fases posteriores. Ejecuta las comprobaciones disponibles, distingue suite local de CI remoto, y actualiza esta SDD con archivos cambiados, comandos, resultados reales y pendientes. No publiques ni despliegues como parte de esta tarea.
 
@@ -1650,7 +1659,7 @@ No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI e
 
 ### 21.6 Registro de implementación de F1
 
-Registro histórico al cerrar F1; el estado vigente está en 21.8.
+Registro histórico al cerrar F1; el estado vigente está en 21.10.
 
 - Fecha: 2026-11-12.
 - Referencia inicial: commit `635cd15`. Los cambios de F1 están en el árbol de trabajo; no se creó un commit ni se publicó el código como parte de esta implementación.
@@ -1673,7 +1682,7 @@ Registro histórico al cerrar F1; el estado vigente está en 21.8.
 
 ### 21.7 Registro de implementación de F2
 
-Registro histórico al cerrar F2; el estado vigente está en 21.8.
+Registro histórico al cerrar F2; el estado vigente está en 21.10.
 
 - Fecha: 2026-11-12.
 - Línea base: `b9852e6`, commit de F1. El árbol estaba limpio al comenzar. Los cambios de F2 permanecen en el árbol de trabajo; no se hizo commit ni se publicó como parte del encargo.
@@ -1694,7 +1703,7 @@ Registro histórico al cerrar F2; el estado vigente está en 21.8.
 - CI: el workflow sigue ejecutando `python -m pytest`, que ahora mide el paquete nuevo. No se ejecutó un runner remoto ni se afirma un run verde en esta sesión.
 - Siguiente fase: F3, revisión de metodología y trazabilidad; pendiente. F4 y F5 también permanecen pendientes.
 
-### 21.8 Registro de implementación de F3 y punto de continuidad vigente
+### 21.8 Registro histórico de implementación de F3
 
 - Fecha: 2026-11-12. Línea base: `81ed7fb`, commit de F2.
 - Estado: **F1, F2 y F3 implementadas y verificadas localmente. F4 y F5 pendientes.**
@@ -1745,6 +1754,8 @@ heurísticas como datos auditados.
 
 ### 21.9 Corrección posterior a F3: ruta de AppTest en CI
 
+Registro previo a F4; el punto de continuidad vigente está en 21.10.
+
 - Línea base: `43d6725`; fecha 2026-11-12. El usuario compartió un run anterior
   con 20 pruebas de UI fallidas, 250 pasadas y cobertura 84.39 %. AppTest buscaba
   `tests/ui/app.py` al resolver una ruta relativa desde el test llamador.
@@ -1764,6 +1775,61 @@ heurísticas como datos auditados.
 - Punto de continuidad: se mantienen las decisiones y contratos de 21.8, más
   esta corrección. **F4 y F5 siguen pendientes** y requieren el siguiente encargo.
 
+### 21.10 Registro de implementación de F4 y continuidad vigente
+
+- Fecha: 2026-11-12. Línea base: `c149bd7`, corrección de AppTest posterior a F3.
+  Línea base verificada: 315 pruebas, cobertura 98.51 %, 42.53 s.
+- Estado: **F1 a F4 implementadas y verificadas localmente. F5 pendiente.**
+  No se hizo commit, push ni publicación como parte del encargo.
+- Contrato definitivo solicitado por el usuario: servicio web Python/Streamlit
+  sobre Linux, **agnóstico del proveedor de alojamiento**. La preferencia por PaaS
+  no exige una plataforma, API, manifiesto ni plan determinados en el repositorio.
+- TDD: regresiones de dependencias/configuración, CI, portabilidad de archivos y
+  arranque genérico. Tras la precisión de agnosticismo, cuatro pruebas de arranque
+  fallaron antes de introducir la entrada independiente. Evidencia en TDD_F4.md.
+- Python: CPython 3.12 en `.python-version`, referencia de ejecución y CI.
+  Localmente se verificó Python 3.12.2 en macOS ARM64; CI usa Ubuntu. Cada entorno
+  de publicación debe configurar su intérprete compatible por su propio mecanismo.
+- Dependencias: entradas `.in`, resoluciones `.txt` reales de pip-tools 7.6.2;
+  desarrollo restringido por ejecución. Versiones del producto de F3 conservadas.
+  Watchdog se fija por Linux al compilar desde macOS. Regeneración idéntica
+  verificada con pip 26.3 y pip-tools 7.6.2, con cabeceras normalizadas.
+- Preparación: instalar el archivo de ejecución y ejecutar pip check. Arranque:
+  `bash iniciar_servicio.sh` con Python y `PORT` del entorno, host `0.0.0.0`,
+  headless, watcher/telemetría desactivados y `exec`. Sin instalaciones al iniciar.
+- Se retiraron el manifiesto y el nombre de arranque vinculados a un proveedor,
+  y las pruebas que sólo exigían su Blueprint. También se retiraron los antiguos
+  lanzadores orientados a instalación local. El contrato no exige recursos remotos.
+- Configuración: pytest/coverage/Ruff en TOML, sin `pytest.ini` ni `.coveragerc`;
+  umbral 85 % y alcance completo conservados. Ruff usa E4/E7/E9/F/I y 100 columnas.
+- Estilo: imports/formato y lambda local convertida en función equivalente. El AST
+  confirmó que no se modificaron otras expresiones de producto. Catálogo,
+  snapshots y documento de metodología permanecen intactos.
+- Reproducibilidad de archivos: LF en código/shell y UTF-8 explícito en fixtures.
+  Esto no equivale a prometer soporte de instalación de usuario final en otro OS.
+- Instalación limpia: runtime sin paquetes globales, pip check y ejemplo
+  independiente exitosos; después herramientas y suite. Revisión agnóstica final:
+  **327 passed**, cero skips/xfails, **42.01 s**, cobertura **98.51 %**. Evidencia
+  en [TDD_F4.md](TDD_F4.md).
+- Limitación del smoke HTTP: la política local bloquea abrir sockets de escucha.
+  Se verifica el contrato con un runtime de prueba, sin afirmar que una URL pública
+  o un health check HTTP real hayan sido comprobados.
+- Red: el usuario descargó paquetes desde su terminal ante la restricción de red
+  de la sesión. Se usaron como fuente offline sin incorporar rutas de esa descarga
+  como dependencias del proyecto.
+- CI: Ubuntu/Python 3.12, `.venv` limpio, lock de desarrollo, pip check, lint,
+  formato y pytest; reportes conservados. No crea recursos ni publica el servicio.
+- Documentación: README, [development.md](development.md), arquitectura, TDD y SDD
+  actualizados al contrato genérico. Ningún paso de cierre exige un Blueprint.
+- Siguiente fase: **F5**, presentación/demo del repositorio. No se inició.
+
+Para continuar en otro chat: leer esta sección, la sección 18, `development.md`,
+`methodology.md` y `TDD_F4.md`; comparar el árbol con el commit disponible.
+Mantener TDD y las resoluciones. No rehacer F1 a F4 ni cambiar fórmulas/catálogo
+para presentar el proyecto. La publicación se configura con los comandos y las
+variables del contrato en el entorno elegido, y se valida en su URL. La licencia
+sigue necesitando decisión de su titular. No inventar un run remoto ni publicación.
+
 ## 22. Fuentes y mantenimiento
 
 ### 22.1 Fuente del estado actual
@@ -1776,8 +1842,8 @@ La descripción de producto, configuración, funciones, esquemas y hallazgos pro
 - [Dependencias actuales](../requirements.txt).
 - [Reglas de exclusión](../.gitignore).
 - [Configuración pública de Streamlit](../.streamlit/config.toml).
-- [Lanzador macOS/Linux](../ejecutar_app.sh).
-- [Lanzador Windows](../ejecutar_app.bat).
+- [Contrato de despliegue](development.md).
+- [Arranque del servicio web](../iniciar_servicio.sh).
 
 Las fuentes técnicas externas están enlazadas junto a las decisiones que apoyan: AppTest, pytest, pytest-cov, pytest-socket, GitHub Actions, pip-tools y Ruff. Se consultaron al redactar esta versión; verificar compatibilidad vigente al implementar.
 

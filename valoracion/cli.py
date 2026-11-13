@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import time
+from pathlib import Path
 
 from .configuracion import CONFIG
 from .exportacion.excel import escribir_excel
 from .modelos import crear_resultado_error
 from .normalizacion import eliminar_duplicados, mercado_de_ticker
 from .servicio import analizar_ticker
-from .universo import EMPRESAS_USA, EMPRESAS_MX, EMPRESAS
+from .universo import EMPRESAS, EMPRESAS_MX, EMPRESAS_USA
 
 
 def main() -> None:

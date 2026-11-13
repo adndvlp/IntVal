@@ -1,6 +1,6 @@
 # App de valoración de acciones USA y México
 
-Aplicación local en Streamlit que descarga información de Yahoo Finance y compara, por acción:
+Aplicación web en Streamlit que descarga información de Yahoo Finance y compara, por acción:
 
 - Precio de mercado
 - Proxy de flujo de caja libre (FCL)
@@ -12,38 +12,43 @@ Aplicación local en Streamlit que descarga información de Yahoo Finance y comp
 
 La app incluye filtros, gráficas históricas y exportación a un archivo Excel con hojas separadas para USA y México.
 
-## Instalación
+## Despliegue
 
-Se recomienda Python 3.10 o posterior.
+El servicio es **agnóstico del proveedor de alojamiento**. Requiere un entorno
+Linux con CPython 3.12 que exponga HTTP/WebSockets y proporcione `PORT`.
 
-```bash
-python -m venv .venv
-```
-
-### Windows
-
-```powershell
-.venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-También puedes ejecutar `ejecutar_app.bat`.
-
-### macOS o Linux
+**Preparación del entorno:**
 
 ```bash
-source .venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
+python -m pip install --no-deps -r requirements.txt
+python -m pip check
 ```
 
-También puedes ejecutar:
+**Arranque del servicio:**
 
 ```bash
-chmod +x ejecutar_app.sh
-./ejecutar_app.sh
+bash iniciar_servicio.sh
 ```
+
+El arranque usa el Python preparado y el puerto del entorno; no instala paquetes.
+El health check de Streamlit está en `/_stcore/health`. Los comandos, variables y
+[comprobaciones de despliegue](docs/development.md) se pueden configurar en el
+proveedor elegido. F4 no requiere un manifiesto ni la API de una plataforma.
+
+## Preparar desarrollo
+
+En el Mac de desarrollo, desde la raíz:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install --no-deps -r requirements-dev.txt
+.venv/bin/python -m pip check
+```
+
+No es necesario activar el entorno: los comandos invocan su intérprete directamente.
+La instalación puede necesitar Internet; la suite y el ejemplo sintético no
+consultan Yahoo. El arranque del servicio es `bash iniciar_servicio.sh`, con `PORT`
+proporcionado por el entorno, y no reinstala paquetes.
 
 ## Uso
 
@@ -60,7 +65,10 @@ chmod +x ejecutar_app.sh
 - `valoracion/`: configuración, modelos, normalización, cálculos, servicio, proveedor Yahoo, exportación y presentación.
 - `data/universo.json`: catálogo local de empresas y procedencia.
 - `tests/`: pruebas de comportamiento, arquitectura y equivalencia.
-- `requirements.txt`: dependencias.
+- `requirements*.in` / `requirements*.txt`: entradas y resoluciones de dependencias.
+- `pyproject.toml`: configuración de pytest, cobertura, lint y formato.
+- `.python-version`: versión de Python utilizada por CI y referencia de ejecución.
+- `iniciar_servicio.sh`: arranque del servicio web mediante `PORT`.
 
 ## Consideraciones
 
@@ -73,13 +81,17 @@ chmod +x ejecutar_app.sh
 
 ## Pruebas y TDD
 
-Con el entorno virtual activo, instala las herramientas de desarrollo y ejecuta:
+En el entorno de desarrollo, instala las herramientas y ejecuta:
 
 ```bash
-python -m pip install -r requirements-dev.txt
-python -m pip check
-python -m pytest
+.venv/bin/python -m pip install --no-deps -r requirements-dev.txt
+.venv/bin/python -m pip check
+.venv/bin/python -m ruff check .
+.venv/bin/python -m ruff format --check .
+.venv/bin/python -m pytest
 ```
+
+La configuración de pruebas, cobertura y Ruff está unificada en `pyproject.toml`.
 
 La suite usa pytest, AppTest, mocks y datos sintéticos. Cubre cálculos, proveedor,
 interfaz, sesión, cachés, CLI y libros Excel reales. Las consultas de mercado no
@@ -91,23 +103,23 @@ El comando completo mide líneas y ramas en las entradas y todo el paquete `valo
 son archivos locales ignorados por Git. Para depurar un caso sin el umbral global:
 
 ```bash
-python -m pytest -o addopts='' tests/ui/test_app.py -k todos_los_analisis_fallan -q
+.venv/bin/python -m pytest -o addopts='' tests/ui/test_app.py -k todos_los_analisis_fallan -q
 ```
 
 Los cambios de software deben seguir **TDD: prueba, fallo observado, cambio mínimo
 y refactorización con pruebas verdes**. La [evidencia de F1](docs/TDD_F1.md), la
 [evidencia de F2](docs/TDD_F2.md), la
 [evidencia de F3](docs/TDD_F3.md), la
+[evidencia de F4](docs/TDD_F4.md), la
 [matriz de trazabilidad](docs/F1_TEST_MATRIX.md) y los
 [datos de referencia](tests/fixtures/README.md) explican qué se comprobó y con qué
 esperados. F3 documenta y restringe la metodología; que la aritmética pase no
 demuestra capacidad predictiva de los proxies.
 
 GitHub Actions ejecutará el mismo comando en push, pull requests y ejecución
-manual, con Python 3.12 y permisos de lectura. El workflow no despliega la app.
-Su ejecución remota debe verificarse en GitHub; la verificación local y sus
-versiones están registradas en la SDD. El bloqueo integral de dependencias y la
-ampliación de compatibilidad permanecen en F4.
+manual, con Python 3.12 en Ubuntu, entorno nuevo y permisos de lectura. Comprueba dependencias, lint, formato y suite. El workflow
+no despliega la app. Su ejecución remota debe verificarse en GitHub; la evidencia
+local y los límites de soporte están registrados en la SDD.
 
 ## Arquitectura (F2)
 
@@ -117,8 +129,8 @@ servicio; los cálculos se ejecutan sobre snapshots sin I/O. Se puede inyectar u
 `ProveedorDatos` en el servicio o una factory en `ProveedorYahoo` para probar
 datos alternativos sin cambiar las fórmulas.
 
-F1, F2 y F3 están implementadas y verificadas localmente. La formalización completa
-de dependencias (F4) y la demo/presentación de producto (F5) siguen pendientes.
+F1 a F4 están implementadas y verificadas localmente. La demo/presentación del
+repositorio (F5) sigue pendiente.
 
 ## Metodología y ejemplo reproducible (F3)
 
@@ -130,7 +142,7 @@ las etiquetas de UI y Excel identifican las métricas realmente calculadas.
 Para conciliar un caso completo con `Decimal`, sin consultar Yahoo:
 
 ```bash
-python -m examples.valoracion_independiente
+.venv/bin/python -m examples.valoracion_independiente
 ```
 
 Genera un CSV de conciliación y un Excel en `examples/salida/` (ignorado por Git).

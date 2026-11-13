@@ -1,0 +1,10 @@
+# Dependencias directas de ejecución. Actualizarlas de forma deliberada.
+streamlit==1.60.0
+plotly==6.9.0
+yfinance==1.5.1
+pandas==3.0.3
+numpy==2.5.1
+openpyxl==3.1.5
+
+# Dependencia de Linux; se fija también al compilar desde un Mac de desarrollo.
+watchdog==6.0.0

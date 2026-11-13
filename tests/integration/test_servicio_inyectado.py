@@ -1,8 +1,8 @@
 """F2-R02/R03/R08: motor real con un proveedor de dominio, sin parchear Yahoo."""
 
+import json
 from dataclasses import asdict
 from importlib import import_module
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -15,7 +15,9 @@ def datos_del_caso(caso):
     modelos = import_module("valoracion.modelos")
     ticker, config = escenario(caso)
     datos = modelos.DatosEmpresa(
-        ticker="TEST", info=ticker.info, precio=40,
+        ticker="TEST",
+        info=ticker.info,
+        precio=40,
         objetivo_analistas=60,
         acciones=None if caso == "sin_acciones" else 10,
         resultados=ticker.income_stmt,
@@ -32,9 +34,12 @@ class ProveedorMemoria:
     def __init__(self, datos):
         self.datos = datos
         self.llamadas = []
-        self.precios = pd.DataFrame({
-            "Fecha": pd.date_range("2025-01-01", periods=3), "Cierre": [38., 39., 40.],
-        })
+        self.precios = pd.DataFrame(
+            {
+                "Fecha": pd.date_range("2025-01-01", periods=3),
+                "Cierre": [38.0, 39.0, 40.0],
+            }
+        )
 
     def obtener_empresa(self, ticker):
         self.llamadas.append(("empresa", ticker))
@@ -64,8 +69,12 @@ def migrar_referencia_f3(referencia, caso):
     if caso in ("financiera", "fx_ausente"):
         for campo in principal:
             if campo.startswith("Valor intrínseco") or campo in (
-                "Upside FCL", "Upside EBIT", "Upside EBITDA", "Upside utilidad neta",
-                "Mediana de modelos", "Upside mediana",
+                "Upside FCL",
+                "Upside EBIT",
+                "Upside EBITDA",
+                "Upside utilidad neta",
+                "Mediana de modelos",
+                "Upside mediana",
             ):
                 principal[campo] = None
         for campo in detalle:
@@ -73,28 +82,44 @@ def migrar_referencia_f3(referencia, caso):
                 detalle[campo] = None
     if caso == "financiera":
         principal["Estado"] = "REVISAR"
-        principal["Notas"] = detalle["Notas"] = "Clase FINANCIERA: no hay un modelo sectorial implementado; proxies no aplicables."
+        principal["Notas"] = detalle["Notas"] = (
+            "Clase FINANCIERA: no hay un modelo sectorial implementado; proxies no aplicables."
+        )
     if caso == "fx_ausente":
         principal["Estado"] = "DATOS INCOMPLETOS"
         for campo in detalle:
             if campo.startswith(("Margen ", "Base ")) or campo in (
-                "Tipo de cambio", "Ingresos actuales", "Deuda", "Efectivo", "Deuda neta",
+                "Tipo de cambio",
+                "Ingresos actuales",
+                "Deuda",
+                "Efectivo",
+                "Deuda neta",
             ):
                 detalle[campo] = None
             elif campo.startswith("Años "):
                 detalle[campo] = 0
-        detalle.update({"Tasa de impuestos": 0.21, "CAGR histórico ingresos": 0.03,
-                        "Crecimiento años 1-5": 0.0075, "Crecimiento años 6-10": 0.00375,
-                        "Fuente EBITDA ajustado": "No disponible"})
-        principal["Notas"] = detalle["Notas"] = " ".join([
-            "FX USD/MXN no verificable; valoraciones bloqueadas.",
-            "Crecimiento no disponible; se usó fallback de 3.0%.",
-            "Deuda desconocida; no se presume cero.", "Efectivo desconocido; no se presume cero.",
-            "Ingresos no disponibles.", "FCL normalizado no positivo o no disponible.",
-            "NOPAT normalizado no positivo o no disponible.",
-            "EBITDA ajustado no positivo o no disponible.",
-            "Utilidad neta normalizada no positiva o no disponible.",
-        ])
+        detalle.update(
+            {
+                "Tasa de impuestos": 0.21,
+                "CAGR histórico ingresos": 0.03,
+                "Crecimiento años 1-5": 0.0075,
+                "Crecimiento años 6-10": 0.00375,
+                "Fuente EBITDA ajustado": "No disponible",
+            }
+        )
+        principal["Notas"] = detalle["Notas"] = " ".join(
+            [
+                "FX USD/MXN no verificable; valoraciones bloqueadas.",
+                "Crecimiento no disponible; se usó fallback de 3.0%.",
+                "Deuda desconocida; no se presume cero.",
+                "Efectivo desconocido; no se presume cero.",
+                "Ingresos no disponibles.",
+                "FCL normalizado no positivo o no disponible.",
+                "NOPAT normalizado no positivo o no disponible.",
+                "EBITDA ajustado no positivo o no disponible.",
+                "Utilidad neta normalizada no positiva o no disponible.",
+            ]
+        )
     return referencia
 
 
@@ -103,13 +128,15 @@ def test_servicio_inyectado_conserva_f1_con_migracion_explicita_f3(caso):
     servicio = import_module("valoracion.servicio")
     datos, config = datos_del_caso(caso)
     proveedor = ProveedorMemoria(datos)
-    esperado = json.loads(Path("tests/fixtures/resultados_f1.json").read_text())[caso]
+    esperado = json.loads(Path("tests/fixtures/resultados_f1.json").read_text(encoding="utf-8"))[
+        caso
+    ]
     esperado = migrar_referencia_f3(esperado, caso)
     resultado = servicio.analizar_empresa("TEST", config, proveedor=proveedor)
     assert proveedor.llamadas == [("empresa", "TEST")]
     assert asdict(resultado.configuracion) == asdict(config)
     for registro, referencia in zip(resultado.como_registros(), esperado, strict=True):
-        assert list(registro)[:len(referencia)] == list(referencia)
+        assert list(registro)[: len(referencia)] == list(referencia)
         assert registro["Versión metodología"] == "proxies-1.0"
         assert registro["Versión contrato"] == "2.0"
         for campo, valor in referencia.items():
@@ -117,7 +144,18 @@ def test_servicio_inyectado_conserva_f1_con_migracion_explicita_f3(caso):
                 assert registro[campo] == pytest.approx(valor, rel=1e-12, abs=1e-12), campo
             else:
                 assert registro[campo] == valor, campo
-    assert ' '.join(d.mensaje for d in resultado.diagnosticos) == resultado.principal['Notas']
+    assert " ".join(d.mensaje for d in resultado.diagnosticos) == resultado.principal["Notas"]
+
+
+def test_snapshot_utf8_con_codificacion_predeterminada_cp1252(monkeypatch):
+    lectura_original = Path.read_text
+
+    def leer_texto(ruta, *args, **kwargs):
+        kwargs.setdefault("encoding", "cp1252")
+        return lectura_original(ruta, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", leer_texto)
+    test_servicio_inyectado_conserva_f1_con_migracion_explicita_f3("completa_simple")
 
 
 def test_calculo_puro_y_resultados_no_comparten_estado_mutable():
@@ -150,7 +188,9 @@ def test_historicos_usen_el_mismo_contrato_inyectado():
     datos, config = datos_del_caso("completa_simple")
     proveedor = ProveedorMemoria(datos)
     precios = servicio.obtener_precio_historico("TEST", "1y", proveedor=proveedor)
-    financieros, margenes = servicio.obtener_historicos_financieros("TEST", config, proveedor=proveedor)
+    financieros, margenes = servicio.obtener_historicos_financieros(
+        "TEST", config, proveedor=proveedor
+    )
     assert proveedor.llamadas == [("precio", "TEST", "1y"), ("estados", "TEST")]
     pd.testing.assert_frame_equal(precios, proveedor.precios)
     precios.loc[0, "Cierre"] = 999
@@ -171,9 +211,11 @@ def test_adaptador_yahoo_acepta_factory_y_retorna_el_modelo_de_dominio():
     base = import_module("valoracion.proveedores.base")
     ticker, config = escenario("completa_simple")
     llamadas = []
+
     def factory(simbolo):
         llamadas.append(simbolo)
         return ticker
+
     proveedor = yahoo.ProveedorYahoo(ticker_factory=factory)
     assert isinstance(proveedor, base.ProveedorDatos)
     datos = proveedor.obtener_empresa("TEST")
@@ -197,6 +239,7 @@ def test_factory_y_cache_fx_quedan_aislados_entre_proveedores():
     ticker, _ = escenario("completa_default")
     ticker.datos["info"].update(financialCurrency="USD", currency="MXN")
     consultas = []
+
     def factory(factor):
         def obtener(simbolo):
             consultas.append((factor, simbolo))
@@ -204,7 +247,9 @@ def test_factory_y_cache_fx_quedan_aislados_entre_proveedores():
                 return ticker
             assert simbolo == "USDMXN=X"
             return type(ticker)(history_result=pd.DataFrame({"Close": [factor]}))
+
         return obtener
+
     primero = yahoo.ProveedorYahoo(ticker_factory=factory(20))
     segundo = yahoo.ProveedorYahoo(ticker_factory=factory(10))
     assert primero.obtener_empresa("TEST").tipo_cambio == 20
@@ -214,11 +259,14 @@ def test_factory_y_cache_fx_quedan_aislados_entre_proveedores():
     assert consultas.count((10, "USDMXN=X")) == 1
 
 
-@pytest.mark.parametrize("campo, atributo, estado, mediana", [
-    ("income_stmt", "resultados", "DATOS INCOMPLETOS", None),
-    ("cashflow", "flujo", "OK", 46),
-    ("balance_sheet", "balance", "REVISAR", 50),
-])
+@pytest.mark.parametrize(
+    "campo, atributo, estado, mediana",
+    [
+        ("income_stmt", "resultados", "DATOS INCOMPLETOS", None),
+        ("cashflow", "flujo", "OK", 46),
+        ("balance_sheet", "balance", "REVISAR", 50),
+    ],
+)
 def test_adaptador_normaliza_estados_nulos_como_el_motor_heredado(campo, atributo, estado, mediana):
     yahoo = import_module("valoracion.proveedores.yahoo")
     servicio = import_module("valoracion.servicio")
@@ -231,7 +279,9 @@ def test_adaptador_normaliza_estados_nulos_como_el_motor_heredado(campo, atribut
     resultado = servicio.analizar_empresa("TEST", config, proveedor=proveedor)
     assert resultado.principal["Estado"] == estado
     assert resultado.principal["Precio de mercado"] == 40
-    assert resultado.principal["Mediana de modelos"] == (pytest.approx(mediana) if mediana is not None else None)
+    assert resultado.principal["Mediana de modelos"] == (
+        pytest.approx(mediana) if mediana is not None else None
+    )
     historicos = proveedor.obtener_estados_historicos("TEST")
     assert isinstance(historicos.resultados, pd.DataFrame)
     assert isinstance(historicos.flujo, pd.DataFrame)

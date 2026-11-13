@@ -1,7 +1,7 @@
 """CLI-01 a CLI-06: parser, motor y archivo real sin acceso al mercado."""
 
-from contextlib import closing
 import sys
+from contextlib import closing
 
 import pytest
 from openpyxl import load_workbook
@@ -10,26 +10,50 @@ import valoracion.cli as motor
 from tests.fixtures.datos_sinteticos import TickerSintetico
 
 
-@pytest.mark.parametrize("mercado, esperados", [("USA", ["TEST"]), ("MX", ["TEST.MX"]), ("TODOS", ["TEST", "TEST.MX"])])
-def test_cli_seleccion_de_universo_y_ruta_con_espacios(monkeypatch, tmp_path, industrial, proveedor, config_simple, mercado, esperados):
+@pytest.mark.parametrize(
+    "mercado, esperados", [("USA", ["TEST"]), ("MX", ["TEST.MX"]), ("TODOS", ["TEST", "TEST.MX"])]
+)
+def test_cli_seleccion_de_universo_y_ruta_con_espacios(
+    monkeypatch, tmp_path, industrial, proveedor, config_simple, mercado, esperados
+):
     proveedor[0]["TEST.MX"] = TickerSintetico()
     monkeypatch.setattr(motor, "EMPRESAS_USA", ["TEST"])
     monkeypatch.setattr(motor, "EMPRESAS_MX", ["TEST.MX"])
     monkeypatch.setattr(motor, "EMPRESAS", ["TEST", "TEST.MX"])
     monkeypatch.setattr(motor, "CONFIG", config_simple)
     ruta = tmp_path / "con espacios" / "salida.xlsx"
-    monkeypatch.setattr(sys, "argv", ["motor_valoracion.py", "--mercado", mercado, "--output", str(ruta)])
+    monkeypatch.setattr(
+        sys, "argv", ["motor_valoracion.py", "--mercado", mercado, "--output", str(ruta)]
+    )
     motor.main()
     assert proveedor[1] == esperados
     with closing(load_workbook(ruta)) as libro:
-        assert set(fila[1] for fila in libro["Resumen"].iter_rows(min_row=4, values_only=True)) == set(esperados)
+        assert set(
+            fila[1] for fila in libro["Resumen"].iter_rows(min_row=4, values_only=True)
+        ) == set(esperados)
 
 
-def test_cli_tickers_repetidos_error_y_continuacion(monkeypatch, tmp_path, industrial, proveedor, config_simple, capsys):
+def test_cli_tickers_repetidos_error_y_continuacion(
+    monkeypatch, tmp_path, industrial, proveedor, config_simple, capsys
+):
     proveedor[0]["ERROR"] = RuntimeError("Fallo CLI")
     monkeypatch.setattr(motor, "CONFIG", config_simple)
     ruta = tmp_path / "mixto.xlsx"
-    monkeypatch.setattr(sys, "argv", ["motor_valoracion.py", "--ticker", "ERROR", "--ticker", "TEST", "--ticker", "TEST", "--output", str(ruta)])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "motor_valoracion.py",
+            "--ticker",
+            "ERROR",
+            "--ticker",
+            "TEST",
+            "--ticker",
+            "TEST",
+            "--output",
+            str(ruta),
+        ],
+    )
     motor.main()
     assert proveedor[1] == ["ERROR", "TEST"]
     salida = capsys.readouterr().out

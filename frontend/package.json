@@ -1,0 +1,53 @@
+{
+  "name": "intval-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": "26.13.1",
+    "npm": "11.12.1"
+  },
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "preview": "astro preview --host 127.0.0.1",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "check": "astro check",
+    "test:unit": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "build": "astro build",
+    "types:generate": "openapi-typescript ../contracts/openapi.v1.json --output src/lib/generated/api.ts --alphabetize --export-type",
+    "test:shell": "node --test tests/shell.test.mjs"
+  },
+  "dependencies": {
+    "@astrojs/react": "7.1.8",
+    "astro": "7.4.11",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.0",
+    "@tailwindcss/vite": "4.3.5",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.10",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitest/coverage-v8": "5.1.0",
+    "eslint": "10.14.0",
+    "eslint-plugin-astro": "3.2.1",
+    "jsdom": "31.0.0",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.10.1",
+    "prettier-plugin-astro": "1.1.2",
+    "tailwindcss": "4.3.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0"
+  }
+}

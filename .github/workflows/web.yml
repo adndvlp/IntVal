@@ -1,0 +1,86 @@
+name: Web
+
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Preparar Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Instalar Python en entorno limpio
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --no-deps -r requirements-dev.txt
+          .venv/bin/python -m pip check
+          python -c "import os; from pathlib import Path; open(os.environ['GITHUB_PATH'], 'a', encoding='utf-8').write(str(Path('.venv/bin').resolve()) + '\n')"
+      - name: Preparar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.node-version
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Fijar versión de npm verificada
+        run: npm install --global npm@11.12.1
+      - name: Instalar frontend desde el lock
+        working-directory: frontend
+        run: npm ci
+      - name: Comprobar OpenAPI y tipos generados
+        run: |
+          python -m valoracion.web.contratos --check
+          npm run types:generate --prefix frontend
+          git diff --exit-code -- contracts/openapi.v1.json frontend/src/lib/generated/api.ts
+      - name: Lint, formato y tipos
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm run format:check
+          npm run check
+      - name: Pruebas unitarias
+        working-directory: frontend
+        run: npm run test:unit
+      - name: Build estático y HTML sin JavaScript
+        working-directory: frontend
+        run: |
+          npm run build
+          npm run test:shell
+      - name: Preparar navegador
+        working-directory: frontend
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Smoke contra la API real
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: Conservar reportes web
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reportes-web
+          path: |
+            frontend/coverage/
+            frontend/playwright-report/
+            frontend/test-results/
+          if-no-files-found: warn
+          retention-days: 7

@@ -158,6 +158,26 @@ mínimo y refactorización en verde**. Véanse [CONTRIBUTING](CONTRIBUTING.md), 
 [registro de F5](docs/TDD_F5.md). La insignia enlaza el workflow real; cada entrega
 debe comprobar su propio run remoto.
 
+La base de la nueva web está en `frontend/`, con Astro estático, React y
+TypeScript. Incluye un shell de vista previa y conexión con la API de lectura;
+el análisis continúa disponible en Streamlit. Para instalar y comprobar el
+frontend se usa Node 26.13.1 y npm 11.12.1:
+
+```bash
+cd frontend
+npm ci
+npm run lint
+npm run format:check
+npm run check
+npm run test:unit
+npm run build
+npm run test:shell
+```
+
+La [guía de desarrollo](docs/development.md#8-fundamentos-web-f6) explica cómo
+ejecutar la API, regenerar los tipos y probar el navegador contra el servicio
+real. [TDD de F6](docs/TDD_F6.md) registra los fallos iniciales y las verificaciones.
+
 ## Límites del análisis
 
 - Las fórmulas son heurísticas con tasas y múltiplos manuales. No incluyen una
@@ -181,19 +201,20 @@ no la validez predictiva de una valoración.
 
 - [SDD y continuidad](docs/SDD.md): requisitos, decisiones, fases y trabajo pendiente.
 - [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
-  FastAPI, especificados para F6–F11 y todavía sin implementar.
+  FastAPI. F6 implementa los fundamentos; F7–F11 permanecen pendientes.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
   [F3](docs/TDD_F3.md), [corrección de CI](docs/TDD_CI_APPTEST.md),
-  [F4](docs/TDD_F4.md) y [F5](docs/TDD_F5.md).
+  [F4](docs/TDD_F4.md), [F5](docs/TDD_F5.md) y [F6](docs/TDD_F6.md).
 
 F1–F5 están implementadas y verificadas localmente. La demo, el ejemplo público,
 las capturas reales revisadas y la licencia MIT completan la presentación del
 repositorio. El [CI del commit F5](https://github.com/adndvlp/IntVal/actions/runs/43370891010)
-está verificado. F6–F11 describen la evolución web futura en la nueva SDD y siguen
-pendientes de implementación. El despliegue público y la validación de su URL
-quedan pendientes.
+está verificado. F6 añade los fundamentos web con validación local; su nuevo
+workflow aún requiere ejecución remota en el commit que se publique. F7 es la
+siguiente fase: sistema visual y landing completa. F8–F11, el despliegue público
+y la validación de su URL quedan pendientes.
 
 ## Licencia
 

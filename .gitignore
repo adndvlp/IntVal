@@ -44,3 +44,13 @@ Desktop.ini
 
 # Salida reproducible del ejemplo F3
 /examples/salida/
+
+# Herramientas y salidas del frontend; capturas de documentación sí se versionan
+node_modules/
+frontend/.astro/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+
+# Referencias locales del usuario, ajenas al producto
+/temp/

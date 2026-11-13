@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import EstadoServicio from '../../components/EstadoServicio';
+
+const baseUrl = (import.meta.env.PUBLIC_API_BASE_URL ?? '').replace(/\/+$/, '');
+---
+
+<Base
+  title="Aplicación"
+  description="Vista previa del espacio de análisis de IntVal."
+>
+  <p class="eyebrow">Vista previa</p>
+  <h1 id="contenido" tabindex="-1">
+    Tu espacio de análisis.
+  </h1>
+  <p class="intro">
+    La nueva interfaz está en preparación. Puedes comprobar la conexión con el
+    servicio.
+  </p>
+  <div class="notice">
+    <h2>Conexión con el servicio</h2>
+    <p>
+      Esta comprobación sólo verifica la disponibilidad del catálogo. El
+      análisis de empresas todavía no está disponible en esta vista.
+    </p>
+    <EstadoServicio client:load baseUrl={baseUrl} />
+    <noscript>
+      <p>
+        Activa JavaScript para comprobar la conexión. La navegación permanece
+        disponible.
+      </p>
+    </noscript>
+  </div>
+</Base>

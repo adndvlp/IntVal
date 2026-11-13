@@ -12,7 +12,8 @@ equivalencia total y 19/45 columnas de las secciones históricas describen F2;
 el contrato vigente es 2.0, con prefijos heredados y 24/73 campos. Las extensiones
 de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
 históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
-posterior está especificada en 21.12 y [SDD_WEB.md](SDD_WEB.md), sin implementar.
+posterior se especifica en [SDD_WEB.md](SDD_WEB.md); F6 incorpora los fundamentos
+web descritos al final. La continuidad vigente es 21.13 de la SDD general.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -323,11 +324,39 @@ La [evidencia de F5](TDD_F5.md) reúne regresiones del proveedor, flujo AppTest 
 red, aislamiento de caché y conciliación del ejemplo público. No cambia metodología,
 contrato, fachada, CLI de mercado, catálogo ni snapshots históricos.
 
-## Destino web especificado después de F5
+## ADR-002: fundamentos HTTP y frontend estático (F6)
+
+Fecha: 2026-11-13. Estado: implementado y verificado localmente.
+
+La frontera HTTP está en `valoracion/web`: `create_app` crea una instancia con
+ajustes operativos propios y catálogos locales. Expone salud, metadatos y
+catálogo, sin consultas de mercado. `esquemas` separa los nueve supuestos
+editables de la configuración efectiva completa; `adaptadores` transporta
+escalares, ausencias y fechas y rechaza tipos o números inválidos.
+
+`contratos` exporta el OpenAPI real a `contracts/openapi.v1.json`. La generación
+con openapi-typescript produce `frontend/src/lib/generated/api.ts`; CI detecta
+drift en ambos. Las operaciones publicadas son sólo de lectura. No hay todavía
+almacén de trabajos, workers, cachés HTTP, análisis o descargas.
+
+`frontend/` usa Astro estático con React/TypeScript y Tailwind. El HTML contiene
+la estructura y navegación; sólo `/app/` hidrata la comprobación de conexión.
+El cliente usa tipos generados y valida el subconjunto de metadatos consumido
+antes de indicar disponibilidad. Un HTTP 200 con HTML o capacidades incompatibles
+produce un error seguro y permite reintentar.
+
+La API y frontend se prueban por separado y juntos: pytest/TestClient,
+Vitest/Testing Library, HTML del build y Playwright contra FastAPI real.
+`web.yml` añade estas verificaciones; `tests.yml` mantiene el conjunto Python.
+No se introduce código financiero JavaScript ni cambia el contrato de arranque
+Streamlit. La resolución Python conserva los pines anteriores y añade la
+frontera HTTP. Evidencia: [TDD_F6.md](TDD_F6.md).
+
+## Destino web pendiente después de F6
 
 La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
-API FastAPI, manteniendo el motor/proveedores/Excel existentes. Es diseño futuro;
-no cambia el diagrama ni las entradas implementadas descritas arriba.
+API FastAPI, manteniendo el motor/proveedores/Excel existentes. F6 implementa
+los fundamentos anteriores; F7–F11 siguen siendo diseño futuro.
 
 La migración separará cachés/sesión de Streamlit del transporte HTTP y preservará
 los snapshots/configuración de análisis. La entrada actual seguirá funcionando

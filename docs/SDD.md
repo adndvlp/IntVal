@@ -3,18 +3,18 @@
 **Especificación y diseño de software de IntVal: formalización del repositorio y evolución de su interfaz web.**
 
 La nueva etapa de landing y dashboard está detallada en la
-[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.12 para
-continuar el trabajo. F1–F5 están implementadas; F6–F11 están especificadas y
-pendientes de implementación. Esta edición sólo redacta el diseño.
+[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.13 para
+continuar el trabajo. F1–F6 están implementadas; F7–F11 están especificadas y
+pendientes de implementación.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.0 |
+| Versión del documento | 2.1 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1 a F5 implementadas; evidencia de cierre: 345 pruebas y cobertura 98.59 %. F6–F11 especificadas en SDD_WEB.md, sin implementar. Continuidad en 21.12; CI y publicación se verifican por commit/entorno, sin asumir runs posteriores |
+| Estado | F1–F6 implementadas; cierre local F6: 394 pruebas Python, cobertura 97.90 %, 12 unitarias frontend, dos HTML y cuatro navegador. F7–F11 pendientes. Continuidad en 21.13; CI y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -23,11 +23,11 @@ pendientes de implementación. Esta edición sólo redacta el diseño.
 | Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
 | Entorno implementado | F4: servicio web agnóstico, Python 3.12, resoluciones pip-tools, arranque mediante PORT, configuración central y Ruff |
 | Presentación implementada | F5: demo sintética, ejemplo público, documentación, capturas reales revisadas y licencia MIT elegida por el usuario |
-| Nuevo encargo autorizado | Especificar landing estática Astro, dashboard React y API FastAPI; TDD y despliegue agnóstico |
+| Nuevo encargo autorizado | Implementar F6 con TDD: fundamentos Astro/React/TS, API de lectura y CI; conservar entrada Streamlit |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). El cierre de F5 está en 21.11 y [TDD de F5](TDD_F5.md). **La continuidad vigente es 21.12 y [SDD_WEB.md](SDD_WEB.md)**: no rehacer F1–F5 ni confundir diseño futuro, implementación, CI remoto y publicación.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). El cierre de F5 está en 21.11 y [TDD de F5](TDD_F5.md). **La continuidad vigente es 21.13 y [SDD_WEB.md](SDD_WEB.md)**: no rehacer F1–F5 ni confundir diseño futuro, implementación, CI remoto y publicación.
 
 ## Índice
 
@@ -1548,13 +1548,14 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 2.0; continuidad vigente en 21.12 y extensión SDD_WEB.md |
+| SDD | Actualizada | Versión 2.1; continuidad vigente en 21.13 y extensión SDD_WEB.md |
 | F1 | Implementada y verificada localmente; incluida en CI previo a F5 | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; incluida en CI previo a F5 | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
 | F4 | Implementada; CI remoto del commit d90fc2a correcto; publicación pendiente | Resoluciones, entorno limpio, Ruff, arranque agnóstico y [Tests #5](https://github.com/adndvlp/IntVal/actions/runs/43363574654); cierre histórico en 21.10 |
 | F5 | Implementada; verificación local y CI remoto de 345aa0a correctos | Demo, ejemplo, documentación, capturas y MIT; cierre en 21.11. [Run 43370891010](https://github.com/adndvlp/IntVal/actions/runs/43370891010) verificado durante la especificación web |
-| F6–F11 | Especificadas, pendientes de implementación | Landing, dashboard, API, calidad y distribución: [SDD web](SDD_WEB.md), sección 18 |
+| F6 | Implementada y verificada localmente | [TDD_F6.md](TDD_F6.md); fundamentos web y API de lectura |
+| F7–F11 | Especificadas, pendientes | [SDD web](SDD_WEB.md), sección 18 |
 
 ## 20. Decisiones y riesgos
 
@@ -1815,7 +1816,7 @@ heurísticas como datos auditados.
 
 ### 21.9 Corrección posterior a F3: ruta de AppTest en CI
 
-Registro previo a F4; el punto de continuidad vigente está en 21.12.
+Registro previo a F4; el punto de continuidad vigente está en 21.13.
 
 - Línea base: `43d6725`; fecha 2026-11-12. El usuario compartió un run anterior
   con 20 pruebas de UI fallidas, 250 pasadas y cobertura 84.39 %. AppTest buscaba
@@ -1838,7 +1839,7 @@ Registro previo a F4; el punto de continuidad vigente está en 21.12.
 
 ### 21.10 Registro histórico de implementación de F4
 
-El punto de continuidad vigente es 21.12. Este apartado conserva la evidencia
+El punto de continuidad vigente es 21.13. Este apartado conserva la evidencia
 y los pendientes que existían al terminar F4; el CI de ese commit se verificó
 posteriormente al implementar F5.
 
@@ -1897,7 +1898,7 @@ sigue necesitando decisión de su titular. No inventar un run remoto ni publicac
 
 ### 21.11 Registro de implementación y cierre de F5
 
-El punto de continuidad vigente es 21.12 y SDD_WEB.md. Este registro conserva
+El punto de continuidad vigente es 21.13 y SDD_WEB.md. Este registro conserva
 los resultados y el alcance del cierre de F5.
 
 - Fecha: 2026-11-12. Línea base: commit `d90fc2a`, F4. Antes del cambio:
@@ -2003,7 +2004,9 @@ parte de este encargo. Cuando se solicite, usar el contrato de `development.md`
 y verificar HTTP/WebSockets, demo, consulta de mercado y descarga en la URL real.
 No exigir Render, un Blueprint, VPS ni servicios adicionales para cerrar el repo.
 
-### 21.12 Especificación web y continuidad vigente
+### 21.12 Registro histórico de la especificación web
+
+La continuidad de esta redacción queda sustituida por 21.13 después de F6.
 
 - Línea base inspeccionada: **345aa0a**, F5. Antes de editar sólo existía como
   novedad no versionada la carpeta temp proporcionada por el usuario; no se
@@ -2046,6 +2049,37 @@ punto» sin haber implementado otra fase nueva, corresponde a **F6**. Implementa
 Usar el encargo preparado en 21.2 de SDD_WEB.md. No modificar el arranque de
 Streamlit antes de los criterios de F11 ni pedir otra vez licencia/titular.
 
+### 21.13 Cierre local de F6 y continuidad vigente
+
+Fecha: 2026-11-13. F6 se implementa sobre `908084c`, con TDD y sin cambiar el
+producto Streamlit existente. La [extensión web v1.1](SDD_WEB.md), sección 21.5,
+es la referencia vigente para continuar con **F7**.
+
+- `frontend/` contiene Astro estático/React/TS, Tailwind y herramientas fijadas
+  con lock real. El shell de vista previa tiene navegación accesible y una
+  comprobación de conexión; no anuncia un dashboard terminado.
+- `valoracion/web/` implementa `create_app`, salud, metadatos, catálogos locales,
+  ajustes por instancia, supuestos estrictos y JSON sin números no finitos.
+  OpenAPI real y tipos generados están versionados. Capacidades: sólo catálogo.
+- `web.yml` complementa el workflow Python: instalación limpia, versiones,
+  contratos sin drift, estilo, tipos, pruebas, build y navegador/API real.
+- Evidencia: **394 pruebas Python** y **97.90 %** de cobertura combinada; **12
+  unitarias frontend**, **dos de HTML** y **cuatro Playwright** pasan localmente.
+  El usuario ejecutó el navegador desde su terminal por la restricción de
+  puertos de la sesión. Se revisaron capturas de escritorio y móvil.
+- Se conservan fórmulas, metodología proxies-1.0, contrato financiero 2.0,
+  catálogo, dataset demo, oráculos, CLI, fachada, exportador, `app.py`, arranque
+  y capturas F5. La instalación de Node/npm quedó aislada del entorno global
+  del usuario.
+- Evidencia detallada de RED/GREEN, versiones, incidencias y límites:
+  [TDD_F6.md](TDD_F6.md). El CI remoto del nuevo commit, la instalación Linux y
+  la URL desplegada todavía no se acreditan. No hubo commit/push o publicación.
+
+Al retomar, comprobar Git y leer SDD_WEB.md 5–6, 8, 14, 15, 18.2 y 21.5.
+Implementar sólo F7 cuando se solicite: sistema visual y landing. Mantener TDD,
+guía web, revisión real y entrada Streamlit. No adelantar análisis F8 o dashboard
+F9 ni volver a pedir decisiones ya resueltas sobre licencia, stack o alojamiento.
+
 ## 22. Fuentes y mantenimiento
 
 ### 22.1 Fuente del estado actual
@@ -2081,7 +2115,7 @@ requisitos futuros con software ya implementado.
 
 | Fase | Entrega prevista | Estado |
 | --- | --- | --- |
-| F6 | Fundamentos Astro/React/TS, contratos iniciales FastAPI y CI | Especificada, pendiente |
+| F6 | Fundamentos Astro/React/TS, contratos iniciales FastAPI y CI | Implementada; [evidencia local](TDD_F6.md) |
 | F7 | Sistema visual y landing estática completa | Especificada, pendiente |
 | F8 | API de análisis, trabajos, cachés, históricos y Excel | Especificada, pendiente |
 | F9 | Dashboard React e integración con paridad funcional | Especificada, pendiente |
@@ -2089,7 +2123,7 @@ requisitos futuros con software ya implementado.
 | F11 | Distribución agnóstica, arranque y cierre de la migración | Especificada, pendiente |
 
 Cada fase tiene requisitos, primeros casos RED, criterios de cierre y una matriz
-de verificación en la extensión. La siguiente fase de implementación es F6,
+de verificación en la extensión. La siguiente fase de implementación es F7,
 cuando el usuario la solicite. La publicación de una URL sigue siendo una acción
 externa separada del diseño y de la preparación del artefacto.
 

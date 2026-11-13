@@ -10,10 +10,10 @@ referencia es **CPython 3.12** en `.python-version`, compartida con CI. La
 verificación local usa macOS ARM64/Python 3.12.2; CI apunta a Ubuntu. La ejecución
 remota de CI y la validación de una URL publicada son evidencias independientes.
 
-La siguiente etapa está especificada en la [SDD web](SDD_WEB.md): Astro estático,
-React y FastAPI, fases F6–F11 pendientes. Los comandos de esta guía siguen
-describiendo el software actual de Streamlit; el arranque no cambia por redactar
-el plan. Las herramientas/scripts frontend se añadirán y verificarán en F6.
+La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora sus
+fundamentos, descritos en la sección 8; F7–F11 siguen pendientes. El contrato de
+ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
+de F11.
 
 ## 1. Contrato de ejecución
 
@@ -221,4 +221,127 @@ el run remoto correspondiente y la URL desplegada son evidencias distintas.
 Durante la especificación de la siguiente etapa se verificó también el
 [run de F5 para 345aa0a](https://github.com/adndvlp/IntVal/actions/runs/43370891010),
 completado correctamente. Es la línea base de SDD_WEB.md; no acredita las fases
-F6–F11 todavía sin implementar.
+F6 ni las fases posteriores.
+
+## 8. Fundamentos web (F6)
+
+F6 añade una API de lectura y un shell estático de vista previa. La landing
+completa corresponde a F7 y el análisis HTTP a F8. `app.py`, CLI y
+`iniciar_servicio.sh` mantienen su comportamiento; el servicio actual sigue
+siendo Streamlit. El frontend no necesita un proceso Node en producción.
+
+### Herramientas y preparación
+
+Usar Node **26.13.1** (`frontend/.node-version`) y npm **11.12.1**
+(`packageManager` y `engines`). La instalación falla con runtimes incompatibles
+por `engine-strict`. El mecanismo para preparar Node depende del entorno.
+Las dependencias directas tienen versiones exactas y `package-lock.json`
+incluye transitivas e integridades reales; no usar `--force` ni
+`--legacy-peer-deps` para resolver conflictos.
+
+Con el entorno Python de la sección 4 instalado, desde `frontend/`:
+
+```bash
+npm ci
+npm run lint
+npm run format:check
+npm run check
+npm run test:unit
+npm run build
+npm run test:shell
+```
+
+`build` genera `frontend/dist/`. `test:shell` inspecciona ese HTML con JavaScript
+desactivado; requiere ejecutar el build primero. La portada no hidrata React;
+`/app/` hidrata únicamente la comprobación de conexión. Ningún build consulta
+mercado ni ejecuta análisis financieros.
+
+### API y desarrollo de la vista previa
+
+Desde la raíz, iniciar la API con la factoría:
+
+```bash
+export VALORACION_CORS_ORIGINS=http://127.0.0.1:4321
+.venv/bin/python -m uvicorn valoracion.web.aplicacion:create_app --factory --host 127.0.0.1 --port 8766
+```
+
+En otra terminal, desde `frontend/`:
+
+```bash
+export PUBLIC_API_BASE_URL=http://127.0.0.1:8766
+npm run dev
+```
+
+Estos puertos son de desarrollo. El alojamiento sigue siendo agnóstico: puede
+servir los archivos estáticos y dirigir `/api/v1` al proceso Python, o alojar
+frontend y API con orígenes distintos. F11 definirá el arranque final del
+producto; F6 no publica ni sustituye el servicio existente.
+
+| Variable | Valor por defecto / efecto |
+| --- | --- |
+| `PUBLIC_API_BASE_URL` | Vacío: mismo origen. Se incorpora al build; con orígenes separados usar la URL pública de la API |
+| `VALORACION_CORS_ORIGINS` | Vacío: sin orígenes cruzados. Lista separada por comas de orígenes HTTP(S), sin rutas ni comodines |
+| `VALORACION_DEMO` | `0`; `1` selecciona demo en metadatos |
+| `VALORACION_MARKET_ENABLED` | `1`; `0` deshabilita esa fuente y selecciona demo por defecto |
+| `VALORACION_MAX_TICKERS` | `650`; entero positivo publicado como límite para la futura selección de análisis |
+
+Las banderas sólo aceptan `0`/`1`. Ajustes inválidos fallan al crear la instancia.
+CORS no permite credenciales. No poner secretos en variables `PUBLIC_`.
+
+Rutas implementadas: `/healthz`, `/api/v1/meta` y `/api/v1/catalog`.
+`/docs` ofrece la documentación técnica de FastAPI. El catálogo acepta
+`source=market|demo` (por defecto `market`) y `market=USA|MX|all` (por defecto
+`all`); el cliente debe enviar la fuente elegida en metadatos. Una fuente
+deshabilitada devuelve 422. Los catálogos usan archivos locales, conservan orden
+y referencia y no verifican la composición actual de índices con un proveedor.
+`capabilities` contiene únicamente `catalog`. No hay rutas de análisis,
+exportación o disponibilidad del build (`readyz`) en esta fase.
+
+Los nueve supuestos editables están en `ConfiguracionWeb`; metadatos devuelve
+también las constantes efectivas. El descuento de empresa empieza explícitamente
+en 10 %, independientemente del descuento del accionista. La pausa efectiva es
+0.15 s para mercado y cero en demo. El constructor heredado `Configuracion()`
+conserva su tasa de empresa heredada y pausa de 0.35 s.
+
+### Contrato generado
+
+Desde la raíz:
+
+```bash
+.venv/bin/python -m valoracion.web.contratos
+.venv/bin/python -m valoracion.web.contratos --check
+npm run types:generate --prefix frontend
+git diff -- contracts/openapi.v1.json frontend/src/lib/generated/api.ts
+```
+
+Versionar ambos archivos generados al cambiar un contrato. El exportador usa
+ajustes deterministas y no incorpora URLs del alojamiento, variables del entorno
+ni paths personales. El cliente valida las capacidades que consume sin asumir
+que un HTTP 200 con HTML sea una respuesta de API válida.
+
+### Navegador y CI
+
+Desde `frontend/`, tras preparar Python y Node:
+
+```bash
+npx --no-install playwright install chromium
+npm run test:e2e
+```
+
+Playwright inicia la API en modo demo sin mercado, recompila el sitio con la URL
+de esa API y sirve el build con Astro preview. Prueba conexión real, teclado,
+ausencia de errores JS, overflow y navegación sin JavaScript en 1280 y 390 px.
+Reservar los puertos 4321 y 8766; no reutiliza servicios ajenos. Si ya existe
+Chrome, `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e` permite usarlo sin descargar
+otro navegador. La suite cierra sus procesos al terminar.
+
+`web.yml` prepara entornos nuevos, instala el lock, comprueba OpenAPI/tipos sin
+drift, lint, formato, tipos, tests, build, HTML y Chromium contra la API real.
+`tests.yml` conserva todas las regresiones Python, incluidas las de API, y el
+umbral de cobertura combinada de 85 %. Ambos workflows sólo tienen permisos
+de lectura y no despliegan. Los reportes y capturas de tests están ignorados en
+Git y se conservan temporalmente como artefactos de CI.
+
+Evidencia local, incidencias y versiones verificadas: [TDD_F6.md](TDD_F6.md).
+El run remoto del nuevo workflow y una URL pública siguen siendo verificaciones
+posteriores al commit; no se deducen del resultado local.

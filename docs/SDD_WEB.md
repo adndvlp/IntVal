@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.0 |
-| Fecha | 2026-11-12 |
+| Versión de esta extensión | 1.1 |
+| Fecha | 2026-11-13 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | Especificadas en este documento; sin implementar |
-| Encargo de esta edición | Redactar toda la especificación; no implementar, instalar, publicar ni desplegar |
+| Estado de F6–F11 | F6 implementada y verificada localmente; F7–F11 pendientes |
+| Encargo de esta edición | Implementar sólo F6 con TDD; conservar el servicio Streamlit y no publicar |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -20,8 +20,11 @@
 El estado actual no se deduce del diseño futuro. Un archivo, ruta o comando de los
 apartados «propuestos» sólo existe cuando una fase lo crea y registra su evidencia.
 Las cifras históricas de pruebas son las del cierre de F5: **345 pruebas y 98.59 %
-de cobertura combinada de líneas y ramas**, con un warning conocido. No se afirma
-que una interfaz Astro/React o una API FastAPI ya estén construidas.
+de cobertura combinada de líneas y ramas**, con un warning conocido. F6 añade
+el shell Astro/React y la API de lectura FastAPI: **394 pruebas Python, 12
+unitarias frontend, dos del HTML compilado y cuatro de navegador** pasan
+localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. La landing y
+el dashboard completos siguen pendientes.
 
 ## Índice
 
@@ -1589,6 +1592,10 @@ una por una; cada fase incluye código, pruebas, documentación y evidencia prop
 
 ### 18.1 F6 — Fundamentos web, contratos iniciales y CI
 
+**Implementada y verificada localmente el 2026-11-13.** Evidencia RED/GREEN,
+versiones, navegador y límites en [TDD_F6.md](TDD_F6.md). El CI remoto del nuevo
+commit y su publicación todavía requieren una ejecución posterior.
+
 **Objetivo:** permitir construir/probar el nuevo frontend y la nueva frontera HTTP
 sin cambiar el producto en ejecución.
 
@@ -1739,7 +1746,7 @@ flowchart LR
 | Fase | Estado de esta edición | Evidencia de implementación |
 | --- | --- | --- |
 | F1–F5 | Completadas en la línea base | SDD general y registros existentes |
-| F6 | Especificada, pendiente | Ninguna todavía |
+| F6 | Implementada; validación local completa | [TDD_F6.md](TDD_F6.md); CI remoto del nuevo commit pendiente |
 | F7 | Especificada, pendiente | Ninguna todavía |
 | F8 | Especificada, pendiente | Ninguna todavía |
 | F9 | Especificada, pendiente | Ninguna todavía |
@@ -1820,15 +1827,15 @@ no volver a proponer Next.js por defecto al retomar.
 4. SDD general, methodology.md y registros TDD previos para la lógica existente.
 5. Estado Git e instrucciones del repositorio antes de editar.
 
-Al redactar esta versión, F1–F5 están en el commit 345aa0a. No hay frontend
-Astro/React ni API FastAPI. La carpeta temp es una referencia del usuario, ajena
-al producto y a las resoluciones; conservar sus archivos y no añadirla en bloque.
+La línea base documental fue F5 en 345aa0a. F6 se implementa sobre 908084c:
+existen `frontend/`, `valoracion/web/`, `contracts/openapi.v1.json` y `web.yml`.
+La carpeta temp es una referencia del usuario, ajena al producto y a las
+resoluciones; conservar sus archivos y no añadirla en bloque.
 
 No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-pide «el siguiente punto» después de esta especificación y no hay otra fase
-implementada, corresponde a F6.
+pide «el siguiente punto» después del cierre local de F6, corresponde a **F7**.
 
-### 21.2 Encargo listo para F6
+### 21.2 Encargo histórico de F6 (ya implementado)
 
 > Lee docs/SDD.md y docs/SDD_WEB.md, comprueba Git y las instrucciones del repo.
 > Implementa únicamente F6 con TDD: fundamentos Astro estático/React/TypeScript,
@@ -1852,7 +1859,7 @@ Antes de marcar una fase completa:
 - No inventar resultados de herramientas, CI o despliegue que no se pudieron ejecutar.
 - Continuar el trabajo autorizado sin volver a pedir decisiones ya resueltas.
 
-### 21.4 Registro de esta edición documental
+### 21.4 Registro de la edición documental original (v1.0)
 
 Esta edición especifica el trabajo futuro y actualiza enlaces/continuidad.
 No introduce dependencias, endpoints, componentes, imágenes nuevas ni cambios de
@@ -1865,6 +1872,39 @@ capturas históricas ya están resueltos; no volver a pedirlos.
 
 Se verificó también el CI remoto de la línea base F5, como se registra en 2.1.
 No se modificaron workflows o recursos externos al consultar su estado.
+
+### 21.5 Cierre local de F6 y encargo siguiente
+
+F6 está implementada con TDD. [TDD_F6.md](TDD_F6.md) documenta los ciclos,
+incidencias y resultados: 394 pruebas Python con 97.90 % de cobertura combinada,
+12 pruebas unitarias del cliente/componente, dos del HTML compilado y cuatro
+de navegador real en 1280/390 px. OpenAPI y tipos TS se generan desde las tres
+rutas reales; `capabilities` sólo contiene `catalog`. Los supuestos web aplican
+los defaults de esta SDD sin cambiar el constructor de dominio heredado.
+
+Node 26.13.1/npm 11.12.1, Astro 7.4.11/React 19.3.1, TS 5.9.3 y Tailwind 4.3.5
+quedan fijados con sus herramientas y lock. Python incorpora FastAPI 0.162.5 y
+Pydantic 2.14.3; HTTPX 0.28.1 permite pruebas HTTP. Las demás resoluciones
+anteriores se conservan. Recharts/shadcn y componentes del dashboard se añadirán
+cuando se usen. No hay todavía trabajos, cachés HTTP o exportación por API.
+
+La revisión visual acredita únicamente el shell mínimo. El CI local no demuestra
+un run remoto ni una URL publicada. El nuevo workflow instala entornos limpios
+en Ubuntu, fija npm explícitamente, comprueba contratos y ejecuta navegador/API.
+El usuario ejecutó el smoke local porque esta sesión no puede escuchar puertos.
+
+`app.py`, `iniciar_servicio.sh`, motor, CLI, fórmulas, catálogo, datos demo,
+ejemplos, snapshots y capturas F5 permanecen intactos. El arranque sigue siendo
+Streamlit hasta F11. No repetir la instalación asistida de herramientas en /tmp:
+los comandos de desarrollo reproducibles están en [development.md](development.md#8-fundamentos-web-f6).
+
+> Lee la SDD general, esta extensión y TDD_F6.md; revisa Git e instrucciones.
+> Implementa únicamente F7 con TDD: sistema visual, componentes base y landing
+> completa de las secciones 5–6 y 18.2. Consulta Modern Web Guidance antes de UI,
+> prueba navegación real, teclado, HTML sin JS, móvil y capturas. Conserva los
+> contratos iniciales y el servicio Streamlit. No implementes análisis F8 ni
+> dashboard F9 dentro de esta fase. Actualiza evidencia y continuidad; no hagas
+> commit/push ni publiques como efecto automático.
 
 ## 22. Fuentes y mantenimiento
 

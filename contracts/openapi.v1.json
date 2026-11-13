@@ -1,0 +1,518 @@
+{
+  "components": {
+    "schemas": {
+      "CampoInvalido": {
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "title": "CampoInvalido",
+        "type": "object"
+      },
+      "Catalogo": {
+        "additionalProperties": false,
+        "properties": {
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EmpresaCatalogo"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "market": {
+            "enum": [
+              "USA",
+              "MX",
+              "all"
+            ],
+            "title": "Market",
+            "type": "string"
+          },
+          "reference_date": {
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "market",
+          "dataset_version",
+          "reference_date",
+          "description",
+          "total",
+          "items"
+        ],
+        "title": "Catalogo",
+        "type": "object"
+      },
+      "ConfiguracionEfectiva": {
+        "additionalProperties": false,
+        "description": "Supuestos editables y constantes efectivas; sólo es respuesta de lectura.",
+        "properties": {
+          "anos_proyeccion": {
+            "const": 10,
+            "default": 10,
+            "title": "Anos Proyeccion",
+            "type": "integer"
+          },
+          "crecimiento_fallback": {
+            "const": 0.03,
+            "default": 0.03,
+            "title": "Crecimiento Fallback",
+            "type": "number"
+          },
+          "crecimiento_maximo": {
+            "const": 0.12,
+            "default": 0.12,
+            "title": "Crecimiento Maximo",
+            "type": "number"
+          },
+          "crecimiento_minimo": {
+            "const": -0.02,
+            "default": -0.02,
+            "title": "Crecimiento Minimo",
+            "type": "number"
+          },
+          "factor_crecimiento_final": {
+            "default": 0.5,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Factor Crecimiento Final",
+            "type": "number"
+          },
+          "factor_crecimiento_inicial": {
+            "default": 0.25,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Factor Crecimiento Inicial",
+            "type": "number"
+          },
+          "factor_margen_conservador": {
+            "default": 0.8,
+            "maximum": 1.0,
+            "minimum": 0.4,
+            "title": "Factor Margen Conservador",
+            "type": "number"
+          },
+          "max_anos_historicos": {
+            "const": 5,
+            "default": 5,
+            "title": "Max Anos Historicos",
+            "type": "integer"
+          },
+          "multiplo_terminal_ebit": {
+            "default": 12.0,
+            "maximum": 30.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Ebit",
+            "type": "number"
+          },
+          "multiplo_terminal_ebitda": {
+            "default": 12.0,
+            "maximum": 30.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Ebitda",
+            "type": "number"
+          },
+          "multiplo_terminal_fcl": {
+            "default": 12.0,
+            "maximum": 30.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Fcl",
+            "type": "number"
+          },
+          "multiplo_terminal_utilidad_neta": {
+            "default": 15.0,
+            "maximum": 35.0,
+            "minimum": 4.0,
+            "title": "Multiplo Terminal Utilidad Neta",
+            "type": "number"
+          },
+          "pausa_entre_tickers": {
+            "enum": [
+              0,
+              0.15
+            ],
+            "title": "Pausa Entre Tickers"
+          },
+          "tasa_descuento": {
+            "default": 0.1,
+            "maximum": 0.2,
+            "minimum": 0.05,
+            "title": "Tasa Descuento",
+            "type": "number"
+          },
+          "tasa_descuento_empresa": {
+            "default": 0.1,
+            "maximum": 0.2,
+            "minimum": 0.05,
+            "title": "Tasa Descuento Empresa",
+            "type": "number"
+          },
+          "tasa_impuestos_fallback": {
+            "const": 0.21,
+            "default": 0.21,
+            "title": "Tasa Impuestos Fallback",
+            "type": "number"
+          },
+          "tasa_impuestos_maxima": {
+            "const": 0.35,
+            "default": 0.35,
+            "title": "Tasa Impuestos Maxima",
+            "type": "number"
+          },
+          "tasa_impuestos_minima": {
+            "const": 0.0,
+            "default": 0.0,
+            "title": "Tasa Impuestos Minima",
+            "type": "number"
+          }
+        },
+        "required": [
+          "pausa_entre_tickers"
+        ],
+        "title": "ConfiguracionEfectiva",
+        "type": "object"
+      },
+      "DatosDemo": {
+        "additionalProperties": false,
+        "properties": {
+          "reference_date": {
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "reference_date"
+        ],
+        "title": "DatosDemo",
+        "type": "object"
+      },
+      "EmpresaCatalogo": {
+        "additionalProperties": false,
+        "properties": {
+          "market": {
+            "enum": [
+              "USA",
+              "MX"
+            ],
+            "title": "Market",
+            "type": "string"
+          },
+          "ticker": {
+            "title": "Ticker",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker",
+          "market"
+        ],
+        "title": "EmpresaCatalogo",
+        "type": "object"
+      },
+      "ErrorDetalle": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "INVALID_REQUEST",
+              "SOURCE_DISABLED"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/CampoInvalido"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "const": false,
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetalle",
+        "type": "object"
+      },
+      "FuenteDisponible": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "enabled"
+        ],
+        "title": "FuenteDisponible",
+        "type": "object"
+      },
+      "Limites": {
+        "additionalProperties": false,
+        "properties": {
+          "max_tickers": {
+            "exclusiveMinimum": 0.0,
+            "title": "Max Tickers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_tickers"
+        ],
+        "title": "Limites",
+        "type": "object"
+      },
+      "Metadatos": {
+        "additionalProperties": false,
+        "properties": {
+          "capabilities": {
+            "items": {
+              "const": "catalog",
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/ConfiguracionEfectiva"
+          },
+          "default_source": {
+            "enum": [
+              "market",
+              "demo"
+            ],
+            "title": "Default Source",
+            "type": "string"
+          },
+          "demo": {
+            "$ref": "#/components/schemas/DatosDemo"
+          },
+          "financial_contract_version": {
+            "title": "Financial Contract Version",
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limites"
+          },
+          "methodology_version": {
+            "title": "Methodology Version",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/FuenteDisponible"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "methodology_version",
+          "financial_contract_version",
+          "default_source",
+          "capabilities",
+          "demo",
+          "configuration",
+          "limits",
+          "sources"
+        ],
+        "title": "Metadatos",
+        "type": "object"
+      },
+      "RespuestaError": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetalle"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "RespuestaError",
+        "type": "object"
+      },
+      "Salud": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "Salud",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "IntVal API",
+    "version": "1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/catalog": {
+      "get": {
+        "operationId": "getCatalog",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "default": "market",
+              "enum": [
+                "market",
+                "demo"
+              ],
+              "title": "Source",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "USA",
+                "MX",
+                "all"
+              ],
+              "title": "Market",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalogo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Catalogo"
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "operationId": "getMetadata",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metadatos"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Metadatos"
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Salud"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Salud"
+      }
+    }
+  }
+}

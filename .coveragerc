@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = app, motor_valoracion
+
+[report]
+show_missing = True
+precision = 2

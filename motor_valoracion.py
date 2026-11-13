@@ -4,7 +4,7 @@ import argparse
 import math
 import time
 import warnings
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Iterable
 
@@ -724,9 +724,71 @@ class Configuracion:
 
     pausa_entre_tickers: float = 0.35
 
+    def __post_init__(self) -> None:
+        for campo in fields(self):
+            valor = getattr(self, campo.name)
+            if isinstance(valor, bool) or not isinstance(valor, (int, float)) or not math.isfinite(valor):
+                raise ValueError(f"{campo.name} debe ser un número finito.")
+        for nombre in ("anos_proyeccion", "max_anos_historicos"):
+            valor = getattr(self, nombre)
+            if not isinstance(valor, int) or valor <= 0:
+                raise ValueError(f"{nombre} debe ser un entero positivo.")
+        if self.tasa_descuento <= -1:
+            raise ValueError("La tasa de descuento debe ser mayor que -1.")
+        for nombre in ("factor_crecimiento_inicial", "factor_crecimiento_final", "factor_margen_conservador"):
+            if not 0 <= getattr(self, nombre) <= 1:
+                raise ValueError(f"{nombre} debe estar entre 0 y 1.")
+        if min(self.crecimiento_minimo, self.crecimiento_maximo, self.crecimiento_fallback) <= -1:
+            raise ValueError("Las tasas de crecimiento deben ser mayores que -1.")
+        if self.crecimiento_minimo > self.crecimiento_maximo:
+            raise ValueError("El crecimiento mínimo no puede superar al máximo.")
+        for nombre in ("multiplo_terminal_fcl", "multiplo_terminal_ebit", "multiplo_terminal_ebitda", "multiplo_terminal_utilidad_neta"):
+            if getattr(self, nombre) <= 0:
+                raise ValueError(f"{nombre} debe ser positivo.")
+        if not 0 <= self.tasa_impuestos_minima <= self.tasa_impuestos_fallback <= self.tasa_impuestos_maxima <= 1:
+            raise ValueError("Las tasas de impuestos deben tener límites coherentes entre 0 y 1.")
+        if self.pausa_entre_tickers < 0:
+            raise ValueError("La pausa entre tickers no puede ser negativa.")
+
 
 CONFIG = Configuracion()
 CACHE_FX: dict[tuple[str, str], float | None] = {}
+
+COLUMNAS_PRINCIPAL = [
+    "Mercado", "Ticker", "Empresa", "Moneda", "Precio de mercado",
+    "Valor intrínseco FCL", "Upside FCL", "Valor intrínseco EBIT", "Upside EBIT",
+    "Valor intrínseco EBITDA", "Upside EBITDA", "Valor intrínseco utilidad neta",
+    "Upside utilidad neta", "Mediana de modelos", "Upside mediana",
+    "Precio objetivo analistas", "Upside analistas", "Estado", "Notas",
+]
+COLUMNAS_DETALLE = [
+    "Mercado", "Ticker", "Empresa", "Sector", "Industria", "Moneda estados",
+    "Moneda cotización", "Tipo de cambio", "Ingresos actuales",
+    "Acciones en circulación", "Deuda", "Efectivo", "Deuda neta",
+    "Tasa de impuestos", "CAGR histórico ingresos", "Crecimiento años 1-5",
+    "Crecimiento años 6-10", "Margen FCL mediano", "Margen FCL conservador",
+    "Años FCL", "Fuente FCL", "Margen NOPAT mediano", "Margen NOPAT conservador",
+    "Años EBIT", "Margen EBITDA ajustado mediano",
+    "Margen EBITDA ajustado conservador", "Años EBITDA", "Fuente EBITDA ajustado",
+    "Margen neto mediano", "Margen neto conservador", "Años utilidad neta",
+    "Base FCL", "Base NOPAT", "Base EBITDA ajustado", "Base utilidad neta",
+    "PV flujos FCL", "PV terminal FCL", "PV flujos EBIT", "PV terminal EBIT",
+    "PV flujos EBITDA", "PV terminal EBITDA", "PV flujos utilidad neta",
+    "PV terminal utilidad neta", "Empresa financiera", "Notas",
+]
+
+
+def crear_resultado_error(ticker: str, error: Exception) -> tuple[dict, dict]:
+    """Conserva el contrato tabular aunque falle la adquisición de una empresa."""
+    identidad = {
+        "Mercado": mercado_de_ticker(ticker), "Ticker": ticker,
+        "Empresa": ticker, "Notas": str(error),
+    }
+    principal = dict.fromkeys(COLUMNAS_PRINCIPAL)
+    principal.update(identidad, Estado="ERROR")
+    detalle = dict.fromkeys(COLUMNAS_DETALLE)
+    detalle.update(identidad)
+    return principal, detalle
 
 
 # ---------------------------------------------------------------------------
@@ -761,7 +823,7 @@ def obtener_fila(
             fila = estado.loc[indice_real]
             if isinstance(fila, pd.DataFrame):
                 fila = fila.iloc[0]
-            fila = pd.to_numeric(fila, errors="coerce").dropna()
+            fila = pd.to_numeric(fila, errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
             return fila.sort_index()
 
     return pd.Series(dtype=float)
@@ -770,7 +832,7 @@ def obtener_fila(
 def ultimo_valor(serie: pd.Series) -> float | None:
     if serie is None or serie.empty:
         return None
-    serie = pd.to_numeric(serie, errors="coerce").dropna()
+    serie = pd.to_numeric(serie, errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
     if serie.empty:
         return None
     return numero_valido(serie.iloc[-1])
@@ -781,7 +843,8 @@ def alinear_series(*series: pd.Series) -> pd.DataFrame:
     for posicion, serie in enumerate(series):
         if serie is None:
             serie = pd.Series(dtype=float)
-        limpias.append(pd.to_numeric(serie, errors="coerce").rename(f"s{posicion}"))
+        limpia = pd.to_numeric(serie, errors="coerce").replace([np.inf, -np.inf], np.nan)
+        limpias.append(limpia.rename(f"s{posicion}"))
     if not limpias:
         return pd.DataFrame()
     return pd.concat(limpias, axis=1, join="inner").dropna()
@@ -817,7 +880,8 @@ def obtener_precio_actual(accion: yf.Ticker) -> float | None:
         if not historia.empty:
             cierre = pd.to_numeric(historia["Close"], errors="coerce").dropna()
             if not cierre.empty:
-                return numero_valido(cierre.iloc[-1])
+                valor = numero_valido(cierre.iloc[-1])
+                return valor if valor is not None and valor > 0 else None
     except Exception:
         pass
 
@@ -1065,24 +1129,38 @@ def proyectar_valor(
     anos: int,
     multiplo_terminal: float,
 ) -> tuple[float | None, float | None, float | None]:
-    if metrica_base is None or metrica_base <= 0:
+    if isinstance(anos, bool) or not isinstance(anos, int) or anos <= 0:
+        raise ValueError("El horizonte en años debe ser un entero positivo.")
+    parametros = [numero_valido(valor) for valor in (
+        metrica_base, crecimiento_1_5, crecimiento_6_10, tasa_descuento, multiplo_terminal,
+    )]
+    if any(valor is None for valor in parametros):
         return None, None, None
-    if tasa_descuento <= -1:
+    metrica_base, crecimiento_1_5, crecimiento_6_10, tasa_descuento, multiplo_terminal = parametros
+    if metrica_base <= 0 or tasa_descuento <= -1:
         return None, None, None
 
     metrica = metrica_base
     pv_flujos = 0.0
 
-    for ano in range(1, anos + 1):
-        crecimiento = crecimiento_1_5 if ano <= 5 else crecimiento_6_10
-        metrica *= 1.0 + crecimiento
-        pv_flujos += metrica / ((1.0 + tasa_descuento) ** ano)
+    try:
+        for ano in range(1, anos + 1):
+            crecimiento = crecimiento_1_5 if ano <= 5 else crecimiento_6_10
+            metrica *= 1.0 + crecimiento
+            pv_flujos += metrica / ((1.0 + tasa_descuento) ** ano)
+            if not math.isfinite(pv_flujos):
+                return None, None, None
 
-    pv_terminal = (
-        metrica * multiplo_terminal
-        / ((1.0 + tasa_descuento) ** anos)
-    )
-    return pv_flujos + pv_terminal, pv_flujos, pv_terminal
+        pv_terminal = (
+            metrica * multiplo_terminal
+            / ((1.0 + tasa_descuento) ** anos)
+        )
+    except (OverflowError, ZeroDivisionError):
+        return None, None, None
+    total = pv_flujos + pv_terminal
+    if not all(math.isfinite(valor) for valor in (total, pv_flujos, pv_terminal)):
+        return None, None, None
+    return total, pv_flujos, pv_terminal
 
 
 def por_accion(valor_total: float | None, acciones: float | None) -> float | None:
@@ -1093,9 +1171,11 @@ def por_accion(valor_total: float | None, acciones: float | None) -> float | Non
 
 
 def rendimiento(valor: float | None, precio: float | None) -> float | None:
+    valor, precio = numero_valido(valor), numero_valido(precio)
     if valor is None or precio is None or precio <= 0:
         return None
-    return valor / precio - 1.0
+    resultado = valor / precio - 1.0
+    return resultado if math.isfinite(resultado) else None
 
 
 def es_financiera(info: dict) -> bool:
@@ -1503,8 +1583,10 @@ def escribir_excel(
     archivo_salida = Path(archivo_salida)
     archivo_salida.parent.mkdir(parents=True, exist_ok=True)
 
-    df_principal = pd.DataFrame(principales)
-    df_detalle = pd.DataFrame(detalles)
+    df_principal = pd.DataFrame(principales).reindex(columns=COLUMNAS_PRINCIPAL)
+    df_detalle = pd.DataFrame(detalles).reindex(columns=COLUMNAS_DETALLE)
+    df_principal = df_principal.replace([np.inf, -np.inf], np.nan)
+    df_detalle = df_detalle.replace([np.inf, -np.inf], np.nan)
 
     if not df_principal.empty:
         df_principal = df_principal.sort_values(
@@ -1516,14 +1598,8 @@ def escribir_excel(
     if not df_detalle.empty and "Mercado" in df_detalle.columns:
         df_detalle = df_detalle.sort_values(["Mercado", "Ticker"])
 
-    df_usa = (
-        df_principal[df_principal["Mercado"] == "USA"].copy()
-        if not df_principal.empty else pd.DataFrame()
-    )
-    df_mx = (
-        df_principal[df_principal["Mercado"] == "MX"].copy()
-        if not df_principal.empty else pd.DataFrame()
-    )
+    df_usa = df_principal[df_principal["Mercado"] == "USA"].copy()
+    df_mx = df_principal[df_principal["Mercado"] == "MX"].copy()
 
     df_supuestos = pd.DataFrame(
         [
@@ -1800,33 +1876,9 @@ def main() -> None:
             print(principal["Estado"])
         except Exception as exc:
             print(f"ERROR: {exc}")
-            principales.append({
-                "Mercado": mercado,
-                "Ticker": ticker,
-                "Empresa": ticker,
-                "Moneda": None,
-                "Precio de mercado": None,
-                "Valor intrínseco FCL": None,
-                "Upside FCL": None,
-                "Valor intrínseco EBIT": None,
-                "Upside EBIT": None,
-                "Valor intrínseco EBITDA": None,
-                "Upside EBITDA": None,
-                "Valor intrínseco utilidad neta": None,
-                "Upside utilidad neta": None,
-                "Mediana de modelos": None,
-                "Upside mediana": None,
-                "Precio objetivo analistas": None,
-                "Upside analistas": None,
-                "Estado": "ERROR",
-                "Notas": str(exc),
-            })
-            detalles.append({
-                "Mercado": mercado,
-                "Ticker": ticker,
-                "Empresa": ticker,
-                "Notas": str(exc),
-            })
+            principal, detalle = crear_resultado_error(ticker, exc)
+            principales.append(principal)
+            detalles.append(detalle)
         time.sleep(CONFIG.pausa_entre_tickers)
 
     escribir_excel(principales, detalles, salida, CONFIG)

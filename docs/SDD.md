@@ -1,0 +1,1684 @@
+# SDD — Aplicación de valoración de acciones de USA y México
+
+**Especificación y diseño de software para formalizar el repositorio como proyecto de portafolio.**
+
+| Campo | Valor |
+| --- | --- |
+| Versión del documento | 1.1 |
+| Fecha de elaboración | 2026-11-12 |
+| Idioma del producto y del documento | Español |
+| Nombre actual de la carpeta | `valoracion_app` |
+| Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
+| Estado | F1 implementada y verificada localmente; primera ejecución remota de CI pendiente. F2 a F5 pendientes |
+| Trabajo previo realizado | Creación y verificación de `.gitignore` |
+| Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
+| Método de implementación obligatorio | TDD: prueba primero, fallo observado, cambio mínimo y refactorización con pruebas verdes |
+| Trabajo posterior acordado | F2 a F5: arquitectura, metodología, reproducibilidad y presentación del repositorio |
+
+Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
+
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior de F1. La matriz implementada está en [trazabilidad de F1](F1_TEST_MATRIX.md), los ciclos en [TDD de F1](TDD_F1.md) y el cierre se registra en la sección 21.6. F2 a F5 siguen siendo especificaciones pendientes.
+
+## Índice
+
+1. [Contexto y acuerdos](#1-contexto-y-acuerdos)
+2. [Objetivo y alcance](#2-objetivo-y-alcance)
+3. [Estado actual del repositorio](#3-estado-actual-del-repositorio)
+4. [Flujos y comportamiento existentes](#4-flujos-y-comportamiento-existentes)
+5. [Mapa del código](#5-mapa-del-código)
+6. [Hallazgos y evidencia](#6-hallazgos-y-evidencia)
+7. [Configuración y cálculo actuales](#7-configuración-y-cálculo-actuales)
+8. [Contratos de datos](#8-contratos-de-datos)
+9. [Requisitos de F1](#9-requisitos-de-f1)
+10. [Diseño de las pruebas](#10-diseño-de-las-pruebas)
+11. [Matriz de pruebas](#11-matriz-de-pruebas)
+12. [Oráculos numéricos](#12-oráculos-numéricos)
+13. [Automatización y CI](#13-automatización-y-ci)
+14. [Ejecución y cierre de F1](#14-ejecución-y-cierre-de-f1)
+15. [F2: separación de responsabilidades](#15-f2-separación-de-responsabilidades)
+16. [F3: metodología y trazabilidad](#16-f3-metodología-y-trazabilidad)
+17. [F4: instalación y herramientas](#17-f4-instalación-y-herramientas)
+18. [F5: presentación del repositorio](#18-f5-presentación-del-repositorio)
+19. [Trazabilidad y dependencias](#19-trazabilidad-y-dependencias)
+20. [Decisiones y riesgos](#20-decisiones-y-riesgos)
+21. [Continuidad en otro chat](#21-continuidad-en-otro-chat)
+22. [Fuentes y mantenimiento](#22-fuentes-y-mantenimiento)
+
+## 1. Contexto y acuerdos
+
+### 1.1 Necesidad del usuario
+
+El usuario quiere que este proyecto pueda presentarse en un portafolio y que el repositorio demuestre prácticas de ingeniería verificables. El interés inmediato está en la calidad del repositorio: organización, pruebas, automatización, metodología documentada e instalación reproducible.
+
+La aplicación ya tiene una funcionalidad concreta: comparar precios de acciones con cuatro aproximaciones de valoración, consultar gráficos y generar un Excel. El trabajo consiste en formalizar y fortalecer esa base.
+
+### 1.2 Acuerdos explícitos de la conversación
+
+| Punto original | Tema | Acuerdo | Fase |
+| --- | --- | --- | --- |
+| 1 | Corregir fallos y casos límite | Realizar junto con las pruebas y su automatización | F1 |
+| 2 | Añadir pruebas y CI | Una sola implementación con el punto 1; cubrir las áreas del proyecto | F1 |
+| 3 | Separar responsabilidades | De acuerdo; documentar y dejar pendiente | F2 |
+| 4 | Documentar y validar la metodología | Documentar; ejecutar después de los puntos anteriores | F3 |
+| 5 | Hacer reproducible la instalación | Documentar y dejar pendiente | F4 |
+| 6 | Preparar la presentación del repositorio | Documentar y dejar pendiente | F5 |
+| Previo | Crear `.gitignore` | Ya realizado y comprobado | Completado |
+
+El usuario pidió primero redactar esta SDD y posteriormente autorizó implementar únicamente F1, con TDD obligatorio. F2 a F5 siguen pendientes. La evidencia de los ciclos se registra en [TDD de F1](TDD_F1.md).
+
+### 1.3 Restricciones y decisiones de alcance
+
+- Mantener Python y Streamlit como base del proyecto.
+- TDD es obligatorio para los cambios de software en todas las fases, por instrucción expresa del usuario. Las refactorizaciones se realizan con la suite en verde; no se fabrican fallos en comportamiento ya correcto para aparentar un ciclo RED.
+- No hay una necesidad demostrada de crear un backend HTTP separado para realizar F1 a F5.
+- Si más adelante se requiere un servicio remoto, el usuario prefiere una alternativa gratuita; mencionó Render como ejemplo. Esto expresa una restricción de coste, no una decisión de despliegue ni una garantía sobre planes comerciales vigentes.
+- No se necesita desplegar ni contratar servicios para formalizar el repositorio.
+- No introducir cuentas, autenticación, base de datos o infraestructura sin un requisito concreto.
+- No cambiar las fórmulas financieras al mismo tiempo que se añade la primera base de pruebas.
+- Se permiten pequeños cambios internos necesarios para corregir fallos y probar el código en F1; la reorganización completa queda en F2.
+- No hacer commits, publicar, desplegar ni cambiar configuración de un servicio externo como consecuencia automática de redactar esta SDD.
+
+### 1.4 Cómo interpretar los requisitos
+
+Las decisiones de secuencia y alcance de la tabla anterior proceden del usuario. Los detalles de diseño —nombres de archivos futuros, identificadores, umbral de cobertura, organización de fixtures y estrategia de CI— son propuestas concretas de esta SDD para permitir su ejecución. Pueden ajustarse con evidencia técnica, dejando registrado el motivo y conservando el alcance acordado.
+
+En este documento:
+
+- **Actual** describe algo observado en la línea base.
+- **Requisito** describe el comportamiento que debe resultar de una fase.
+- **Pendiente de validar** identifica un riesgo o decisión que no se ha demostrado mediante una prueba.
+- **Caracterización** significa registrar el comportamiento existente para detectar cambios; no equivale a validar que un modelo financiero sea correcto.
+- **Finalizado** requiere evidencia de implementación y verificación, no únicamente una casilla marcada.
+
+## 2. Objetivo y alcance
+
+### 2.1 Objetivo general
+
+Convertir la aplicación en un proyecto cuyo repositorio permita entender su propósito, instalarlo, comprobar sus resultados, reproducir sus pruebas y continuar su desarrollo con límites explícitos entre datos, cálculos e interfaz.
+
+### 2.2 Resultados esperados
+
+1. Los errores del proveedor y los conjuntos vacíos no interrumpen toda la aplicación.
+2. Los cálculos y flujos principales tienen pruebas deterministas con resultados verificables.
+3. Las pruebas se ejecutan localmente y en CI con el mismo comando.
+4. La estructura del código permite probar y sustituir la adquisición de datos sin rehacer la valoración.
+5. La metodología explica lo que calcula, los supuestos y las limitaciones de cada aproximación.
+6. Una instalación limpia reproduce un entorno definido.
+7. La documentación muestra el producto y la evidencia técnica sin atribuirle capacidades no implementadas.
+
+### 2.3 Qué significa «cubrir todo con tests»
+
+Cubrir las áreas y comportamientos relevantes: utilidades, adquisición y normalización de datos, cálculos, análisis por ticker, interfaz, estado de sesión, cachés, exportación y CLI. Incluir escenarios correctos, fallos, datos faltantes y límites.
+
+No significa crear una prueba por línea, exigir un porcentaje de cobertura de 100 % o comprobar que una función repite su propia implementación. El criterio principal es la matriz de comportamientos de la sección 11; la cobertura ayuda a detectar huecos.
+
+### 2.4 Fuera del alcance de la primera implementación
+
+- Separar toda la aplicación en paquetes nuevos.
+- Cambiar el modelo económico o recalibrar supuestos.
+- Añadir nuevos proveedores de mercado.
+- Paralelizar consultas o crear trabajos distribuidos.
+- Añadir un backend, usuarios o persistencia remota.
+- Rediseñar visualmente la aplicación.
+- Añadir operaciones de compraventa o seguimiento de una cuenta de inversión.
+- Publicar una demo o producir capturas de funcionalidades todavía no implementadas.
+
+## 3. Estado actual del repositorio
+
+### 3.1 Inventario versionable
+
+```text
+valoracion_app/
+├── .gitignore
+├── .streamlit/
+│   └── config.toml
+├── README.md
+├── app.py
+├── motor_valoracion.py
+├── requirements.txt
+├── ejecutar_app.sh
+└── ejecutar_app.bat
+```
+
+Esta SDD añade `docs/SDD.md` y una referencia desde el README. El inventario anterior representa la línea base previa a esa adición.
+
+También existen localmente `.venv/`, `__pycache__/` y archivos del sistema; se excluyen del versionado. No confundirlos con archivos necesarios para instalar el proyecto.
+
+### 3.2 Estado confirmado en la línea base original
+
+Este inventario corresponde al commit `635cd15`. La incorporación posterior de pruebas, workflow y documentación de F1 se registra en las secciones 19.3 y 21.6.
+
+| Aspecto | Estado observado |
+| --- | --- |
+| Git | Inicializado; commit de referencia `635cd15`; árbol limpio antes de redactar la SDD |
+| Interfaz | Streamlit; archivo de aproximadamente 576 líneas |
+| Motor | Archivo de aproximadamente 1,837 líneas que contiene varias responsabilidades |
+| Universo local | 500 símbolos USA y 104 MX; sin duplicados dentro de cada lista en esta revisión |
+| Pruebas versionadas | No existen |
+| Workflow de CI | No existe |
+| Configuración de pytest/cobertura | No existe |
+| `pyproject.toml` | No existe |
+| Dependencias | Seis paquetes de ejecución con límites mínimos abiertos |
+| Licencia | No existe un archivo de licencia |
+| Documentación | README con instalación, uso y consideraciones generales |
+| Demostración sin conexión | No existe un modo de producto con datos guardados |
+| `.gitignore` | Añadido y verificado antes de esta SDD |
+
+Las cantidades de símbolos son una propiedad del archivo local. No se ha verificado que las listas equivalgan a los componentes actuales de un índice bursátil; no presentarlas como una composición oficial actualizada.
+
+### 3.3 Dependencias declaradas actualmente
+
+```text
+streamlit>=1.37
+plotly>=5.24
+yfinance>=0.2.50
+pandas>=2.0
+numpy>=1.24
+openpyxl>=3.1
+```
+
+### 3.4 Entorno usado para los diagnósticos
+
+| Componente | Versión local observada |
+| --- | --- |
+| Python | 3.12.2 |
+| Streamlit | 1.60.0 |
+| pandas | 3.0.3 |
+| NumPy | 2.5.1 |
+| yfinance | 1.5.1 |
+| Plotly | 6.9.0 |
+| openpyxl | 3.1.5 |
+
+Estas versiones describen el entorno local; no son un lockfile, una selección de versiones recomendadas ni una certificación de compatibilidad. El README dice Python 3.10 o posterior; únicamente se comprobó el arranque en el entorno de la tabla.
+
+### 3.5 `.gitignore` existente
+
+Excluye entornos virtuales, bytecode, cachés de herramientas, reportes de cobertura, `.env` y variantes, `.streamlit/secrets.toml`, temporales, registros y archivos del sistema. Permite versionar `.env.example`.
+
+Excluye `/valoraciones_*.xlsx` en la raíz, que cubre los nombres de exportación predeterminados. No excluye todos los `.xlsx` del proyecto: los ejemplos y fixtures futuros deben poder versionarse de manera intencional. `.streamlit/config.toml` permanece versionable.
+
+## 4. Flujos y comportamiento existentes
+
+### 4.1 Flujo por interfaz
+
+1. Elegir `USA`, `MX` o `Todos`.
+2. Seleccionar símbolos del universo o introducir símbolos adicionales separados por comas.
+3. Ajustar descuento, margen conservador, factores de crecimiento y múltiplos terminales.
+4. Pulsar **Analizar empresas**.
+5. Ejecutar análisis secuencial por ticker, con caché y una pausa entre empresas.
+6. Guardar resultados, detalles y configuración usada en `st.session_state`.
+7. Mostrar resumen, filtros, indicadores y tabla.
+8. Generar un Excel completo en un directorio temporal para descargarlo.
+9. Elegir una empresa para ver valores, precio histórico, estados financieros y márgenes.
+
+Al inicio no se consultan empresas: se muestran instrucciones y los tamaños de los universos. La selección inicial toma seis símbolos para USA/Todos y diez para MX.
+
+### 4.2 Estado de sesión y cachés
+
+| Elemento | Función actual |
+| --- | --- |
+| `principales` | Lista de registros de resumen del análisis |
+| `detalles` | Lista de registros de diagnóstico |
+| `config` | Tupla de pares con los valores de la configuración usada |
+| `detalle_ticker` | Clave del selector de la empresa en el detalle |
+| `analizar_cached` | `st.cache_data`, TTL de 3,600 segundos |
+| `precio_historico` | `st.cache_data`, TTL de 1,800 segundos |
+| `historicos_financieros` | `st.cache_data`, TTL de 3,600 segundos |
+| `CACHE_FX` | Diccionario global del motor para pares de divisas; sin TTL propio |
+
+Cambiar controles no debe alterar retrospectivamente el significado de resultados ya calculados. La aplicación guarda la configuración usada y la reutiliza para la exportación y los detalles financieros.
+
+### 4.3 Flujo por terminal
+
+El motor tiene una CLI funcional en su propio archivo:
+
+```bash
+python motor_valoracion.py --mercado USA --ticker AAPL --ticker MSFT --output valoraciones_empresas.xlsx
+```
+
+- `--mercado`: `USA`, `MX` o `TODOS`; predeterminado `TODOS`.
+- `--ticker`: repetible; cuando se usa, determina los símbolos analizados.
+- `--output`: predeterminado `valoraciones_empresas.xlsx`.
+- Sin `--ticker`, puede analizar un universo grande. No ejecutar este caso contra Yahoo durante las pruebas.
+- La CLI captura errores por empresa y genera un registro de resumen con más campos que el registro de error actual de la interfaz. Esa divergencia es relevante para F1.
+
+### 4.4 Libro Excel
+
+Se generan siete hojas: `Resumen`, `USA`, `MX`, `Detalle`, `Supuestos`, `Universo` y `Fuentes`.
+
+Los encabezados se escriben en la fila 3 y los datos empiezan en la fila 4. El libro incluye títulos con fecha de generación, paneles congelados, formatos numéricos, tablas y formato condicional.
+
+La descarga de la interfaz representa el **análisis completo almacenado**, no únicamente las filas visibles después de aplicar filtros. Conservar y documentar este comportamiento en F1.
+
+## 5. Mapa del código
+
+Las líneas siguientes corresponden a la línea base y pueden desplazarse. Buscar por nombre de función al retomar.
+
+### 5.1 Interfaz: `app.py`
+
+| Funciones | Responsabilidad |
+| --- | --- |
+| `analizar_cached` | Construcción de configuración y análisis con caché |
+| `precio_historico` | Consulta y preparación del precio ajustado |
+| `historicos_financieros` | Obtención y preparación de estados y márgenes para gráficas |
+| `format_money`, `format_percent` | Presentación de valores y ausencias |
+| `construir_configuracion` | Controles de supuestos |
+| `preparar_tabla`, `render_table` | Selección de columnas y presentación del resumen |
+| `grafica_valoraciones` | Comparación de valores por método |
+| `mostrar_detalle` | Detalle de una empresa y sus gráficas |
+| `main` | Selección, ejecución, filtros, estado y descarga |
+
+Puntos especialmente relevantes: `main`, aproximadamente línea 421; cálculo de `validos`, línea 544; `mostrar_detalle`, línea 318. La configuración visual y los decoradores de caché se ejecutan al importar el módulo.
+
+### 5.2 Motor: `motor_valoracion.py`
+
+| Grupo | Símbolos principales |
+| --- | --- |
+| Universo | `EMPRESAS_USA`, `EMPRESAS_MX`, `EMPRESAS`, `FUENTES_UNIVERSO` |
+| Configuración | `Configuracion`, `CONFIG`, `CACHE_FX` |
+| Utilidades | `mercado_de_ticker`, `eliminar_duplicados`, `numero_valido`, `normalizar_etiqueta` |
+| Normalización | `obtener_fila`, `ultimo_valor`, `alinear_series`, `convertir_serie` |
+| Proveedor | `obtener_info_segura`, `obtener_precio_actual`, `obtener_objetivo_analistas`, `obtener_acciones`, `ultimo_cierre_simbolo`, `obtener_tipo_cambio` |
+| Métricas | `calcular_cagr`, `estimar_tasa_impuestos`, `construir_fcl`, `construir_ebitda`, `margen_normalizado` |
+| Valoración | `proyectar_valor`, `por_accion`, `rendimiento`, `es_financiera`, `analizar_ticker` |
+| Excel | `escribir_excel` |
+| Terminal | `main` |
+
+Puntos especialmente relevantes: `Configuracion`, línea 698; `proyectar_valor`, línea 1060; `analizar_ticker`, línea 1117; `escribir_excel`, línea 1496; CLI `main`, línea 1756.
+
+### 5.3 Dependencias actuales
+
+```mermaid
+flowchart LR
+    UI[app.py / Streamlit] --> MOTOR[motor_valoracion.py]
+    CLI[CLI del motor] --> MOTOR
+    UI --> YF[yfinance / Yahoo Finance]
+    MOTOR --> YF
+    MOTOR --> XLSX[Excel / pandas y openpyxl]
+    UI --> PLOT[Gráficas / Plotly]
+```
+
+La interfaz también descarga datos para sus gráficos. Por tanto, simular únicamente `analizar_ticker` no basta para que una prueba completa de resultados quede aislada de la red.
+
+## 6. Hallazgos y evidencia
+
+### 6.1 Comprobaciones realizadas
+
+| ID | Comprobación | Resultado |
+| --- | --- | --- |
+| E-001 | Arranque con `AppTest.from_file('app.py').run()` | Sin excepciones en la pantalla inicial |
+| E-002 | Simular `RuntimeError` en `motor_valoracion.analizar_ticker`, seleccionar `A` y pulsar analizar | Se registra `Estado=ERROR`, pero después la interfaz falla con `AttributeError` |
+| E-003 | Llamar `escribir_excel` con un único registro de error reducido equivalente al de la interfaz | `KeyError: 'Upside mediana'` |
+| E-004 | Llamar `escribir_excel([], [], ruta_temporal, Configuracion())` | Se genera un libro; no se validó exhaustivamente su contrato de encabezados |
+| E-005 | Comprobar reglas de `.gitignore` con `git check-ignore` | Entorno, cachés, secretos y exportaciones predeterminadas excluidos; código y configuración pública disponibles |
+
+Esos diagnósticos iniciales no constituían una suite de pruebas versionada. En aquella revisión no se comprobó un análisis completo con datos reales de Yahoo, ni se midió cobertura, ni se ejecutó CI remoto. La suite posterior de F1 usa datos sintéticos, mide cobertura y conserva pendiente la primera verificación remota de CI.
+
+### 6.2 Defectos de la línea base corregidos en F1
+
+**BUG-001 — La interfaz falla cuando todos los análisis lanzan una excepción.**
+
+El bloque de error de `app.main` crea un registro sin la columna `Upside mediana`. Más adelante se ejecuta:
+
+```python
+pd.to_numeric(filtrado.get("Upside mediana"), errors="coerce").dropna()
+```
+
+Cuando falta la columna, la conversión produce un escalar y `.dropna()` provoca:
+
+```text
+AttributeError: 'numpy.float64' object has no attribute 'dropna'
+```
+
+La corrección debe preservar una estructura tabular válida incluso cuando ningún ticker tiene valoración.
+
+**BUG-002 — El Excel falla con registros de error reducidos.**
+
+`escribir_excel` ordena por `Mercado` y `Upside mediana` si el DataFrame no está vacío. Con registros reducidos, la segunda columna no existe y el proceso termina con `KeyError`.
+
+La corrección debe normalizar el esquema antes de ordenar y escribir. No basta con arreglar la interfaz si el exportador sigue siendo frágil al recibir registros válidos de error.
+
+### 6.3 Riesgos de la línea base incorporados a las pruebas de F1
+
+| ID | Observación en el código | Trabajo esperado |
+| --- | --- | --- |
+| R-001 | El filtro de upside usa `fillna(-999)` y puede ocultar registros sin valoración, incluidos errores | Definir y probar visibilidad de ausencias en F1 |
+| R-002 | `precio_historico` no captura errores de `history()` | Aislar un fallo de gráfica y mantener disponible el análisis |
+| R-003 | El detalle vuelve a consultar información y estados; hay accesos al proveedor fuera del análisis principal | Simular toda la adquisición en tests; evitar que una gráfica rompa el resto |
+| R-004 | Se muestra un mensaje de éxito general al terminar el bucle, aunque pueda haber errores | Mostrar un balance fiel de resultados |
+| R-005 | Los registros y tablas vacíos no comparten un esquema explícito | Definir esquema estable para ausencia de datos |
+| R-006 | `CACHE_FX`, cachés de Streamlit y sesión pueden contaminar pruebas | Limpiar y reconstruir estado entre casos |
+| R-007 | El detalle usa selecciones y `.iloc[0]` que presuponen la existencia de una fila | Comprobar conjuntos vacíos y selección obsoleta |
+| R-008 | Algunos helpers aceptan valores no finitos o configuraciones que no proceden de la UI | Fijar contratos de entrada; impedir valores engañosos y excepciones accidentales |
+
+Originalmente eran observaciones de inspección. F1 añadió primero pruebas de sus comportamientos relevantes, corrigió los fallos reproducidos y registró los casos que ya funcionaban como caracterización. La relación con pruebas ejecutables está en `docs/F1_TEST_MATRIX.md`; las causas RED observadas están en `docs/TDD_F1.md`.
+
+### 6.4 Cuestiones metodológicas reservadas a F3
+
+- Si falla la conversión entre monedas distintas, `analizar_ticker` usa `fx=1.0` con una nota; `historicos_financieros` usa `or 1.0` sin un diagnóstico equivalente en su retorno.
+- Deuda y efectivo faltantes terminan tratándose como cero.
+- El código trata FCL y utilidad neta como flujos del accionista; EBIT/NOPAT y EBITDA ajustado como valor de empresa. Esta es una elección del código, no una validación financiera.
+- La clasificación de empresas financieras añade una advertencia, pero no excluye por sí misma esos modelos de la mediana.
+- Se comparte una tasa de descuento entre aproximaciones distintas.
+- Algunas etiquetas de márgenes históricos necesitan contrastarse con las métricas efectivamente graficadas; por ejemplo, el margen llamado EBIT se calcula usando NOPAT.
+
+F1 puede documentar y caracterizar estos comportamientos. No debe convertirlos en recomendaciones metodológicas ni modificarlos silenciosamente para lograr que las pruebas pasen.
+
+## 7. Configuración y cálculo actuales
+
+Esta sección describe la implementación inspeccionada. Se incluye para construir pruebas y comprender cambios posteriores; **no certifica la validez económica de los modelos**.
+
+### 7.1 `Configuracion`
+
+Es una `dataclass(frozen=True)`. Sus valores predeterminados son:
+
+| Campo | Predeterminado |
+| --- | --- |
+| `anos_proyeccion` | `10` |
+| `tasa_descuento` | `0.10` |
+| `factor_crecimiento_inicial` | `0.25` |
+| `factor_crecimiento_final` | `0.50` |
+| `crecimiento_minimo` | `-0.02` |
+| `crecimiento_maximo` | `0.12` |
+| `crecimiento_fallback` | `0.03` |
+| `factor_margen_conservador` | `0.80` |
+| `max_anos_historicos` | `5` |
+| `multiplo_terminal_fcl` | `12.0` |
+| `multiplo_terminal_ebit` | `12.0` |
+| `multiplo_terminal_ebitda` | `12.0` |
+| `multiplo_terminal_utilidad_neta` | `15.0` |
+| `tasa_impuestos_fallback` | `0.21` |
+| `tasa_impuestos_minima` | `0.00` |
+| `tasa_impuestos_maxima` | `0.35` |
+| `pausa_entre_tickers` | `0.35` |
+
+La UI sustituye la pausa por `0.15`. La tasa visible va de 5 % a 20 %; el factor de margen, de 40 % a 100 %; los factores de crecimiento, de 0 % a 100 %. Los múltiplos de FCL/EBIT/EBITDA van de 4 a 30 y el de utilidad neta de 4 a 35.
+
+### 7.2 Normalización y métricas
+
+1. `obtener_fila` normaliza nombres contables, busca candidatos por prioridad, convierte a números, elimina ausencias y ordena fechas.
+2. `alinear_series` conserva fechas comunes mediante unión interna y descarta filas con ausencias.
+3. `construir_fcl` prefiere `Free Cash Flow`; si no está disponible, calcula `CFO - abs(CapEx)`.
+4. `construir_ebitda` prefiere EBITDA disponible; en su defecto calcula `EBIT + abs(D&A)`.
+5. La tasa de impuestos usa la mediana de tasas admitidas con utilidad antes de impuestos positiva, limitada al rango configurado; si no hay observaciones, usa el fallback.
+6. `NOPAT = EBIT × (1 - tasa_impuestos)`.
+7. `EBITDA ajustado = EBITDA - max(EBIT, 0) × tasa_impuestos - abs(CapEx)`, con fechas alineadas.
+
+### 7.3 Crecimiento y márgenes
+
+El CAGR de ingresos se calcula con observaciones positivas y la duración en años obtenida de los días entre fechas divididos entre `365.25`.
+
+Si el CAGR no está disponible, se usa `revenueGrowth` y después `crecimiento_fallback`. La tasa de fallback todavía pasa por los factores de crecimiento:
+
+```text
+g_1_5  = clip(cagr_o_fallback × factor_crecimiento_inicial,
+              crecimiento_minimo, crecimiento_maximo)
+g_6_10 = g_1_5 × factor_crecimiento_final
+```
+
+Por ejemplo, el fallback de `0.03` con factores predeterminados produce `g_1_5=0.0075` y `g_6_10=0.00375`; no una proyección directa de 3 %.
+
+Para cada métrica, se calculan márgenes sobre ingresos positivos, se excluyen infinitos y márgenes fuera del intervalo abierto `(-2, 2)`, se toman hasta cinco observaciones recientes y se usa su mediana. Si es positiva, se multiplica por el factor conservador; si es negativa, se conserva.
+
+La base proyectable es el último ingreso disponible multiplicado por el margen normalizado conservador. Una base no positiva produce ausencia de valoración en `proyectar_valor`.
+
+### 7.4 Proyección y valor por acción
+
+Para base `B`, descuento `r`, horizonte `N` y múltiplo terminal `M`:
+
+```text
+metrica_0 = B
+metrica_t = metrica_(t-1) × (1 + g_t)
+g_t      = g_1_5 si t <= 5; g_6_10 si t >= 6
+PV_flujos = suma(metrica_t / (1 + r)^t), t=1..N
+PV_terminal = metrica_N × M / (1 + r)^N
+valor_total = PV_flujos + PV_terminal
+```
+
+En el comportamiento actual:
+
+- Se resta deuda neta al resultado de EBIT/NOPAT y EBITDA ajustado.
+- No se resta deuda neta al resultado de FCL ni utilidad neta.
+- `deuda_neta = deuda - efectivo`.
+- `por_accion` divide por las acciones y sólo devuelve resultados positivos y finitos.
+- La mediana incluye los valores por acción disponibles de los cuatro modelos.
+- `rendimiento` calcula `valor / precio - 1`.
+
+### 7.5 Estado del análisis actual
+
+| Estado | Condición actual |
+| --- | --- |
+| `DATOS INCOMPLETOS` | Falta precio, acciones o ingreso actual |
+| `REVISAR` | Existen esos datos, pero hay menos de dos modelos disponibles |
+| `OK` | No se cumple ninguna de las condiciones anteriores |
+| `ERROR` | La capa de ejecución captura una excepción al analizar el ticker |
+
+`OK` no significa que las hipótesis económicas hayan sido validadas ni que todos los campos estén presentes. F3 deberá distinguir estado de ejecución, disponibilidad y calidad metodológica si incorpora nuevos diagnósticos.
+
+## 8. Contratos de datos
+
+### 8.1 Principios
+
+- Conservar los nombres públicos de columnas durante F1.
+- Mantener números como números; los porcentajes se almacenan como fracciones, por ejemplo `0.15` para 15 %.
+- Diferenciar ausencia de valor y cero real. No completar valores financieros faltantes con ceros para facilitar la UI o el Excel.
+- Las monedas deben permanecer explícitas; no sumar o comparar importes de monedas diferentes como si fueran homogéneos.
+- Un error por ticker debe conservar identidad, estado y diagnóstico.
+- Las capas que reciben registros deben poder trabajar con listas vacías y con registros de error parciales, normalizando las columnas conocidas.
+- Normalizar con un esquema explícito y tipos compatibles con ausencias. No asumir que `DataFrame([])` contiene columnas.
+
+### 8.2 Resultado principal
+
+`analizar_ticker(ticker, config, mercado=None)` devuelve `(principal, detalle)`. El esquema principal completo tiene las siguientes 19 columnas:
+
+| Columna | Tipo lógico |
+| --- | --- |
+| `Mercado` | Texto: `USA` o `MX` |
+| `Ticker` | Texto |
+| `Empresa` | Texto |
+| `Moneda` | Texto o ausencia |
+| `Precio de mercado` | Número finito o ausencia |
+| `Valor intrínseco FCL` | Número finito positivo o ausencia |
+| `Upside FCL` | Número finito o ausencia |
+| `Valor intrínseco EBIT` | Número finito positivo o ausencia |
+| `Upside EBIT` | Número finito o ausencia |
+| `Valor intrínseco EBITDA` | Número finito positivo o ausencia |
+| `Upside EBITDA` | Número finito o ausencia |
+| `Valor intrínseco utilidad neta` | Número finito positivo o ausencia |
+| `Upside utilidad neta` | Número finito o ausencia |
+| `Mediana de modelos` | Número finito positivo o ausencia |
+| `Upside mediana` | Número finito o ausencia |
+| `Precio objetivo analistas` | Número finito positivo o ausencia |
+| `Upside analistas` | Número finito o ausencia |
+| `Estado` | Uno de los cuatro estados existentes |
+| `Notas` | Texto; puede estar vacío |
+
+Se propone definir una constante de columnas y un constructor pequeño de error, compartido por UI y CLI. Puede permanecer en `motor_valoracion.py` durante F1. La normalización del exportador debe seguir siendo defensiva y no depender exclusivamente de ese constructor.
+
+### 8.3 Detalle
+
+El detalle completo tiene 45 campos. Deben conservarse como contrato de compatibilidad durante F1:
+
+```text
+Mercado
+Ticker
+Empresa
+Sector
+Industria
+Moneda estados
+Moneda cotización
+Tipo de cambio
+Ingresos actuales
+Acciones en circulación
+Deuda
+Efectivo
+Deuda neta
+Tasa de impuestos
+CAGR histórico ingresos
+Crecimiento años 1-5
+Crecimiento años 6-10
+Margen FCL mediano
+Margen FCL conservador
+Años FCL
+Fuente FCL
+Margen NOPAT mediano
+Margen NOPAT conservador
+Años EBIT
+Margen EBITDA ajustado mediano
+Margen EBITDA ajustado conservador
+Años EBITDA
+Fuente EBITDA ajustado
+Margen neto mediano
+Margen neto conservador
+Años utilidad neta
+Base FCL
+Base NOPAT
+Base EBITDA ajustado
+Base utilidad neta
+PV flujos FCL
+PV terminal FCL
+PV flujos EBIT
+PV terminal EBIT
+PV flujos EBITDA
+PV terminal EBITDA
+PV flujos utilidad neta
+PV terminal utilidad neta
+Empresa financiera
+Notas
+```
+
+Un detalle de error puede tener sólo identidad y notas como entrada heredada. La tabla que lo consume debe añadir columnas ausentes con valores nulos sin inventar importes. La fila correspondiente debe poder identificarse por ticker, sin depender exclusivamente de la posición.
+
+### 8.4 Históricos y presentación
+
+- `precio_historico`: DataFrame con `Fecha` y `Cierre`, incluso cuando no hay datos. Fechas compatibles con Plotly y sin zona horaria en su salida actual.
+- `historicos_financieros`: dos DataFrames, para importes y márgenes. Los importes se muestran en millones; los márgenes son fracciones.
+- El índice anual usado para gráficos se llama `Año`.
+- `format_money` y `format_percent`: ausencia o valor no finito se representa como `—`.
+- Los gráficos no deben contener barras inventadas en cero para un modelo sin valor.
+
+### 8.5 Contrato Excel de F1
+
+- Conservar las siete hojas existentes y su orden.
+- Encabezados legibles en la fila 3; datos desde la fila 4.
+- `Resumen`, `USA` y `MX` deben mantener las columnas del resultado principal aunque no tengan filas.
+- `Detalle` debe conservar su esquema normalizado incluso si sólo hay errores.
+- Un registro de USA no aparece en la hoja MX, y viceversa.
+- `Supuestos` debe representar la configuración del análisis exportado, no los controles editados después.
+- Ausencias financieras se escriben como celdas vacías, no como cadenas `nan`, `None` o importes ficticios.
+- El archivo debe abrirse mediante `openpyxl` después de guardarse.
+- La fecha de generación no debe ser la base de una comparación binaria del archivo.
+- Con un error de escritura, la aplicación debe conservar los resultados y mostrar un mensaje útil; no afirmar que el archivo fue generado.
+
+## 9. Requisitos de F1
+
+F1 es una única entrega de correcciones y pruebas automatizadas. Sus pasos internos pueden ejecutarse de forma incremental, pero no se considera terminada con las correcciones sin tests, con tests sin las correcciones, o con un workflow que no ejecuta las comprobaciones reales.
+
+**TDD es obligatorio por instrucción expresa del usuario.** Para cada cambio de comportamiento: escribir primero una prueba, ejecutarla y observar el fallo por la causa esperada, implementar lo mínimo para pasarla y refactorizar con la suite correspondiente en verde. Registrar comandos y resultados en `docs/TDD_F1.md`. Las caracterizaciones que ya pasan no requieren alterar el producto ni fabricar un fallo. No se permite implementar primero y añadir después los tests de esa implementación.
+
+### 9.1 Robustez y comportamiento observable
+
+| ID | Requisito |
+| --- | --- |
+| F1-R01 | El arranque no consulta Yahoo y no produce excepciones de aplicación. |
+| F1-R02 | Sin tickers seleccionados, mostrar una advertencia y no iniciar consultas. Conservar un análisis anterior si existe. |
+| F1-R03 | Un error por ticker no interrumpe los demás; cada símbolo conserva un resultado o un error identificable. |
+| F1-R04 | Si todos los tickers fallan, mostrar su estado y diagnóstico sin excepción ni indicadores numéricos inventados. |
+| F1-R05 | Si todos los resultados carecen de valores calculables, las tablas, indicadores y exportación siguen funcionando. |
+| F1-R06 | Los registros sin `Upside mediana` se conservan visibles al aplicar el filtro numérico; éste sólo elimina filas con upside disponible por debajo del umbral. El filtro explícito de estado sí puede excluir errores. |
+| F1-R07 | Un filtro que produce cero filas muestra conteo cero y valores agregados ausentes. No ejecutar `.iloc[0]` sobre un conjunto vacío. |
+| F1-R08 | La selección del detalle usa resultados existentes; una selección obsoleta se restablece o produce un mensaje sin romper la pantalla. |
+| F1-R09 | Un error en un histórico o gráfico se comunica de forma localizada; el resumen y la descarga siguen disponibles. No consultar históricos para un registro de error sin datos útiles. |
+| F1-R10 | El mensaje de finalización distingue resultados calculados, incompletos, a revisar y errores; un lote enteramente fallido no se anuncia como éxito total. |
+| F1-R11 | Limpiar resultados elimina el estado del análisis y devuelve la pantalla a un estado inicial coherente. |
+| F1-R12 | La configuración almacenada sigue asociada al resultado y al Excel hasta ejecutar un análisis nuevo. |
+| F1-R13 | Las tablas financieras no propagan infinitos como precios o valoraciones válidas; las ausencias se presentan como tales. |
+| F1-R14 | Las siete hojas Excel pueden generarse con datos completos, mixtos, sólo errores o ninguna fila. |
+| F1-R15 | Un error de escritura o preparación del Excel no elimina el análisis ni muestra una descarga inválida como si hubiera funcionado. |
+| F1-R16 | La CLI conserva sus argumentos y genera resultados con el mismo contrato que la interfaz, incluido el caso de error por empresa. |
+| F1-R17 | Las fórmulas, supuestos y resultados válidos de la línea base se mantienen, salvo una corrección aritmética demostrada y documentada por separado. |
+
+La selección de una empresa en el detalle y la descarga continúan trabajando sobre el análisis completo. Los filtros del resumen no cambian silenciosamente esos ámbitos.
+
+### 9.2 Errores de datos y de programación
+
+Capturar errores del proveedor en límites definidos y presentar un diagnóstico útil. No envolver toda la aplicación en un `except Exception` que oculte fallos de programación.
+
+En el procesamiento por ticker se mantiene el aislamiento de excepciones para que una empresa no detenga el lote. Una prueba debe demostrar que el error aparece asociado a su ticker y que el siguiente ticker continúa.
+
+Los contratos de entradas inválidas deben distinguir:
+
+- Datos ausentes o no convertibles del proveedor: representar ausencia y diagnóstico.
+- Operaciones sin resultado válido, como dividir por cero acciones: devolver ausencia según el contrato del helper.
+- Configuración estructuralmente inválida, por ejemplo horizonte no positivo o no entero, límites invertidos o parámetros no finitos: rechazar de forma explícita antes del análisis, con un error de validación comprensible. No corregir silenciosamente la configuración.
+- `proyectar_valor` conserva su retorno de tres ausencias para base ausente/no positiva o descuento `<= -1`. Para parámetros no finitos, debe evitar resultados infinitos o excepciones accidentales y fijar un comportamiento explícito en tests.
+
+La validación puede implementarse en un helper pequeño dentro de los archivos actuales. No obliga a reorganizar toda la aplicación en esta fase.
+
+### 9.3 Calidad y automatización
+
+| ID | Requisito |
+| --- | --- |
+| F1-Q01 | Suite con pytest; fixtures sintéticos, deterministas y sin credenciales. |
+| F1-Q02 | Ninguna prueba obligatoria hace consultas reales de mercado. La instalación de paquetes sí puede necesitar red. |
+| F1-Q03 | Pruebas de cálculos con valores esperados independientes del código bajo prueba. |
+| F1-Q04 | Regresiones obligatorias para BUG-001 y BUG-002. |
+| F1-Q05 | Cobertura de las áreas de la sección 11; porcentaje por sí solo insuficiente. |
+| F1-Q06 | Medir `app.py` y `motor_valoracion.py`, incluyendo ramas; umbral inicial propuesto de 85 % de cobertura total calculada por coverage.py. |
+| F1-Q07 | Un comando local ejecuta suite, reportes y umbral; CI usa ese mismo comando. |
+| F1-Q08 | Workflow en `push`, `pull_request` y ejecución manual; sin despliegue ni secretos. |
+| F1-Q09 | Pruebas independientes del orden de ejecución y del contenido de cachés de una ejecución anterior. |
+| F1-Q10 | Documentar cómo instalar dependencias de desarrollo, ejecutar la suite e interpretar resultados. |
+
+El umbral de 85 % es una decisión de diseño inicial. No bajar el umbral para evitar escribir pruebas significativas. Si una incompatibilidad técnica impide medir parte de la app, resolverla o documentar con precisión la limitación; no excluir todo el archivo ni presentar esa exclusión como cobertura completa.
+
+## 10. Diseño de las pruebas
+
+### 10.1 Herramientas y alcance
+
+Se propone utilizar:
+
+- `pytest`: organización, parametrización y fixtures.
+- `pytest-cov`/coverage.py: medición de líneas y ramas, reportes y umbral.
+- `unittest.mock` o `monkeypatch`: sustitución de dependencias externas.
+- `streamlit.testing.v1.AppTest`: interacción con la interfaz sin navegador. Su alcance está descrito en la [documentación oficial de pruebas de Streamlit](https://docs.streamlit.io/develop/api-reference/app-testing).
+- `openpyxl`: inspección del archivo Excel generado; ya es dependencia del proyecto.
+- Bloqueo automático mediante `monkeypatch` de construcción de `yf.Ticker`, sockets IPv4/IPv6 y DNS. La implementación está en `tests/conftest.py` y tiene su propia prueba; un acceso no preparado falla aunque el producto capture `Exception`.
+- `PyYAML`: inspección estructural del contrato del workflow de CI; sólo dependencia de desarrollo.
+
+Se evaluó inicialmente `pytest-socket` como defensa adicional, según su [documentación de uso](https://github.com/miketheman/pytest-socket). En F1 se implementó el bloqueo mediante la fixture automática compartida para mantener explícitas las defensas del proveedor y de Python sin incorporar otro plugin. Los sockets Unix que utiliza la coordinación local pueden seguir funcionando. El bloqueo de sockets por sí solo no se presenta como defensa suficiente frente a transportes nativos.
+
+No se requiere Selenium, Playwright ni un servidor web para la primera suite. AppTest no sustituye una revisión visual del producto; su función aquí es verificar lógica e interacción.
+
+### 10.2 Estructura propuesta para F1
+
+```text
+.github/
+└── workflows/
+    └── tests.yml
+tests/
+├── conftest.py
+├── fixtures/
+│   ├── README.md
+│   └── datos_sinteticos.py o archivos JSON/CSV pequeños
+├── unit/
+│   ├── test_utilidades.py
+│   ├── test_normalizacion.py
+│   ├── test_metricas.py
+│   ├── test_proyeccion.py
+│   └── test_presentacion.py
+├── integration/
+│   ├── test_proveedor_yahoo_simulado.py
+│   ├── test_analizar_ticker.py
+│   ├── test_excel.py
+│   └── test_cli.py
+└── ui/
+    └── test_app.py
+requirements-dev.txt
+pytest.ini
+.coveragerc
+```
+
+Los nombres exactos pueden adaptarse al tamaño real de la suite. No crear archivos vacíos para aparentar estructura. `pytest.ini` y `.coveragerc` son configuración mínima de F1; consolidarlos en `pyproject.toml` corresponde a F4.
+
+`requirements-dev.txt` debe incluir las dependencias de ejecución mediante `-r requirements.txt` y las herramientas de pruebas con versiones compatibles verificadas. El bloqueo completo de dependencias de ejecución sigue pendiente de F4.
+
+### 10.3 Capas y responsabilidades de las pruebas
+
+| Capa | Qué debe ejecutarse de verdad | Qué se sustituye |
+| --- | --- | --- |
+| Unidad | Operaciones numéricas, normalización y formato | Ningún componente interno salvo necesidad justificada |
+| Adaptadores del proveedor | Helpers que eligen campos y fallbacks | Objeto `yf.Ticker` y respuestas externas |
+| Integración de análisis | `analizar_ticker` completo y sus cálculos | Sólo adquisición de mercado y, cuando corresponda, reloj |
+| Excel | Creación, guardado y lectura del libro real | Ruta temporal y fecha si se necesita fijarla |
+| CLI | Parser, selección de tickers, bucle y exportación | Datos del proveedor, pausas y argumentos del proceso |
+| UI | Script real, controles, sesión, filtros y preparación de descarga | Adquisición de mercado y fallos de escritura deliberados |
+
+No simular `analizar_ticker` en todas las pruebas de integración: al menos un caso debe recorrer el motor real con estados financieros sintéticos. En UI puede simularse el análisis para aislar una regresión, pero debe existir también un flujo representativo con el motor real y proveedor falso.
+
+### 10.4 Fixtures de dominio
+
+Definir compañías sintéticas sin atribuir importes a empresas reales. Los símbolos de prueba pueden ser `TEST` y `TEST.MX`; los DataFrames deben imitar la estructura que utiliza el código.
+
+| Fixture | Contenido y finalidad |
+| --- | --- |
+| Empresa industrial completa | Ingresos, EBIT, utilidad, impuestos, pretax, CFO, CapEx, EBITDA, deuda, efectivo, precio y acciones |
+| Empresa MX en moneda local | Esquema completo con `currency=MXN` y estados en MXN |
+| Empresa con monedas distintas | Estados en una moneda y cotización en otra, con FX directo/inverso controlado |
+| Datos insuficientes | Faltan ingresos, acciones o precio de forma parametrizada |
+| Modelos parciales | Sólo uno, dos o tres modelos calculables |
+| Empresa financiera | Sector/industria que activa la advertencia actual |
+| Histórico vacío | DataFrames sin filas con estructura conocida |
+| Fallo del proveedor | Propiedades y métodos que lanzan errores controlados |
+| Fechas y signos | Columnas desordenadas, fechas comunes parciales, CapEx/D&A positivos y negativos |
+| Valores no finitos | `None`, `NaN`, infinitos y texto no convertible |
+| Lote mixto | Al menos una empresa válida, una incompleta y una con error |
+
+Si se usan JSON/CSV, reconstruir fechas y tipos explícitamente. Los fixtures no deben depender de cómo un parser infiera los tipos en una versión concreta de pandas.
+
+Cada fixture debe tener una explicación de origen, unidades y valores esperados en `tests/fixtures/README.md`. Los DataFrames mutables deben devolverse como copias nuevas por test.
+
+### 10.5 Simulación de yfinance y bloqueo de red
+
+El doble de `Ticker` debe ofrecer únicamente las propiedades y métodos necesarios: `get_info`, `info`, `fast_info`, `income_stmt`, `cashflow`, `balance_sheet`, `analyst_price_targets`, `history` y `get_shares_full`.
+
+Requisitos:
+
+1. Instalar por defecto una sustitución que haga fallar el test si se intenta construir un ticker no preparado.
+2. Permitir reemplazos explícitos por escenario y registrar tickers/argumentos solicitados.
+3. Simular respuestas y excepciones, no sólo el caso exitoso.
+4. Parchear el nombre donde se resuelve la dependencia. La UI importa funciones del motor al ejecutar su script; tenerlo en cuenta al preparar AppTest.
+5. No permitir una vuelta accidental al `yf.Ticker` real cuando falta un fixture.
+6. Bloquear sockets de Python como segunda defensa. Si el transporte usa bibliotecas nativas, no considerar suficiente ese bloqueo: la sustitución del proveedor debe impedir llegar a ese transporte.
+7. Un acceso no preparado debe fallar de forma visible para la suite, incluso si el código de producto captura `Exception`. Evitar que un mock incorrecto se transforme silenciosamente en «datos incompletos» y haga pasar el test.
+
+El mecanismo de sustitución temporal puede implementarse con [monkeypatch de pytest](https://docs.pytest.org/en/stable/how-to/monkeypatch.html). No desactivar de manera global funciones financieras internas para facilitar la prueba.
+
+### 10.6 Aislamiento del tiempo, disco y estado
+
+- Usar `tmp_path` para Excel y archivos de cada prueba; es una fixture provista por [pytest](https://docs.pytest.org/en/stable/how-to/tmp_path.html).
+- Sustituir pausas entre tickers para que las pruebas no esperen tiempo real.
+- No esperar los TTL de las cachés; comprobar claves y llamadas con contador y limpieza explícita.
+- Vaciar `CACHE_FX` y las cachés relevantes de Streamlit antes/después de los casos que las utilizan.
+- Crear una instancia nueva de AppTest por escenario, salvo pruebas explícitas de persistencia dentro de una misma sesión.
+- No reutilizar DataFrames mutados entre casos.
+- No comparar archivos Excel binarios: la fecha y metadatos pueden cambiar sin alterar su contenido funcional.
+- Si se fija la fecha, usar un punto de sustitución pequeño o comprobar su formato y presencia, sin modificar el reloj global de todo el proceso.
+
+### 10.7 Reglas para los asserts
+
+- Utilizar `pytest.approx` para valores flotantes; tolerancia inicial sugerida `rel=1e-9, abs=1e-9` en cálculos pequeños y deterministas.
+- Las operaciones monetarias grandes pueden requerir una tolerancia absoluta distinta, documentada según unidades.
+- No calcular el esperado llamando de nuevo a la función probada o copiando su bucle.
+- Comprobar valores, unidades, esquema, estados y diagnósticos relevantes.
+- No fijar el texto completo de un traceback, un orden interno de llamadas irrelevante, hashes de binarios ni todo el HTML generado.
+- No probar la implementación de pandas, Plotly o una dataclass por sí misma. Probar el uso que hace la aplicación de ellas.
+- No permitir `skip` o `xfail` permanentes en los dos bugs comprobados ni en los requisitos obligatorios para declarar F1 terminada.
+
+## 11. Matriz de pruebas
+
+Los IDs son referencias de comportamiento. Un test parametrizado puede cubrir varios IDs, y un ID puede necesitar varios casos. No son una cuota mínima de archivos o funciones.
+
+### 11.1 Utilidades y normalización
+
+| ID | Área | Caso y resultado requerido |
+| --- | --- | --- |
+| U-01 | Mercado | Sufijo `.MX` en mayúsculas/minúsculas produce MX; símbolos del alcance sin ese sufijo producen USA según la regla actual. |
+| U-02 | Duplicados | Eliminar repetidos conservando el orden de primera aparición. |
+| U-03 | Número | Admitir número y texto numérico; rechazar ausencia, texto inválido, NaN e infinitos. |
+| U-04 | Etiquetas | Mayúsculas, espacios y signos no impiden localizar una línea contable equivalente. |
+| U-05 | Filas | Respetar la prioridad de candidatos; seleccionar de forma determinista ante etiquetas repetidas. |
+| U-06 | Filas | DataFrame ausente, vacío o sin candidato devuelve una serie vacía compatible. |
+| U-07 | Fechas | Ordenar datos contables por fecha antes de elegir el último valor o calcular crecimiento. |
+| U-08 | Alineación | Conservar sólo fechas comunes válidas; soportar series vacías y sin coincidencias. |
+| U-09 | Último valor | Ausencias y serie vacía producen ausencia; una serie normalizada produce el último valor válido. |
+| U-10 | FX de serie | Multiplicar todos los datos por el factor manteniendo fechas y sin mutar la entrada. |
+| U-11 | No finitos | La normalización que alimenta valores financieros no presenta infinitos como datos válidos. |
+| U-12 | Formato | Moneda y porcentaje correctos; ausencia/no finito se presenta como `—`, no como cero. |
+| U-13 | Tabla | Preparar columnas visibles sin modificar el DataFrame original; manejar tabla vacía normalizada. |
+
+### 11.2 Helpers de adquisición
+
+| ID | Área | Caso y resultado requerido |
+| --- | --- | --- |
+| P-01 | Información | `get_info` válido se utiliza; fallo permite probar fallback a `info`. |
+| P-02 | Información | Fallan ambos accesos o la respuesta no es un diccionario: resultado definido, sin error no controlado. |
+| P-03 | Precio | Elegir el primer precio positivo y finito disponible en `fast_info`. |
+| P-04 | Precio | Con `fast_info` insuficiente, usar cierre histórico válido; histórico vacío/fallido produce ausencia. |
+| P-05 | Analistas | Preferencia actual: mean/median de API específica, después targetMeanPrice/targetMedianPrice de info. |
+| P-06 | Analistas | Ausencia, cero, negativo, NaN o error no generan un precio objetivo válido. |
+| P-07 | Acciones | Cubrir info, fast_info, capitalización/precio e histórico de acciones según la prioridad actual. |
+| P-08 | Acciones | No dividir capitalización entre cero; cero/negativo/no finito no son acciones válidas. |
+| P-09 | FX | Misma moneda devuelve 1 sin consultas. Caracterizar monedas ausentes sin inferir que sean económicamente equivalentes. |
+| P-10 | FX | Cotización directa positiva, inversa positiva y ausencia de ambas. |
+| P-11 | FX | El caché distingue pares y reutiliza el resultado actual, incluida ausencia; no se contamina entre tests. |
+| P-12 | Histórico | Cierres no numéricos, vacío y fallo de consulta producen un resultado controlado. |
+
+### 11.3 Métricas y proyección
+
+| ID | Área | Caso y resultado requerido |
+| --- | --- | --- |
+| C-01 | CAGR | Crecimiento conocido con fechas explícitas; resultado independiente de columnas originalmente desordenadas al pasar por normalización. |
+| C-02 | CAGR | Menos de dos observaciones positivas o duración no positiva: ausencia. |
+| C-03 | CAGR | Caracterizar el descarte de observaciones no positivas y el fallback ante fechas no interpretables. |
+| C-04 | Impuestos | Mediana de observaciones admitidas; excluir pretax no positivo y tasas no válidas. |
+| C-05 | Impuestos | Aplicar ventana histórica, límites configurados y fallback sin datos útiles. |
+| C-06 | FCL | Campo directo tiene prioridad sobre el calculado. |
+| C-07 | FCL | CFO menos valor absoluto de CapEx con ambos signos y fechas alineadas. |
+| C-08 | EBITDA | Campo directo y fallback EBIT más valor absoluto de depreciación; sin datos produce ausencia. |
+| C-09 | Margen | Mediana conocida, ventana reciente y factor conservador sobre margen positivo. |
+| C-10 | Margen | Margen negativo no se mejora artificialmente aplicándole el factor; ingresos cero y outliers no se utilizan. |
+| C-11 | Proyección | Caso numérico conocido sin crecimiento ni descuento. |
+| C-12 | Proyección | Caso conocido con crecimiento y descuento; verificar separación entre flujos y terminal. |
+| C-13 | Proyección | Cambio de crecimiento en el año 6, con un horizonte que realmente cruce ese límite. |
+| C-14 | Proyección | Base ausente/no positiva y descuento `<= -1` producen las tres ausencias definidas. |
+| C-15 | Entradas | NaN, infinitos, horizonte inválido y configuración inconsistente reciben el tratamiento explícito acordado en F1, sin resultados engañosos. |
+| C-16 | Por acción | División conocida; rechazar ausencia de acciones, cero, negativos y resultados no finitos/no positivos. |
+| C-17 | Upside | Valores conocidos positivos y negativos, valor cero y precio inválido; no emitir infinito. |
+| C-18 | Sector | Clasificación financiera por los campos utilizados y empresa no financiera; no confundir advertencia con modelo validado. |
+
+### 11.4 Integración del análisis por empresa
+
+| ID | Caso | Resultado requerido |
+| --- | --- | --- |
+| A-01 | Industrial con datos completos | Motor real produce los cuatro modelos, mediana, upsides, detalle y estado según datos conocidos. |
+| A-02 | Empresa MX con estados en MXN | Conserva moneda y valores coherentes sin conversión innecesaria. |
+| A-03 | Estados y cotización en monedas distintas | FX controlado se aplica a ingresos, métricas y balance de forma consistente. |
+| A-04 | Falla FX entre monedas distintas | Caracterización explícita del fallback actual y su nota; pendiente de corrección metodológica en F3. No denominar este escenario «validación de FX». |
+| A-05 | Falta precio | `DATOS INCOMPLETOS`; upside ausente; no dividir por ausencia. |
+| A-06 | Faltan acciones | Valores por acción ausentes y estado incompleto. |
+| A-07 | Faltan ingresos | Valores normalizados ausentes y estado incompleto. |
+| A-08 | Uno o ningún modelo calculable | `REVISAR` si existen los datos básicos; mediana sólo de disponibles o ausente. |
+| A-09 | Dos/tres modelos disponibles | Mediana excluye ausencias; no se rellenan modelos con cero. |
+| A-10 | No hay CAGR | Probar revenueGrowth y fallback; verificar aplicación posterior de ambos factores. |
+| A-11 | Crecimiento extremo | Se aplican límites antes del segundo factor; comprobar extremo positivo y negativo. |
+| A-12 | Deuda y efectivo conocidos | Conciliación aritmética actual de modelos de empresa versus accionista, con números comprobables. |
+| A-13 | Empresa financiera | Se incluye diagnóstico y bandera; caracterizar mediana actual sin afirmar idoneidad metodológica. |
+| A-14 | Proveedor falla parcialmente | Una parte ausente no produce importes inventados; conservar datos y notas disponibles. |
+| A-15 | No finitos en datos del proveedor | Salidas financieras válidas o ausencias explícitas; ningún infinito como valoración. |
+| A-16 | Inmutabilidad de entradas | Analizar una empresa no modifica los DataFrames compartidos por el fixture ni la configuración de otra. |
+
+### 11.5 Interfaz y sesión
+
+| ID | Caso | Resultado requerido |
+| --- | --- | --- |
+| UI-01 | Abrir app | Instrucciones y controles; ninguna consulta externa ni excepción. |
+| UI-02 | Analizar sin selección | Advertencia; cero consultas nuevas; análisis previo, si lo hay, conservado. |
+| UI-03 | Símbolos adicionales | Separar comas, normalizar espacios/mayúsculas y quitar duplicados conservando el orden. |
+| UI-04 | Lote correcto | Mostrar resumen, tabla, detalle y preparación de descarga con datos simulados. |
+| UI-05 | Sólo excepciones por ticker | Regresión BUG-001: cero excepciones de aplicación, errores identificables y métricas ausentes. |
+| UI-06 | Sólo datos incompletos | La UI funciona aunque no exista ninguna valoración numérica. |
+| UI-07 | Lote mixto | Conservar resultados válidos y filas de error; mostrar balance fiel del lote. |
+| UI-08 | Filtro por mercado/estado | Incluir únicamente los estados/mercados seleccionados, manteniendo el contrato tabular. |
+| UI-09 | Filtro por upside | Excluir números inferiores al umbral; conservar ausencias salvo filtro de estado explícito. |
+| UI-10 | Cero filas visibles | Conteo cero; agregados ausentes; ninguna división o selección inválida. |
+| UI-11 | Limpiar | Retornar al estado inicial; no dejar un detalle huérfano ni resultados anteriores visibles. |
+| UI-12 | Cambiar supuestos sin recalcular | Resultados/Excel conservan su configuración original; un análisis nuevo usa la nueva. |
+| UI-13 | Cambiar de lote | Selector de detalle coherente cuando el ticker seleccionado antes ya no existe. |
+| UI-14 | Histórico de precio vacío | Mensaje localizado; resumen y descarga disponibles. |
+| UI-15 | Histórico de precio lanza error | Igual aislamiento; no traceback no controlado. |
+| UI-16 | Estados para gráficos vacíos/fallidos | Mensaje localizado y conservación del análisis. |
+| UI-17 | Error al preparar Excel | Mensaje útil; conservar resultados y permitir otros controles. |
+| UI-18 | Gráfica de valoraciones con modelos ausentes | Sólo valores disponibles; etiquetas/unidades coherentes; no ceros inventados. |
+| UI-19 | Reejecución de Streamlit | Los filtros no repiten consultas de análisis innecesarias ni alteran datos guardados. |
+| UI-20 | Flujo integrado | Al menos un caso utiliza el motor real con `Ticker` falso, además de los casos que simulan la función de análisis. |
+
+La descarga binaria puede no exponerse como una interacción de navegador en AppTest. Verificar sus entradas o los bytes preparados y cubrir el archivo a nivel integración. No añadir un servidor completo sólo para sortear ese límite.
+
+### 11.6 Exportación Excel
+
+| ID | Caso | Resultado requerido |
+| --- | --- | --- |
+| X-01 | Libro completo | Siete hojas, encabezados, filas y valores esperados; se puede reabrir. |
+| X-02 | Mercados | Partición correcta USA/MX; resumen conserva ambos. |
+| X-03 | Sólo errores reducidos | Regresión BUG-002: archivo válido y columnas estables. |
+| X-04 | Lista vacía | Libro válido con esquemas de resumen/detalle y hojas auxiliares. |
+| X-05 | Registros mixtos | Ordenar por mercado/upside sin perder errores o ausencias. |
+| X-06 | Tipos | Importes y porcentajes numéricos; ausencias como celdas vacías. |
+| X-07 | Supuestos | Configuración usada realmente en el análisis. |
+| X-08 | Formato funcional | Encabezados en fila 3, paneles congelados, formatos de moneda/porcentaje, tablas válidas donde hay datos. |
+| X-09 | Identidad | Caracteres acentuados, nombres y tickers se conservan. |
+| X-10 | Ruta | Crear directorio de salida si falta; no escribir fuera de la ruta temporal de prueba. |
+| X-11 | Escritura fallida | Excepción controlable por la capa llamadora; nunca registrar éxito inexistente. |
+| X-12 | Alcance de la descarga | Los filtros de pantalla no reducen silenciosamente el análisis completo exportado. |
+
+No fijar anchos exactos de todas las columnas o el XML completo salvo que protejan un defecto específico. El objetivo es un libro correcto y utilizable.
+
+### 11.7 CLI y cachés
+
+| ID | Caso | Resultado requerido |
+| --- | --- | --- |
+| CLI-01 | `--ticker` repetido | Una ejecución por símbolo único, orden conservado. |
+| CLI-02 | Selección de mercado | Elegir el universo correcto sin consultarlo realmente; usar universos de prueba pequeños. |
+| CLI-03 | `--output` | Escribir en la ruta solicitada; procesar rutas con espacios mediante objetos Path. |
+| CLI-04 | Fallo de una empresa | Continuar con las siguientes y exportar el error junto con los resultados. |
+| CLI-05 | Todos los análisis fallan | Generar un libro con errores sin fallar por columnas inexistentes. |
+| CLI-06 | Argumento inválido/ayuda | Mensaje y código de salida del parser coherentes; sin consultas. |
+| CACHE-01 | Mismo ticker y configuración | Reutilizar análisis sin llamadas extra al proveedor. |
+| CACHE-02 | Cambiar configuración | Invalidar la clave correspondiente y producir resultado nuevo. |
+| CACHE-03 | Histórico con distinto período | Claves distintas y contenido correcto. |
+| CACHE-04 | Aislamiento | Una prueba no obtiene datos cacheados de otra; pares de divisas y configuraciones no se mezclan. |
+
+## 12. Oráculos numéricos
+
+Los siguientes casos se eligieron para poder calcular el esperado fuera de la implementación. Utilizar estos valores y añadir los que requieran las fixtures integradas.
+
+### 12.1 Proyección sin crecimiento ni descuento
+
+```text
+B=100; g_1_5=0; g_6_10=0; r=0; N=3; M=2
+PV_flujos = 100 + 100 + 100 = 300
+PV_terminal = 100 × 2 = 200
+Valor total = 500
+Retorno esperado: (500, 300, 200)
+```
+
+### 12.2 Crecimiento y descuento iguales
+
+```text
+B=100; g_1_5=0.10; g_6_10=0.05; r=0.10; N=2; M=10
+Métrica año 1 = 110; PV = 100
+Métrica año 2 = 121; PV = 100
+PV_terminal = 121 × 10 / 1.1^2 = 1000
+Retorno esperado: (1200, 200, 1000)
+```
+
+### 12.3 Cambio de etapa en año 6
+
+```text
+B=100; g_1_5=0.10; g_6_10=0; r=0; N=6; M=2
+Métricas: 110, 121, 133.1, 146.41, 161.051, 161.051
+PV_flujos = 832.612
+PV_terminal = 322.102
+Valor total = 1154.714
+```
+
+Este caso debe fallar si por error se usa el crecimiento inicial también en el sexto año.
+
+### 12.4 Otras referencias
+
+| Caso | Entradas | Esperado |
+| --- | --- | --- |
+| CAGR | Ingresos 100 el 2020-01-01 y 146.41 el 2024-01-01 | 10 %; intervalo de cuatro años con la convención actual |
+| FCL calculado | CFO `[150, 180]`, CapEx `[-40, -50]` | `[110, 130]` |
+| EBITDA calculado | EBIT `[100, 120]`, D&A `[-20, 30]` | `[120, 150]` |
+| Margen | Métrica `[20, 30, 60]`, ingresos `[100, 200, 300]`, factor `0.8` | Márgenes `[0.20, 0.15, 0.20]`, mediana `0.20`, conservador `0.16`, base reciente `48` |
+| Impuestos | Impuestos `[20, 25]`, pretax `[100, 100]` | Mediana `0.225` |
+| Tope fiscal | Tasa observada admitida `0.37`, máximo `0.35` | `0.35` |
+| Proxy EBITDA ajustado | EBITDA `150`, EBIT `100`, impuestos `0.2`, CapEx `-30` | `100` |
+| FX directo | Importe `100`, factor `20` | `2000` en moneda destino |
+| FX inverso | Cotización inversa `0.05` | Factor directo `20` |
+| Valor por acción | Valor total `1000`, acciones `10` | `100` |
+| Upside | Valor `120`, precio `100` | `0.20` |
+| Downside | Valor `80`, precio `100` | `-0.20` |
+| Pérdida total teórica | Valor `0`, precio `100` | `-1.0` en el helper de rendimiento |
+| Mediana disponible | Modelos `[100, None, 140, 120]` | `120`, no `110` por rellenar una ausencia con cero |
+| Límite de crecimiento | CAGR `0.50`, factor `0.25`, máximo `0.12`, segundo factor `0.5` | `0.12` y `0.06` |
+| Límite negativo | CAGR `-0.20`, factor `0.25`, mínimo `-0.02`, segundo factor `0.5` | `-0.02` y `-0.01` |
+
+La fixture A-01 también debe publicar un cálculo completo de ingresos, márgenes, proyección, deuda, acciones y mediana, con valores esperados propios. No basta con que los resultados «sean mayores que cero».
+
+## 13. Automatización y CI
+
+### 13.1 Comandos objetivo de F1
+
+**Estos comandos están disponibles desde F1.** Ejecutarlos con el entorno virtual activo y las dependencias de desarrollo instaladas.
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pip check
+python -m pytest
+```
+
+La configuración de pytest debe hacer que `python -m pytest` incluya los objetivos equivalentes a:
+
+```bash
+python -m pytest --cov=app --cov=motor_valoracion --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=85
+```
+
+No duplicar opciones de cobertura en varias configuraciones que puedan divergir. Elegir la configuración declarada como fuente del comando canónico. El bloqueo de red y los markers también deben quedar documentados allí.
+
+`pytest-cov` admite selección de fuentes, cobertura de ramas, reportes y umbral de fallo; véase su [referencia de configuración](https://pytest-cov.readthedocs.io/en/latest/config.html).
+
+Para depurar un caso se podrán usar selectores de pytest, por ejemplo `python -m pytest tests/ui/test_app.py -k todos_fallan`. Una ejecución parcial no sirve como evidencia de que pasó la suite completa.
+
+### 13.2 Workflow propuesto
+
+Ruta: `.github/workflows/tests.yml`.
+
+| Elemento | Diseño |
+| --- | --- |
+| Disparadores | `push`, `pull_request`, `workflow_dispatch` |
+| Entorno inicial obligatorio | Ubuntu con Python 3.12 |
+| Job | Instalar, comprobar dependencias, ejecutar suite y publicar reportes como artefactos |
+| Tiempo máximo inicial | 10 minutos por job; investigar esperas antes de ampliarlo |
+| Permisos | Lectura del contenido del repositorio; sin permisos de publicación |
+| Caché | Sólo paquetes de instalación, con clave asociada a los archivos de dependencias |
+| Secretos | Ninguno |
+| Publicación del producto | Ninguna |
+| Reportes | Cobertura XML y, si se configura, JUnit; conservar también ante fallos cuando estén disponibles |
+
+Secuencia:
+
+1. Obtener el código con una acción oficial de checkout.
+2. Preparar la versión de Python con la acción oficial correspondiente.
+3. Instalar dependencias de desarrollo.
+4. Ejecutar `python -m pip check`.
+5. Ejecutar el mismo `python -m pytest` documentado para local.
+6. Adjuntar reportes generados para revisión; no enviar datos a una plataforma externa de cobertura.
+
+GitHub documenta ese flujo para proyectos Python en [Building and testing Python](https://docs.github.com/en/actions/tutorials/build-and-test-code/python). La recomendación de permisos mínimos está en su [referencia de uso seguro de Actions](https://docs.github.com/en/actions/reference/security/secure-use).
+
+Al implementar, verificar versiones vigentes de las acciones oficiales y fijarlas de forma revisable; preferir SHA completo con comentario de versión. No copiar versiones o hashes inventados de esta SDD.
+
+### 13.3 Compatibilidad
+
+Python 3.12 es la primera plataforma de CI elegida por ser la versión local comprobada. El README menciona 3.10+, pero eso no demuestra que todas las combinaciones actuales de dependencias estén probadas.
+
+En F4 se debe cerrar una política explícita de versiones y ampliar la matriz para reflejarla. Si F1 ya prueba Python 3.10 además de 3.12, documentar sus resultados; no convertir una combinación fallida en un job permitido a fallar y anunciarla como soportada.
+
+### 13.4 Límites de lo verificable localmente
+
+Crear y validar un workflow no demuestra que GitHub lo haya ejecutado. La entrega de F1 debe distinguir:
+
+- Suite ejecutada localmente: comando, entorno y resultado.
+- Workflow escrito y revisado: archivo y disparadores.
+- CI remoto ejecutado: enlace real al run y estado, únicamente si existe y se dispone del contexto necesario para consultarlo.
+
+Si no hay remoto configurado o no hay acceso, dejar esa verificación como pendiente externo explícito; no inventar una ejecución verde. No hace falta crear un repositorio remoto o cambiar permisos para redactar la SDD o desarrollar las pruebas.
+
+## 14. Ejecución y cierre de F1
+
+### 14.1 Orden de trabajo recomendado
+
+1. Confirmar línea base, instrucciones locales y cambios del usuario.
+2. Añadir dependencias/configuración mínima de pruebas y fixtures de proveedor.
+3. Escribir y ejecutar regresiones que fallen por BUG-001 y BUG-002 en la línea base. Registrar que fallan por la causa esperada.
+4. Definir esquema tabular y una construcción de errores consistente; corregir ambos defectos con cambios pequeños.
+5. Añadir casos de unidades e integración numérica; conservar resultados válidos conocidos.
+6. Cubrir lotes mixtos, vacíos, filtros, configuración guardada y fallos localizados del detalle.
+7. Cubrir Excel y CLI con archivos reales temporales y proveedor simulado.
+8. Añadir comprobaciones de caché y ausencia de consultas reales.
+9. Revisar huecos de cobertura y cubrir comportamientos relevantes, sin asserts artificiales.
+10. Crear el workflow y documentar instalación/ejecución de la suite.
+11. Ejecutar el comando canónico completo y comprobar que no quedan artefactos generados versionables.
+12. Actualizar esta SDD con evidencias y pendientes; no marcar F2 a F5 como implementadas.
+
+### 14.2 Archivos que puede modificar F1
+
+- `app.py`: robustez de interfaz, filtros, estado, históricos y descarga.
+- `motor_valoracion.py`: esquema, helpers pequeños, manejo de entradas y exportación robusta.
+- `tests/**`: fixtures y suite.
+- `requirements-dev.txt`, `pytest.ini`, `.coveragerc`: soporte de pruebas.
+- `.github/workflows/tests.yml`: automatización.
+- `README.md` y esta SDD: instrucciones y evidencia.
+- `.gitignore`: sólo si aparecen artefactos concretos de pruebas que requieran exclusión.
+
+No mover masivamente código, renombrar la API pública o modificar las listas de empresas para hacer más rápidas las pruebas. Los universos grandes se sustituyen dentro del test que los necesita.
+
+### 14.3 Criterios de aceptación de F1
+
+- [x] BUG-001 y BUG-002 tienen pruebas de regresión que pasan y correcciones en producto.
+- [x] Cada área y caso obligatorio de la matriz tiene una prueba identificable: `docs/F1_TEST_MATRIX.md`.
+- [x] Al menos una integración utiliza todo el motor real con datos sintéticos y esperado independiente.
+- [x] Todas las pruebas obligatorias funcionan sin Yahoo ni credenciales.
+- [x] La suite detecta accesos de proveedor no preparados; no se apoya sólo en que la máquina no tenga Internet.
+- [x] Cero errores de aplicación en los casos UI obligatorios.
+- [x] Libros Excel de datos completos, mixtos, errores y vacío se generan y se reabren.
+- [x] La configuración usada se conserva en resultados y exportación.
+- [x] Cobertura medida sobre ambos archivos con ramas y umbral total de al menos 85 %.
+- [x] Sin exclusiones amplias, skips o xfails que oculten requisitos obligatorios.
+- [x] `python -m pip check` y `python -m pytest` pasan en el entorno documentado.
+- [x] Workflow configurado para ejecutar esas comprobaciones y propagar fallos; contrato local comprobado. La ejecución en GitHub sigue pendiente.
+- [x] README explica comandos y límites de la suite.
+- [x] Se informa con precisión que la primera ejecución de CI remota sigue pendiente.
+- [x] No se han introducido cambios metodológicos silenciosos ni iniciado la refactorización completa.
+- [x] Estado de fases y evidencia actualizados en esta SDD.
+
+El cumplimiento de la suite completa debe poder revisarse en una sola entrega. El número final de tests y su duración se registran después de ejecutarlos; no se predicen como resultados alcanzados.
+
+## 15. F2: separación de responsabilidades
+
+**Estado: pendiente; corresponde al punto 3 original. Depende de F1.**
+
+### 15.1 Problema que resuelve
+
+El motor concentra catálogo, proveedor, transformación de estados, cálculo, Excel y CLI. La UI también descarga y transforma datos. Esto dificulta aislar cambios y obliga a conocer detalles de Yahoo para probar funciones de presentación.
+
+F2 organiza el código conservando los resultados y comportamientos protegidos por F1. No debe aprovecharse la reorganización para cambiar fórmulas, componentes del universo o estilos sin relación con ella.
+
+### 15.2 Estructura objetivo propuesta
+
+```text
+app.py                         # Entrada de Streamlit
+motor_valoracion.py             # Fachada de compatibilidad y entrada CLI heredada
+valoracion/
+├── __init__.py
+├── configuracion.py            # Configuración y validación
+├── modelos.py                  # Datos internos y diagnósticos
+├── universo.py                 # Carga y validación del catálogo local
+├── normalizacion.py            # Etiquetas, fechas, números y alineación
+├── calculos.py                 # Métricas y proyecciones sin I/O
+├── servicio.py                 # Orquestación de análisis por empresa
+├── cli.py                      # Argumentos y ejecución por terminal
+├── proveedores/
+│   ├── __init__.py
+│   ├── base.py                 # Contrato de adquisición
+│   └── yahoo.py                # Adaptación de yfinance
+├── exportacion/
+│   ├── __init__.py
+│   └── excel.py
+└── presentacion/
+    ├── __init__.py
+    ├── formatos.py
+    └── graficas.py
+data/
+└── universo.json               # Símbolos, mercado y metadatos de procedencia
+```
+
+Esta estructura usa un paquete en la raíz para no exigir una migración simultánea a instalación editable. Se puede elegir otro diseño justificado, pero debe conservarse una frontera clara entre cálculo e I/O. No crear una clase por cada función ni subdividir archivos sólo por cantidad de líneas.
+
+### 15.3 Dirección de dependencias
+
+```mermaid
+flowchart TD
+    UI[Streamlit] --> SERV[Servicio de análisis]
+    CLI[CLI] --> SERV
+    SERV --> CONTRATO[Contrato del proveedor]
+    YAHOO[Proveedor Yahoo] --> CONTRATO
+    YAHOO --> YF[yfinance]
+    SERV --> NORMAL[Normalización]
+    SERV --> CALC[Cálculos puros]
+    UI --> GRAF[Presentación]
+    UI --> EXCEL[Exportación Excel]
+    CLI --> EXCEL
+```
+
+El contrato del proveedor define qué datos necesita el servicio, no cómo se renderizan. El servicio recibe una implementación; Yahoo es la predeterminada y los tests suministran un proveedor sintético.
+
+### 15.4 Requisitos
+
+| ID | Requisito |
+| --- | --- |
+| F2-R01 | Los cálculos no importan Streamlit, yfinance u openpyxl y no escriben archivos ni hacen consultas. |
+| F2-R02 | La adquisición de datos de análisis e históricos pasa por un adaptador explícito; evitar una segunda implementación de Yahoo escondida en la UI. |
+| F2-R03 | La configuración y los diagnósticos tienen una definición compartida. |
+| F2-R04 | La UI mantiene selección, estado y presentación; la CLI mantiene argumentos y mensajes de terminal. |
+| F2-R05 | Excel recibe resultados y configuración; no descarga datos de mercado. |
+| F2-R06 | El universo se carga desde datos locales con validación de identidad, mercado y duplicados; sin consultas al importar. |
+| F2-R07 | La fachada heredada permite seguir usando `streamlit run app.py` y `python motor_valoracion.py ...`. |
+| F2-R08 | Las mismas fixtures producen resultados numéricos y esquemas equivalentes a los de F1. |
+
+### 15.5 Modelos internos
+
+Se propone separar tres conceptos:
+
+- `DatosEmpresa`: identidad, monedas, precio, acciones y estados normalizados adquiridos.
+- `ResultadoAnalisis`: resumen, detalle y configuración usada.
+- `Diagnostico`: motivo de ausencia, fallback o fallo y su ámbito.
+
+Pueden implementarse con dataclasses y tipos de Python. No añadir una dependencia de validación sólo por disponer de clases. Los tipos internos deben poder convertirse al contrato de columnas existente; UI y Excel no deben conocer estructuras privadas de yfinance.
+
+Las colecciones mutables se crean por resultado. No compartir DataFrames entre empresas o sesiones sin una política explícita de copia y caché.
+
+### 15.6 Migración del catálogo
+
+Conservar exactamente los símbolos y su orden inicial al extraerlos, y comprobarlo en una prueba de equivalencia. Añadir metadatos que distingan fecha de snapshot del catálogo, fecha de comprobación de fuente y significado de la lista.
+
+No descargar automáticamente los componentes de un índice para sustituir el catálogo durante esta refactorización. Eso sería un cambio funcional separado.
+
+### 15.7 Secuencia y criterios de aceptación
+
+1. Extraer configuración, utilidades y cálculo puro con las pruebas existentes.
+2. Introducir contrato y adaptador del proveedor; reutilizarlo para históricos.
+3. Extraer servicio, exportación y CLI.
+4. Mover catálogo preservando contenido y orden.
+5. Reducir la UI y mantener la fachada de compatibilidad.
+6. Ajustar medición de cobertura a los módulos nuevos; no perder cobertura al dejar de medir código movido.
+7. Escribir una decisión de arquitectura que explique dependencias y compatibilidad.
+
+- [ ] Suite completa de F1 pasa con los mismos esperados numéricos.
+- [ ] Las pruebas de cálculo no necesitan parches de red.
+- [ ] Servicio probado con proveedor falso por inyección explícita.
+- [ ] UI e históricos usan el adaptador definido.
+- [ ] Entradas heredadas y esquemas públicos siguen funcionando.
+- [ ] Catálogo extraído sin cambios de símbolos u orden.
+- [ ] Diagrama e inventario actualizados; no hay dependencias circulares.
+- [ ] Cobertura incluye el código nuevo, no únicamente las fachadas.
+
+Entregables: paquete organizado, catálogo de datos, pruebas migradas y `docs/architecture.md` con la decisión de estructura.
+
+## 16. F3: metodología y trazabilidad
+
+**Estado: pendiente; corresponde al punto 4 original. Depende de F1 y F2.**
+
+### 16.1 Objetivo
+
+Explicar y revisar qué representa cada modelo, con qué datos se calcula, cómo llega al valor por acción y cuándo deja de ser aplicable. Las pruebas de aritmética de F1 protegen comportamiento; esta fase debe evaluar y justificar el modelo económico.
+
+### 16.2 Investigación y decisiones que deben cerrarse
+
+| ID | Tema | Pregunta que debe resolverse y quedar documentada |
+| --- | --- | --- |
+| MET-01 | Naturaleza del FCL | ¿El dato de Yahoo o CFO menos CapEx se puede tratar como FCFE en este contexto? ¿Qué componentes faltan o requieren conciliación? |
+| MET-02 | Descuento | ¿Qué tasa corresponde a cada tipo de flujo y por qué? ¿Se mantiene una tasa común como simplificación declarada? |
+| MET-03 | EBIT/NOPAT | ¿Qué reinversión o ajustes adicionales requiere la aproximación utilizada? |
+| MET-04 | EBITDA ajustado | ¿Qué aproxima restar impuestos sobre EBIT y todo el CapEx? ¿Cómo se diferencia CapEx de mantenimiento y crecimiento, si se hace? |
+| MET-05 | Utilidad neta | ¿Qué supone proyectarla como flujo distribuible y cuáles son las limitaciones? |
+| MET-06 | Múltiplos | ¿Sobre qué métrica se aplican los múltiplos terminales, y qué fuente o criterio justifica sus valores? |
+| MET-07 | Crecimiento/margen | ¿Qué fundamento tienen factores, límites y ventanas? ¿Cómo se trata un histórico corto, negativo o extraordinario? |
+| MET-08 | Balance y acciones | ¿Cómo se concilian deuda/efectivo, fechas de balance y acciones actuales? ¿Qué ocurre ante datos desconocidos? |
+| MET-09 | Sectores | ¿Qué modelos son aplicables a industriales, financieras, aseguradoras, vehículos inmobiliarios u otras categorías del universo? |
+| MET-10 | Mediana | ¿Es válido combinar las aproximaciones disponibles? ¿Qué debe mostrarse cuando sólo hay una o cuando alguna no aplica? |
+| MET-11 | Divisas | ¿Qué conversión se usa para estados, balance y comparación con precio? ¿Qué limitación temporal introduce? |
+| MET-12 | Analistas | ¿Qué estadístico, cobertura, fecha y horizonte están disponibles? ¿Cómo evitar presentar el objetivo como comprobación del modelo? |
+
+Estas preguntas requieren investigación con fuentes técnicas o académicas primarias y datos conocidos. No asumir respuestas a partir del nombre de una columna ni del hecho de que un test de F1 pase.
+
+### 16.3 Requisitos
+
+| ID | Requisito |
+| --- | --- |
+| F3-R01 | Documento de metodología con fórmulas, unidades, fuentes, supuestos, aplicabilidad y limitaciones de cada modelo. |
+| F3-R02 | Al menos un ejemplo completo calculado y conciliado de manera independiente, reproducible sin Yahoo. |
+| F3-R03 | Versionar la metodología y asociarla al resultado/exportación cuando se introduzcan cambios en los cálculos. |
+| F3-R04 | Una conversión desconocida entre monedas distintas no puede producir una valoración rotulada como convertida correctamente usando 1.0. |
+| F3-R05 | Separar deuda o efectivo desconocidos de un valor confirmado igual a cero; comunicar su efecto en los modelos. |
+| F3-R06 | Publicar una matriz de aplicabilidad por sector y excluir de agregados los modelos declarados no aplicables. |
+| F3-R07 | Identificar número de modelos que participa en la mediana y explicar sus límites. |
+| F3-R08 | Alinear etiquetas de interfaz/Excel con la métrica realmente calculada. |
+| F3-R09 | Mostrar procedencia y fecha de adquisición, período financiero y supuestos usados en cada resultado en la medida disponible. |
+| F3-R10 | Cada cambio económico tiene una decisión documentada y cambios de pruebas explicados; no reemplazar esperados sin justificación. |
+
+### 16.4 Política prevista para ausencia de FX
+
+Si origen y destino son iguales y están identificados, `1.0` es una identidad de unidades. Si son distintos y no se consigue una conversión válida, el resultado no debe aparentar que fue convertido:
+
+- Conservar precio y objetivo si ya se conocen en moneda de cotización.
+- Marcar como no disponibles las valoraciones afectadas por la conversión.
+- Conservar identidad y diagnóstico para que el usuario entienda qué falta.
+- No mezclar gráficos de importes de monedas distintas con la misma etiqueta.
+- Clasificar el caso como datos incompletos o con un diagnóstico de calidad explícito, según el contrato revisado.
+
+Si la moneda está ausente, tratarla como desconocida y documentar cualquier inferencia. No aplicar una equivalencia económica porque las cadenas estén vacías.
+
+Esta política es parte de F3 porque modifica resultados y diagnósticos económicos de la línea base. F1 debe impedir fallos de ejecución, pero no presentar su caracterización del fallback como aprobación de esa política anterior.
+
+### 16.5 Trazabilidad de un resultado
+
+Registrar, con nombres definitivos decididos en esta fase:
+
+- Ticker, mercado y moneda de cotización.
+- Moneda de los estados y factor de conversión utilizado, con su procedencia.
+- Momento de adquisición de datos y períodos financieros usados.
+- Fuente de cada métrica construida o directa.
+- Cantidad de observaciones y fallback aplicado a crecimiento, márgenes e impuestos.
+- Configuración efectiva, versión de metodología y modelos incluidos/excluidos.
+- Motivo de un dato ausente o de un modelo no aplicable.
+
+No inventar una fecha de mercado porque se conoce la fecha de descarga. No describir como fuente primaria una serie derivada por la aplicación.
+
+### 16.6 Entregables y criterios de aceptación
+
+Entregables previstos:
+
+- `docs/methodology.md`.
+- Un ejemplo verificable en `examples/`, con datos sintéticos o una snapshot cuya procedencia y condiciones de uso estén documentadas.
+- Registro de decisiones metodológicas y migración de resultados.
+- Diagnósticos y presentación actualizados.
+- Tests específicos para las políticas nuevas y un caso completo conciliado.
+
+- [ ] MET-01 a MET-12 tienen respuesta documentada o limitación explícita que restringe el producto.
+- [ ] Ninguna valoración convertida usa un FX desconocido como si fuera conocido.
+- [ ] No se confunde balance ausente con balance cero sin advertencia ni decisión expresa.
+- [ ] Aplicabilidad por sector implementada conforme a la decisión documentada.
+- [ ] Fórmulas, nombres y unidades coinciden entre código, explicación, gráficos y Excel.
+- [ ] Ejemplo independiente produce los resultados esperados.
+- [ ] Cambios respecto a la versión previa se explican y quedan cubiertos por tests.
+
+No añadir simulaciones avanzadas, optimización de cartera o una matriz de sensibilidad como requisito implícito de esta fase. Pueden proponerse después si aportan valor, con alcance propio.
+
+## 17. F4: instalación y herramientas
+
+**Estado: pendiente; corresponde al punto 5 original. Depende de las fases anteriores.**
+
+### 17.1 Problema actual
+
+`requirements.txt` permite que se instalen versiones futuras de los paquetes. Los scripts `.sh` y `.bat` actualizan pip e instalan dependencias cada vez que se inicia la app. Esto hace que arrancar la aplicación pueda modificar su entorno y depender de la red aunque ya estuviera instalada.
+
+### 17.2 Diseño propuesto
+
+Mantener el flujo basado en pip y separar las definiciones de dependencias de los archivos resueltos:
+
+```text
+requirements.in           # Dependencias directas de ejecución
+requirements-dev.in       # Herramientas de desarrollo y relación con ejecución
+requirements.txt          # Resolución versionada de ejecución
+requirements-dev.txt      # Resolución versionada de desarrollo
+pyproject.toml            # Configuración de herramientas y metadatos que correspondan
+```
+
+Se propone `pip-tools` para generar las resoluciones; su documentación explica las entradas `.in` y la compilación de archivos fijados en [pip-tools](https://pip-tools.pypa.io/en/stable/).
+
+El archivo de desarrollo debe respetar la resolución de ejecución para no instalar otra versión del producto al añadir herramientas. Documentar cómo regenerar ambos y bajo qué Python/plataforma se resolvieron. Si se adopta otra herramienta, elegir una sola estrategia y migrar los comandos coherentemente.
+
+No mantener la misma lista manual de dependencias en `.in`, `pyproject.toml` y otros archivos con autoridades contradictorias. Si posteriormente se empaqueta el proyecto, revisar y documentar la fuente única correspondiente.
+
+### 17.3 Requisitos
+
+| ID | Requisito |
+| --- | --- |
+| F4-R01 | Definir y probar las versiones de Python soportadas; alinear README, resolución y CI. |
+| F4-R02 | Instalar versiones resueltas y versionadas; documentar actualización deliberada de dependencias. |
+| F4-R03 | Separar preparación del entorno y arranque. Un arranque normal no actualiza pip ni reinstala todo. |
+| F4-R04 | Conservar comandos claros para macOS/Linux y Windows, con rutas entrecomilladas y `python -m pip` asociado al intérprete correcto. |
+| F4-R05 | Consolidar configuración de pytest/cobertura y herramientas en `pyproject.toml` cuando sea apropiado, sin duplicaciones. |
+| F4-R06 | Añadir lint y formato mediante Ruff con reglas explícitas y una ejecución en CI. |
+| F4-R07 | Una instalación limpia, comprobación de dependencias y suite completa deben pasar utilizando sólo archivos versionados. |
+| F4-R08 | Documentar qué necesita red al instalar y qué pruebas/modo de demostración pueden ejecutarse sin proveedor externo. |
+
+Ruff se propone como herramienta de lint y formato según su [documentación oficial](https://docs.astral.sh/ruff/). Introducir primero reglas de errores e imports relevantes; evitar una reescritura masiva sin relación con la calidad funcional.
+
+### 17.4 Comportamiento de los lanzadores
+
+Después de la fase:
+
+- Si no existe un entorno preparado, indicar cómo instalarlo o invocar explícitamente un modo de instalación documentado.
+- Si existe, iniciar Streamlit sin actualizar dependencias.
+- Un cambio de dependencias requiere un paso de actualización explícito.
+- Los lanzadores deben funcionar desde otra carpeta, resolviendo correctamente la ubicación del proyecto.
+- No pedir credenciales o secretos para iniciar la pantalla inicial o ejecutar la suite.
+
+No es obligatorio crear múltiples scripts nuevos si bastan comandos claros en el README. Sí es obligatorio que los scripts existentes dejen de modificar silenciosamente el entorno en cada arranque.
+
+### 17.5 Criterios de aceptación
+
+- [ ] Instalación limpia con los archivos resueltos, seguida de `pip check`, sin conflictos.
+- [ ] Suite y cobertura pasan con el entorno resuelto.
+- [ ] Versiones declaradas de Python verificadas en CI o limitaciones explícitas de soporte.
+- [ ] Comandos de instalación y arranque separados y probados.
+- [ ] Lanzadores no reinstalan ni actualizan paquetes en un arranque normal.
+- [ ] Ruff y formato tienen comandos documentados y CI coherente.
+- [ ] Regeneración de resoluciones reproducible y documentada para plataformas soportadas.
+- [ ] No se promete que una resolución generada para un entorno sea universal sin comprobarlo.
+
+## 18. F5: presentación del repositorio
+
+**Estado: pendiente; corresponde al punto 6 original. Depende de F1 a F4.**
+
+### 18.1 Objetivo
+
+Que una persona que abre el repositorio comprenda el problema, vea el resultado, pueda probarlo y encuentre evidencia de las decisiones técnicas. La presentación debe reflejar la implementación existente al terminar las fases anteriores.
+
+### 18.2 README objetivo
+
+Contenido esperado, organizado para una lectura rápida:
+
+1. Nombre y descripción breve del problema que resuelve.
+2. Captura o animación real de un flujo representativo.
+3. Funciones disponibles y límites principales.
+4. Tecnologías y esquema sencillo del flujo de datos.
+5. Instalación reproducible y ejecución por interfaz/CLI.
+6. Cómo usar una demostración sin Yahoo.
+7. Cómo ejecutar pruebas y comprobaciones de calidad.
+8. Enlaces a SDD, arquitectura, metodología y ejemplo verificable.
+9. Estado del proyecto, trabajo pendiente y limitaciones del proveedor/modelos.
+10. Licencia y atribución reales.
+
+Las insignias de CI y cobertura deben apuntar a evidencias existentes. No inventar métricas de rendimiento, precisión, usuarios o validación financiera.
+
+### 18.3 Requisitos
+
+| ID | Requisito |
+| --- | --- |
+| F5-R01 | README orientado a evaluar y ejecutar el proyecto, con enlaces válidos. |
+| F5-R02 | Capturas reales de la versión actual, con datos identificados como sintéticos si corresponde. |
+| F5-R03 | Modo de demostración determinista sin depender de Yahoo. |
+| F5-R04 | Ejemplo de análisis y exportación que pueda reproducirse desde datos versionados. |
+| F5-R05 | Licencia decidida por el titular y añadida con atribución correcta; no inventar identidad del autor. |
+| F5-R06 | Guía breve de contribución con comandos, pruebas y criterio para cambios metodológicos. |
+| F5-R07 | Estado de fases y roadmap coherentes con lo que realmente se ha implementado. |
+| F5-R08 | Material de portafolio sin exponer secretos, rutas personales, datos privados o afirmaciones no comprobadas. |
+
+### 18.4 Diseño del modo de demostración
+
+Usar el contrato del proveedor introducido en F2 para suministrar datos sintéticos desde archivos locales. Compartir el motor de cálculo y las vistas del producto; no construir una segunda app con resultados escritos manualmente.
+
+El modo debe:
+
+- Poder activarse con un control o argumento documentado.
+- Mostrar de forma persistente que usa datos de demostración y su fecha de referencia.
+- Ofrecer pocos símbolos con casos representativos: empresa completa USA, empresa MX y datos insuficientes.
+- Permitir analizar, filtrar, consultar detalle y descargar Excel sin consultas externas.
+- Incluir la procedencia de demostración en la exportación.
+- Tener una prueba que impida una llamada accidental al proveedor de mercado.
+
+Los fixtures de tests de F1 y los datos de demo pueden compartir origen, pero no deben acoplar el código de producto a imports desde `tests/`. Extraer los datos de demostración a un lugar adecuado y conservar fixtures de prueba independientes.
+
+### 18.5 Artefactos previstos
+
+```text
+README.md
+LICENSE                         # Tras decidir su contenido
+CONTRIBUTING.md
+docs/
+├── SDD.md
+├── architecture.md
+├── methodology.md
+└── images/                     # Capturas reales y optimizadas
+examples/
+└── analisis_reproducible/       # Datos, explicación y salida representativa
+```
+
+No son requisitos automáticos un sitio de marketing, dominio, despliegue, changelog extenso, plantillas de incidencias o múltiples documentos de gobernanza. Añadirlos sólo si existe una necesidad concreta.
+
+### 18.6 Criterios de aceptación
+
+- [ ] Una persona puede seguir el README desde una instalación limpia.
+- [ ] La demo completa funciona con las consultas de mercado bloqueadas.
+- [ ] Capturas corresponden al producto y datos de demo actuales.
+- [ ] Ejemplo reproducible concuerda con metodología y Excel.
+- [ ] Pruebas y CI mencionados existen; enlaces no contienen repositorios ficticios.
+- [ ] Licencia y atribución se han resuelto sin suposiciones sobre derechos o autoría.
+- [ ] Las limitaciones son específicas y visibles, sin convertir la documentación en promesas de rentabilidad.
+- [ ] SDD, arquitectura y roadmap reflejan el estado final real.
+
+## 19. Trazabilidad y dependencias
+
+### 19.1 Secuencia general
+
+```mermaid
+flowchart LR
+    G[gitignore completado] --> S[SDD redactada]
+    S --> F1[F1 Correcciones y pruebas con CI]
+    F1 --> F2[F2 Organización del código]
+    F2 --> F3[F3 Metodología y trazabilidad]
+    F3 --> F4[F4 Entorno y herramientas]
+    F4 --> F5[F5 Presentación y demo]
+```
+
+La configuración mínima de tests/CI de F1 no espera a la formalización completa de dependencias de F4. Los ajustes documentales necesarios en cada fase se realizan junto con ella, aunque la presentación completa del README corresponda a F5.
+
+### 19.2 Relación entre hallazgos, requisitos y verificaciones
+
+| Origen | Requisitos principales | Verificaciones |
+| --- | --- | --- |
+| BUG-001: lote enteramente fallido | F1-R03, R04, R05, Q04 | UI-05, UI-06; pruebas de esquema |
+| BUG-002: Excel con errores reducidos | F1-R14, Q04 | X-03, CLI-05 |
+| R-001: filtro oculta ausencias | F1-R06 | UI-07, UI-09 |
+| R-002/R-003: fallos de históricos | F1-R09 | UI-14, UI-15, UI-16, P-12 |
+| R-004: mensaje de éxito general | F1-R10 | UI-05, UI-07 |
+| R-005/R-007: esquemas y selección | F1-R07, R08, R14 | UI-10, UI-13, X-04 |
+| R-006: cachés y sesión | F1-Q09, R11, R12 | CACHE-01 a CACHE-04, UI-11, UI-12, UI-19 |
+| R-008: entradas no finitas | F1-R13, Q03 | U-03, U-11, C-15, C-16, C-17, A-15 |
+| Cálculos actuales | F1-R17, Q03 | C-01 a C-18, A-01, A-12, oráculos numéricos |
+| Adquisición y fallbacks | F1-Q02, Q05 | P-01 a P-12, A-02 a A-14 |
+| Contrato de exportación | F1-R14, R15 | X-01 a X-12, UI-17 |
+| CLI | F1-R16 | CLI-01 a CLI-06 |
+| Código mezclado | F2-R01 a F2-R08 | Suite F1 migrada y equivalencia de resultados |
+| Dudas económicas y datos | F3-R01 a F3-R10 | MET-01 a MET-12, nuevos casos conciliados |
+| Dependencias abiertas/lanzadores | F4-R01 a F4-R08 | Instalación limpia, comandos y matriz de CI |
+| Falta de evidencia de producto | F5-R01 a F5-R08 | Demo, documentación, capturas y ejemplo |
+
+### 19.3 Estado de ejecución después de F1
+
+| Entrega | Estado | Evidencia |
+| --- | --- | --- |
+| `.gitignore` | Completada | Archivo existente y comprobación E-005 |
+| SDD | Actualizada | Versión 1.1; incorpora TDD obligatorio y evidencia de F1 |
+| F1 | Implementada y verificada localmente; CI remoto pendiente | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
+| F2 | Pendiente | El código sigue en los dos archivos principales |
+| F3 | Pendiente | Fórmulas descritas para caracterización; metodología no validada |
+| F4 | Pendiente | Dependencias abiertas y lanzadores que instalan al arrancar |
+| F5 | Pendiente | Sin demo, capturas de portafolio ni licencia definida |
+
+## 20. Decisiones y riesgos
+
+### 20.1 Registro inicial de decisiones
+
+| ID | Decisión | Estado y motivo |
+| --- | --- | --- |
+| D-001 | Correcciones y pruebas automatizadas en la misma entrega | Acordada con el usuario; evita separar el arreglo de su protección contra regresiones |
+| D-002 | Refactorización amplia después de F1 | Acordada; primero establecer comportamiento verificable |
+| D-003 | Cambios metodológicos después de F2 | Acordada; distinguir reorganización y cambios de resultados |
+| D-004 | Mantener Streamlit y no añadir un servicio separado por defecto | Diseño de esta SDD acorde al alcance del repositorio |
+| D-005 | Usar pruebas deterministas con proveedor simulado | Diseño de F1; evitar dependencia de disponibilidad y límites de Yahoo |
+| D-006 | Cobertura de ramas con umbral total inicial 85 % | Propuesta de calidad de F1, complementada por matriz funcional |
+| D-007 | Python 3.12 en primer CI; soporte completo se cierra en F4 | Propuesta basada en entorno local comprobado |
+| D-008 | Un esquema común de resultado y error | Diseño de F1 para resolver fallos de UI y exportación |
+| D-009 | Dependencias resueltas con estrategia única basada en pip | Propuesta de F4; no migrar de herramienta por preferencia aislada |
+| D-010 | Modo demo usa el motor real y proveedor local | Propuesta de F5; no duplicar resultados precalculados en otra interfaz |
+| D-011 | Licencia por decidir con su titular | Pendiente para F5; no bloquea F1 ni autoriza atribuciones inventadas |
+| D-012 | Si se necesita servicio externo, preferencia por coste cero | Restricción del usuario; verificar alternativas cuando exista necesidad real |
+| D-013 | TDD obligatorio para los cambios de software de todas las fases | Instrucción explícita posterior del usuario; ciclos de F1 documentados |
+| D-014 | Bloqueo de red en fixture automática, sin pytest-socket | Ajuste de diseño de F1: proveedor, sockets Python y DNS bloqueados con monkeypatch y verificados mediante tests |
+| D-015 | PyYAML como herramienta de desarrollo | Permite comprobar el contrato estructural del workflow; no se incorpora al producto |
+
+### 20.2 Riesgos y mitigaciones
+
+| Riesgo | Consecuencia | Mitigación |
+| --- | --- | --- |
+| Tests que dependen de Yahoo | Fallos intermitentes y resultados no reproducibles | Proveedor falso, fixtures y bloqueo de accesos accidentales |
+| Mocks que ocultan todo el motor | Suite verde sin probar cálculo real | Integración A-01/UI-20 y esperados independientes |
+| Congelar un error económico como verdad | Mayor confianza injustificada | Etiquetar caracterización y resolver MET en F3 |
+| Migración amplia antes de tener pruebas | Regresiones difíciles de atribuir | Orden F1 → F2 y cambios pequeños |
+| Dependencias nuevas no fijadas | Entornos divergentes | Compatibilidad mínima en F1 y resolución completa en F4 |
+| Cachés compartidas | Pruebas dependientes del orden o datos obsoletos | Limpieza por fixture y casos específicos de caché |
+| Cobertura superficial | Porcentaje alto sin verificar resultados | Matriz y oráculos además del umbral |
+| Excel comparado como binario | Tests frágiles por metadatos | Reabrir e inspeccionar estructura/tipos/valores |
+| CI local confundido con remoto | Evidencia de calidad engañosa | Registrar por separado suite local y run remoto |
+| Datos financieros sin procedencia | Resultados difíciles de explicar | Trazabilidad y versión de metodología en F3 |
+| Demo dependiente de Internet | Revisor no puede probar el producto | Proveedor local y prueba sin red en F5 |
+| Documentación desactualizada | Otro chat ejecuta una fase equivocada | Actualizar estado/evidencia al cerrar cada fase |
+
+### 20.3 Decisiones que no deben improvisarse
+
+- La licencia y la identidad legal del autor.
+- El significado financiero de FCL y la tasa de descuento adecuada.
+- La sustitución del catálogo por componentes actuales de un índice.
+- Una promesa de soporte multiplataforma sin pruebas.
+- Una ejecución remota de CI inexistente.
+- La contratación de servicios, publicación o despliegue.
+
+Las decisiones pendientes de una fase futura no impiden realizar las correcciones y pruebas acordadas para F1. Resolver opciones rutinarias de implementación dentro del alcance; escalar al usuario únicamente decisiones de producto, derechos, coste o cambios de alcance que no estén resueltos por este documento.
+
+## 21. Continuidad en otro chat
+
+### 21.1 Lectura y comprobaciones iniciales
+
+1. Leer esta SDD completa, el README y las instrucciones locales aplicables.
+2. Consultar `git status` y el historial reciente; proteger los cambios del usuario.
+3. Comprobar qué fases ya tienen implementación y evidencia. No suponer que el estado de esta versión sigue vigente.
+4. Comparar el commit actual con `635cd15`; localizar funciones por nombre, no por líneas antiguas.
+5. Revisar `app.py`, `motor_valoracion.py`, dependencias y tests existentes antes de cambiar contratos.
+6. Ejecutar los comandos que realmente existan. Si F1 sigue pendiente, no afirmar que `python -m pytest` ejecuta una suite del proyecto.
+7. Implementar la fase solicitada, respetando el orden y el alcance. No continuar automáticamente a fases posteriores por haber terminado una.
+
+La carpeta usada en esta sesión fue:
+
+```text
+/Users/andresitopacheco/Desktop/I/acc/Acciones/valoracion_app
+```
+
+Es una referencia local de trabajo, no una ruta que deba aparecer en comandos públicos, tests o documentación de instalación para otros usuarios.
+
+### 21.2 Instrucción lista para continuar con F1
+
+Se conserva el siguiente texto como alcance original de F1. Antes de usarlo en un chat nuevo, revisar el cierre de la sección 21.6: F1 ya está implementada localmente y no debe rehacerse desde cero. Las correcciones futuras deben seguir TDD; F2 continúa pendiente y requiere una solicitud para iniciarse.
+
+> Lee `docs/SDD.md` y las instrucciones del repositorio. Implementa únicamente F1: corrige los casos de fallo, crea pruebas deterministas para todas las áreas relevantes y automatízalas en CI en una misma entrega. F2 a F5 siguen pendientes. Empieza por reproducir BUG-001 y BUG-002 mediante tests y corrige sus causas. Usa fixtures sintéticos y un proveedor falso; las pruebas obligatorias no deben consultar Yahoo. Conserva las fórmulas válidas actuales y sus contratos públicos; documenta como caracterización lo que aún requiere revisión metodológica. Sigue la matriz de pruebas, verifica los resultados numéricos de forma independiente, mide cobertura sobre ambos archivos con ramas y usa el umbral inicial de 85 %. Añade el workflow y comandos de desarrollo sin realizar la refactorización completa ni el bloqueo integral de dependencias de fases posteriores. Ejecuta las comprobaciones disponibles, distingue suite local de CI remoto, y actualiza esta SDD con archivos cambiados, comandos, resultados reales y pendientes. No publiques ni despliegues como parte de esta tarea.
+
+### 21.3 Reproducción puntual de los defectos originales
+
+El siguiente diagnóstico es de la **línea base anterior a F1**. Debe ejecutarse desde la raíz y con las dependencias instaladas. Produce un fallo deliberado; no es un reemplazo de los tests de regresión que se deben versionar.
+
+```python
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+import streamlit as st
+from streamlit.testing.v1 import AppTest
+
+from motor_valoracion import Configuracion, escribir_excel
+
+st.cache_data.clear()
+
+# BUG-001: todos los tickers seleccionados fallan en la capa de análisis.
+with patch(
+    "motor_valoracion.analizar_ticker",
+    side_effect=RuntimeError("Fallo simulado del proveedor"),
+):
+    app = AppTest.from_file("app.py", default_timeout=20).run()
+    app.sidebar.multiselect[0].set_value(["A"])
+    app.sidebar.button[0].click().run()
+    print([error.message for error in app.exception])
+
+# BUG-002: el exportador recibe el registro reducido usado por la UI.
+principal = {
+    "Mercado": "USA",
+    "Ticker": "TEST",
+    "Empresa": "TEST",
+    "Estado": "ERROR",
+    "Notas": "Fallo simulado",
+}
+detalle = {
+    "Mercado": "USA",
+    "Ticker": "TEST",
+    "Empresa": "TEST",
+    "Notas": "Fallo simulado",
+}
+with TemporaryDirectory() as temporal:
+    escribir_excel(
+        [principal],
+        [detalle],
+        Path(temporal) / "diagnostico.xlsx",
+        Configuracion(),
+    )
+```
+
+En la línea base, el primer caso muestra el `AttributeError` de BUG-001 y el segundo lanza el `KeyError` de BUG-002. Después de F1, ambos deben transformarse en regresiones que pasan y verificar resultados útiles, no sólo ausencia de excepciones.
+
+La posición de los widgets puede cambiar. En los tests definitivos preferir claves explícitas o identificación estable; no conservar índices posicionales por comodidad si dejan de ser claros.
+
+### 21.4 Registro obligatorio al cerrar una fase
+
+Añadir un registro con:
+
+```text
+Fase:
+Fecha:
+Commit o referencia verificable, si existe:
+Estado: pendiente / en curso / implementada / verificación externa pendiente
+Alcance realizado:
+Archivos relevantes:
+Requisitos y casos de prueba cubiertos:
+Comandos ejecutados:
+Entorno y versiones:
+Resultado real de tests, cobertura y herramientas:
+Enlace de CI remoto, si existe:
+Limitaciones y pendientes:
+Decisiones ajustadas y motivo:
+Siguiente fase, todavía no iniciada:
+```
+
+No escribir porcentajes, cantidades de tests, compatibilidades o enlaces de CI estimados. Mantener las casillas abiertas cuando falta evidencia.
+
+### 21.5 Registro de la entrega documental original, anterior a F1
+
+- Fecha: 2026-11-12.
+- Alcance: SDD detallada y referencia desde el README.
+- Implementación funcional: ninguna modificación de aplicación ni de fórmulas.
+- Evidencia utilizada: inspección del código y diagnósticos E-001 a E-005.
+- Tests del proyecto: todavía no existen en la línea base.
+- CI remoto: no ejecutado como parte de esta redacción.
+- Siguiente fase: F1, pendiente.
+
+### 21.6 Registro de implementación de F1
+
+- Fecha: 2026-11-12.
+- Referencia inicial: commit `635cd15`. Los cambios de F1 están en el árbol de trabajo; no se creó un commit ni se publicó el código como parte de esta implementación.
+- Estado: implementada y verificada localmente; primera ejecución remota de GitHub Actions pendiente.
+- Método: TDD por instrucción expresa del usuario. Primero se ejecutaron regresiones fallidas, después los cambios mínimos, y finalmente una refactorización pequeña con la suite en verde. Evidencia en `docs/TDD_F1.md`.
+- Alcance: esquema estable de 19/45 columnas; errores y vacíos; validación de configuración y números finitos; aislamiento de históricos y exportación; conservación de configuración/sesión; pruebas unitarias, integración, UI, Excel, CLI y cachés; workflow de CI.
+- Fórmulas: se conservaron las expresiones y resultados válidos caracterizados. Las dudas metodológicas de FX, deuda, sectores y naturaleza de flujos siguen pendientes de F3.
+- Pruebas: matriz original de 101 escenarios relacionada con pruebas ejecutables en `docs/F1_TEST_MATRIX.md`; casos parametrizados generan una suite más amplia.
+- Datos de referencia: `tests/fixtures/README.md` contiene la conciliación independiente de los cuatro modelos con datos sintéticos.
+- Entorno local: macOS, Python 3.12.2; versiones de ejecución de la sección 3.4. Herramientas añadidas: pytest 9.1.1, pytest-cov 7.1.0, coverage 7.17.0 y PyYAML 6.0.3.
+- Dependencias: se instalaron herramientas desde wheels previamente descargados en la caché local porque la sesión no pudo resolver PyPI. No se añadió esa ruta local al proyecto ni al workflow; el comando público sigue usando `requirements-dev.txt`.
+- Comprobación de dependencias: `python -m pip check`, sin requisitos rotos.
+- Checkpoint de suite completa: `python -m pytest -q --tb=short --show-capture=no`, 215 pruebas pasaron; cobertura total con ramas 97.96 %, sin exclusiones de código, skips ni xfails. Duración observada: 28.00 s.
+- Verificación tras refactorización: 29 pruebas de CLI, cachés e interfaz pasaron en 11.70 s. La ejecución canónica final se registra en `docs/TDD_F1.md`.
+- Ejecución canónica final: `python -m pytest`, **215 pruebas pasaron**, sin skips ni xfails, en **28.58 s**. Cobertura total combinada de líneas y ramas **98.04 %** (`app.py`: 97.61 %; `motor_valoracion.py`: 98.20 %). Umbral de 85 % superado.
+- Advertencia observada: pandas avisa al probar índices de fechas deliberadamente no interpretables en una caracterización del fallback de CAGR; no impidió la suite.
+- Workflow: `.github/workflows/tests.yml`, Ubuntu/Python 3.12, eventos push/PR/manual, permisos de lectura, acciones oficiales fijadas por SHA y reportes XML/JUnit. Se verificó el contrato local, no se ejecutó un runner remoto.
+- Pendiente externo: comprobar el primer run real de CI cuando el usuario publique estos cambios. No se afirma un run verde ni se incluye un enlace inexistente.
+- Siguiente fase: F2, pendiente y no iniciada. F3, F4 y F5 también permanecen pendientes.
+
+## 22. Fuentes y mantenimiento
+
+### 22.1 Fuente del estado actual
+
+La descripción de producto, configuración, funciones, esquemas y hallazgos procede de los archivos locales inspeccionados en el commit de referencia:
+
+- [README](../README.md).
+- [Interfaz Streamlit](../app.py).
+- [Motor y CLI](../motor_valoracion.py).
+- [Dependencias actuales](../requirements.txt).
+- [Reglas de exclusión](../.gitignore).
+- [Configuración pública de Streamlit](../.streamlit/config.toml).
+- [Lanzador macOS/Linux](../ejecutar_app.sh).
+- [Lanzador Windows](../ejecutar_app.bat).
+
+Las fuentes técnicas externas están enlazadas junto a las decisiones que apoyan: AppTest, pytest, pytest-cov, pytest-socket, GitHub Actions, pip-tools y Ruff. Se consultaron al redactar esta versión; verificar compatibilidad vigente al implementar.
+
+### 22.2 Reglas de mantenimiento
+
+1. Mantener esta SDD como referencia de alcance y decisiones; los detalles de ejecución deben apuntar a código y resultados reales.
+2. Al implementar una fase, actualizar estado, criterios de aceptación y registro de evidencia.
+3. Si cambia un contrato público, explicar versión, migración y efecto en UI, CLI, Excel y tests.
+4. Si cambia metodología, actualizar simultáneamente fórmulas documentadas, ejemplo independiente y pruebas.
+5. Evitar copiar cifras de cobertura o capturas que queden obsoletas; enlazar evidencia cuando exista.
+6. Mantener explícita la diferencia entre trabajo acordado, diseño propuesto, comportamiento actual y validación pendiente.
+7. Conservar la historia de hallazgos como contexto, indicando cuándo se corrigieron; no presentarlos como defectos abiertos después de resolverlos.
+

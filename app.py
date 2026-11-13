@@ -14,6 +14,8 @@ import streamlit as st
 import yfinance as yf
 
 from motor_valoracion import (
+    COLUMNAS_DETALLE,
+    COLUMNAS_PRINCIPAL,
     EMPRESAS_MX,
     EMPRESAS_USA,
     Configuracion,
@@ -22,6 +24,7 @@ from motor_valoracion import (
     construir_ebitda,
     construir_fcl,
     convertir_serie,
+    crear_resultado_error,
     escribir_excel,
     estimar_tasa_impuestos,
     mercado_de_ticker,
@@ -317,6 +320,9 @@ def grafica_valoraciones(fila: pd.Series) -> go.Figure:
 
 def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config_tuple: tuple) -> None:
     st.subheader("Detalle de empresa")
+    if df_principal.empty:
+        st.info("No hay empresas disponibles para mostrar el detalle.")
+        return
     opciones = df_principal.sort_values(["Mercado", "Ticker"])["Ticker"].tolist()
     ticker = st.selectbox("Empresa", opciones, key="detalle_ticker")
     fila = df_principal[df_principal["Ticker"] == ticker].iloc[0]
@@ -338,12 +344,20 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
     )
     cols[3].metric("Estado", str(fila.get("Estado") or "—"))
 
+    if fila.get("Estado") == "ERROR":
+        st.warning(f"{ticker}: {fila.get('Notas') or 'No se pudo analizar la empresa.'}")
+        return
+
     col_a, col_b = st.columns([1, 1])
     with col_a:
         st.plotly_chart(grafica_valoraciones(fila), use_container_width=True)
     with col_b:
         periodo = st.selectbox("Periodo del precio", ["1y", "2y", "5y", "10y"], index=2)
-        historia = precio_historico(ticker, periodo)
+        try:
+            historia = precio_historico(ticker, periodo)
+        except Exception as exc:
+            st.warning(f"No se pudo cargar el historial de precio: {exc}")
+            historia = pd.DataFrame()
         if historia.empty:
             st.info("Yahoo Finance no devolvió historial de precio.")
         else:
@@ -356,7 +370,11 @@ def mostrar_detalle(df_principal: pd.DataFrame, df_detalle: pd.DataFrame, config
             )
             st.plotly_chart(fig, use_container_width=True)
 
-    financieros, margenes = historicos_financieros(ticker, config_tuple)
+    try:
+        financieros, margenes = historicos_financieros(ticker, config_tuple)
+    except Exception as exc:
+        st.warning(f"No se pudieron cargar los estados financieros del detalle: {exc}")
+        financieros, margenes = pd.DataFrame(), pd.DataFrame()
     col_c, col_d = st.columns([1, 1])
     with col_c:
         if financieros.empty:
@@ -480,19 +498,7 @@ def main() -> None:
                 try:
                     principal, detalle = analizar_cached(ticker, config_tuple)
                 except Exception as exc:
-                    principal = {
-                        "Mercado": mercado_de_ticker(ticker),
-                        "Ticker": ticker,
-                        "Empresa": ticker,
-                        "Estado": "ERROR",
-                        "Notas": str(exc),
-                    }
-                    detalle = {
-                        "Mercado": mercado_de_ticker(ticker),
-                        "Ticker": ticker,
-                        "Empresa": ticker,
-                        "Notas": str(exc),
-                    }
+                    principal, detalle = crear_resultado_error(ticker, exc)
                 principales.append(principal)
                 detalles.append(detalle)
                 progreso.progress(i / len(tickers), text=f"{i}/{len(tickers)} completadas")
@@ -503,7 +509,15 @@ def main() -> None:
             st.session_state["config"] = config_tuple
             estado.empty()
             progreso.empty()
-            st.success(f"Análisis completado para {len(tickers)} empresas.")
+            conteos = pd.Series([fila["Estado"] for fila in principales]).value_counts()
+            balance = "; ".join(
+                f"{estado}: {int(conteos.get(estado, 0))}"
+                for estado in ("OK", "DATOS INCOMPLETOS", "REVISAR", "ERROR")
+            )
+            if conteos.get("OK", 0) == len(tickers):
+                st.success(f"Análisis completado. {balance}")
+            else:
+                st.warning(f"Análisis finalizado con observaciones. {balance}")
 
     if "principales" not in st.session_state:
         st.info(
@@ -516,8 +530,8 @@ def main() -> None:
         col3.metric("Métodos de valoración", 4)
         return
 
-    df_principal = pd.DataFrame(st.session_state["principales"])
-    df_detalle = pd.DataFrame(st.session_state["detalles"])
+    df_principal = pd.DataFrame(st.session_state["principales"]).reindex(columns=COLUMNAS_PRINCIPAL)
+    df_detalle = pd.DataFrame(st.session_state["detalles"]).reindex(columns=COLUMNAS_DETALLE)
     config_tuple_actual = st.session_state.get("config", config_tuple)
     config_actual = Configuracion(**dict(config_tuple_actual))
 
@@ -535,13 +549,11 @@ def main() -> None:
         df_principal["Mercado"].isin(filtro_mercado)
         & df_principal["Estado"].isin(filtro_estado)
     ].copy()
-    if "Upside mediana" in filtrado.columns:
-        filtrado = filtrado[
-            filtrado["Upside mediana"].fillna(-999) >= minimo_upside
-        ]
-        filtrado = filtrado.sort_values("Upside mediana", ascending=False, na_position="last")
+    upside = pd.to_numeric(filtrado["Upside mediana"], errors="coerce")
+    filtrado = filtrado[upside.isna() | (upside >= minimo_upside)]
+    filtrado = filtrado.sort_values("Upside mediana", ascending=False, na_position="last")
 
-    validos = pd.to_numeric(filtrado.get("Upside mediana"), errors="coerce").dropna()
+    validos = pd.to_numeric(filtrado["Upside mediana"], errors="coerce").dropna()
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("Empresas mostradas", len(filtrado))
     k2.metric("Upside mediano", format_percent(validos.median()) if not validos.empty else "—")
@@ -550,23 +562,26 @@ def main() -> None:
 
     render_table(filtrado)
 
-    with tempfile.TemporaryDirectory() as temporal:
-        ruta = Path(temporal) / "valoraciones_USA_MX.xlsx"
-        escribir_excel(
-            st.session_state["principales"],
-            st.session_state["detalles"],
-            ruta,
-            config_actual,
+    try:
+        with tempfile.TemporaryDirectory() as temporal:
+            ruta = Path(temporal) / "valoraciones_USA_MX.xlsx"
+            escribir_excel(
+                st.session_state["principales"],
+                st.session_state["detalles"],
+                ruta,
+                config_actual,
+            )
+            excel_bytes = ruta.read_bytes()
+    except Exception as exc:
+        st.warning(f"No se pudo preparar el Excel: {exc}")
+    else:
+        st.download_button(
+            "Descargar Excel completo",
+            data=excel_bytes,
+            file_name="valoraciones_USA_MX.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=False,
         )
-        excel_bytes = ruta.read_bytes()
-
-    st.download_button(
-        "Descargar Excel completo",
-        data=excel_bytes,
-        file_name="valoraciones_USA_MX.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=False,
-    )
 
     st.divider()
     mostrar_detalle(df_principal, df_detalle, config_tuple_actual)

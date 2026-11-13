@@ -19,6 +19,7 @@ dist/
 .coverage.*
 htmlcov/
 coverage.xml
+test-results.xml
 
 # Variables de entorno y secretos locales
 .env

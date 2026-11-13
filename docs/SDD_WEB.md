@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.1 |
+| Versión de esta extensión | 1.2 |
 | Fecha | 2026-11-13 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6 implementada y verificada localmente; F7–F11 pendientes |
-| Encargo de esta edición | Implementar sólo F6 con TDD; conservar el servicio Streamlit y no publicar |
+| Estado de F6–F11 | F6 verificada localmente; F7 implementada con revisión de navegador pendiente; F8–F11 pendientes |
+| Encargo de esta edición | Implementar sólo F7 con TDD; conservar el servicio Streamlit y no publicar |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -23,8 +23,8 @@ Las cifras históricas de pruebas son las del cierre de F5: **345 pruebas y 98.5
 de cobertura combinada de líneas y ramas**, con un warning conocido. F6 añade
 el shell Astro/React y la API de lectura FastAPI: **394 pruebas Python, 12
 unitarias frontend, dos del HTML compilado y cuatro de navegador** pasan
-localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. La landing y
-el dashboard completos siguen pendientes.
+localmente. Evidencia y límites en [TDD_F6.md](TDD_F6.md) y 21.5. F7 añade la landing y metodología; su revisión de navegador está pendiente,
+como se registra en 21.6 y TDD_F7.md. El dashboard sigue pendiente.
 
 ## Índice
 
@@ -1619,6 +1619,8 @@ app anterior preservada. Crear TDD_F6.md con el registro real.
 
 ### 18.2 F7 — Sistema visual y landing completa
 
+**Implementada; revisión visual/navegador pendiente.** Ver [TDD_F7.md](TDD_F7.md).
+
 **Objetivo:** materializar la identidad y una landing estática cuidada.
 
 | ID | Requisito verificable |
@@ -1747,7 +1749,7 @@ flowchart LR
 | --- | --- | --- |
 | F1–F5 | Completadas en la línea base | SDD general y registros existentes |
 | F6 | Implementada; validación local completa | [TDD_F6.md](TDD_F6.md); CI remoto del nuevo commit pendiente |
-| F7 | Especificada, pendiente | Ninguna todavía |
+| F7 | Implementada, revisión de navegador pendiente | [TDD_F7.md](TDD_F7.md) |
 | F8 | Especificada, pendiente | Ninguna todavía |
 | F9 | Especificada, pendiente | Ninguna todavía |
 | F10 | Especificada, pendiente | Ninguna todavía |
@@ -1833,7 +1835,8 @@ La carpeta temp es una referencia del usuario, ajena al producto y a las
 resoluciones; conservar sus archivos y no añadirla en bloque.
 
 No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-pide «el siguiente punto» después del cierre local de F6, corresponde a **F7**.
+retoma ahora, primero debe cerrar la revisión de F7 descrita en 21.6; después
+corresponde **F8**.
 
 ### 21.2 Encargo histórico de F6 (ya implementado)
 
@@ -1873,7 +1876,9 @@ capturas históricas ya están resueltos; no volver a pedirlos.
 Se verificó también el CI remoto de la línea base F5, como se registra en 2.1.
 No se modificaron workflows o recursos externos al consultar su estado.
 
-### 21.5 Cierre local de F6 y encargo siguiente
+### 21.5 Registro de cierre local de F6
+
+La continuidad vigente está en 21.6.
 
 F6 está implementada con TDD. [TDD_F6.md](TDD_F6.md) documenta los ciclos,
 incidencias y resultados: 394 pruebas Python con 97.90 % de cobertura combinada,
@@ -1905,6 +1910,32 @@ los comandos de desarrollo reproducibles están en [development.md](development.
 > contratos iniciales y el servicio Streamlit. No implementes análisis F8 ni
 > dashboard F9 dentro de esta fase. Actualiza evidencia y continuidad; no hagas
 > commit/push ni publiques como efecto automático.
+
+### 21.6 Implementación de F7 y paso pendiente
+
+F7 se implementa sobre fd47e78: landing con todos los bloques de 6.2,
+metodología pública, 404, tokens y componentes base, metadatos y captura
+reproducible. El ejemplo DEMO-USA sale del CSV/manifest público mediante
+`examples.exportar_demo_web`; CI detecta drift. No hay fórmulas de valoración
+ni islas React en la landing. Las fuentes son del sistema y el gráfico es HTML.
+
+Pasan 396 pruebas Python, 12 unitarias frontend y cinco del HTML compilado.
+Ruff, ESLint, Prettier, tipos y build son correctos. Se preservan motor, API,
+contratos, datos y entrada Streamlit. Detalle: [TDD_F7.md](TDD_F7.md).
+
+**F7 no está cerrada:** falta ejecutar el navegador y revisar las capturas.
+La sesión no puede escuchar puertos ni lanzar Chrome. El usuario tiene el
+comando corto `.venv/bin/python /tmp/f7.py`; alternativa permanente:
+`PLAYWRIGHT_CHANNEL=chrome npm run capture` desde frontend con el entorno fijado.
+Al pasar se generan las capturas de documentación y la imagen OG. Inspeccionarlas,
+registrar tamaños/contrastes/resultados y actualizar este estado antes de F8.
+No certificar WCAG, métricas de campo o CI remoto con las comprobaciones locales.
+
+> Para continuar: revisar Git y TDD_F7.md; terminar y documentar el navegador de
+> F7 sin rehacer su implementación. Después, y sólo cuando se solicite, iniciar
+> F8 con TDD según 18.3: trabajos, proveedor, cachés, históricos y exportación
+> reales. Conservar cálculos, contrato financiero 2.0, ejemplo y Streamlit. No
+> adelantar dashboard F9 ni publicar como efecto automático.
 
 ## 22. Fuentes y mantenimiento
 

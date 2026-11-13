@@ -13,7 +13,7 @@ el contrato vigente es 2.0, con prefijos heredados y 24/73 campos. Las extension
 de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
 históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
 posterior se especifica en [SDD_WEB.md](SDD_WEB.md); F6 incorpora los fundamentos
-web descritos al final. La continuidad vigente es 21.13 de la SDD general.
+web descritos al final. La continuidad vigente es 21.14 de la SDD general.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -352,11 +352,29 @@ No se introduce código financiero JavaScript ni cambia el contrato de arranque
 Streamlit. La resolución Python conserva los pines anteriores y añade la
 frontera HTTP. Evidencia: [TDD_F6.md](TDD_F6.md).
 
-## Destino web pendiente después de F6
+## F7: presentación estática y derivado de demo
+
+La landing y metodología son páginas Astro sin hidratación. Comparten tokens,
+layout y acciones de navegación con el shell React. La comparación del hero es
+HTML semántico con barras decorativas; el build no ejecuta el motor ni consulta
+Yahoo. No hay fórmulas financieras en JavaScript.
+
+`examples.exportar_demo_web` lee exclusivamente el CSV y manifest públicos y
+genera `frontend/src/data/demo.json`; pytest concilia cada importe y CI comprueba
+que no haya drift. Este derivado es un recurso de presentación, no un endpoint
+HTTP ni una caché de cotizaciones. El contrato API de F6 permanece intacto.
+
+El sitio incorpora metadatos, favicon y canonical condicionado a un origen real.
+La captura reproducible prueba el build/API y guarda imágenes intencionales de
+documentación sólo cuando pasa. La revisión de navegador/visual se registra
+por separado en [TDD_F7.md](TDD_F7.md); está pendiente de la ejecución preparada.
+
+## Destino web pendiente después de F7
 
 La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
 API FastAPI, manteniendo el motor/proveedores/Excel existentes. F6 implementa
-los fundamentos anteriores; F7–F11 siguen siendo diseño futuro.
+los fundamentos anteriores y F7 la presentación estática. F8–F11 siguen
+siendo diseño futuro.
 
 La migración separará cachés/sesión de Streamlit del transporte HTTP y preservará
 los snapshots/configuración de análisis. La entrada actual seguirá funcionando

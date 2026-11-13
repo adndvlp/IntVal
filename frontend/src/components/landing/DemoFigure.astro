@@ -1,0 +1,85 @@
+---
+import demo from '../../data/demo.json';
+const numero = (value: number) =>
+  new Intl.NumberFormat('es-MX', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+const porcentaje = new Intl.NumberFormat('es-MX', {
+  style: 'percent',
+  signDisplay: 'always',
+  maximumFractionDigits: 1,
+}).format(demo.upside);
+const filas = [
+  { label: 'Precio de referencia', value: demo.price },
+  ...demo.proxies,
+];
+const escala = Math.max(...filas.map((fila) => fila.value));
+---
+
+<figure class="demo-figure" data-demo-figure>
+  <div class="analysis-sheet">
+    <div class="sheet-top">
+      <span class="sheet-monogram" aria-hidden="true">
+        A
+      </span>
+      <div>
+        <span class="sheet-ticker">
+          {demo.ticker} <span aria-hidden="true">/</span> USA
+        </span>
+        <h2>{demo.company.replace(' (demo)', '')}</h2>
+      </div>
+      <span class="sheet-tag">Ejemplo</span>
+    </div>
+    <div class="sheet-intro">
+      <p>Un precio. Cuatro perspectivas.</p>
+      <span>{demo.currency}</span>
+    </div>
+    <table class="comparison-table">
+      <caption>Comparación en{demo.currency}por acción</caption>
+      <thead class="visually-hidden">
+        <tr>
+          <th scope="col">Referencia o aproximación</th>
+          <th scope="col">{demo.currency} por acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filas.map((fila, index) => (
+          <tr class:list={[{ 'price-row': index === 0 }]}>
+            <th scope="row">
+              <span>{fila.label}</span>
+              <span class="value-track" aria-hidden="true">
+                <span
+                  class="value-bar"
+                  style={'inline-size:' + (fila.value / escala) * 100 + '%'}
+                ></span>
+              </span>
+            </th>
+            <td>{numero(fila.value)}</td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row">Mediana de los 4 proxies</th>
+          <td>{numero(demo.median)}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="sheet-difference">
+      <span>Brecha frente al precio</span>
+      <strong>{porcentaje}</strong>
+    </div>
+    <p class="sheet-caution">
+      No es rentabilidad esperada ni una recomendación.
+    </p>
+  </div>
+  <figcaption>
+    <span class="reference-dot" aria-hidden="true"></span> Datos sintéticos ·
+    referencia <time datetime={demo.reference_date}>{demo.reference_date}</time>
+    <br />
+    <a href="https://github.com/adndvlp/IntVal/tree/main/examples/demo">
+      Ver datos y supuestos del ejemplo <span aria-hidden="true">↗</span>
+    </a>
+  </figcaption>
+</figure>

@@ -1,24 +1,268 @@
 ---
 import Base from '../layouts/Base.astro';
+import Action from '../components/ui/Action.astro';
+import Arrow from '../components/ui/Arrow.astro';
+import DemoFigure from '../components/landing/DemoFigure.astro';
 ---
 
 <Base
-  title="Análisis de acciones"
-  description="Un espacio para comparar empresas de Estados Unidos y México."
+  title="Pon el precio en perspectiva"
+  description="Compara acciones de Estados Unidos y México con cuatro aproximaciones de valoración. Revisa supuestos, procedencia y resultados por acción con IntVal."
 >
-  <p class="eyebrow">USA / México</p>
-  <h1 id="contenido" tabindex="-1">
-    IntVal, análisis de acciones.
-  </h1>
-  <p class="intro">
-    Un espacio para comparar empresas de Estados Unidos y México.
-  </p>
-  <div class="notice">
-    <h2>Una nueva experiencia en preparación</h2>
-    <p>
-      Esta vista previa permite recorrer la estructura inicial y comprobar la
-      conexión con el servicio.
-    </p>
-    <p>El análisis de empresas se incorporará en una próxima etapa.</p>
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="eyebrow">
+        <span class="small-line" aria-hidden="true"></span> Una mirada
+        fundamental
+      </p>
+      <h1 id="contenido" tabindex="-1">
+        Pon el precio
+        <br />
+        en <em>perspectiva.</em>
+      </h1>
+      <p class="hero-description">
+        Una cotización cuenta una parte de la historia. Compara empresas de
+        Estados Unidos y México con cuatro aproximaciones de valoración y revisa
+        los supuestos detrás de cada cifra.
+      </p>
+      <div class="actions">
+        <Action href="/app/?fuente=demo">Explorar la demo</Action>
+        <a class="text-link" href="#como-funciona">
+          Cómo funciona <span aria-hidden="true">↓</span>
+        </a>
+      </div>
+      <p class="preview-note">
+        Nueva experiencia web en preparación.{' '}
+        <a href="/app/">Ver el estado de la aplicación</a>.
+      </p>
+      <div class="hero-footnote">
+        <span>
+          USA <span aria-hidden="true">/</span> México
+        </span>
+        <span>Cuatro perspectivas</span>
+        <span>Un mismo análisis</span>
+      </div>
+    </div>
+    <div id="demostracion" class="hero-demo">
+      <div class="figure-index">
+        <span>Una empresa, bajo la lupa</span>
+        <span>01 — 04</span>
+      </div>
+      <DemoFigure />
+    </div>
+  </section>
+  <div class="principle-band">
+    <div class="wrap">
+      <p>
+        El resultado importa.
+        <br />
+        <strong>Entender de dónde viene, también.</strong>
+      </p>
+      <span>Datos → Supuestos → Perspectiva</span>
+    </div>
   </div>
+  <section id="como-funciona" class="section wrap">
+    <div class="section-heading">
+      <p class="eyebrow">01 / El recorrido</p>
+      <h2>
+        De los datos
+        <br />a una mejor pregunta.
+      </h2>
+      <p>
+        Elige una empresa, revisa tus supuestos y compara los resultados con el
+        precio.
+      </p>
+    </div>
+    <ol class="steps" role="list">
+      <li>
+        <span class="step-number">01</span>
+        <h3>Elige las empresas.</h3>
+        <p>
+          Explora el catálogo de USA y México o incorpora símbolos adicionales.
+          La demostración usa tres empresas ficticias y datos locales.
+        </p>
+      </li>
+      <li>
+        <span class="step-number">02</span>
+        <h3>Haz explícitos los supuestos.</h3>
+        <p>
+          Revisa tasas de descuento, crecimiento, márgenes y múltiplos
+          terminales. Cada resultado depende de estas decisiones.
+        </p>
+      </li>
+      <li>
+        <span class="step-number">03</span>
+        <h3>Compara. Revisa. Exporta.</h3>
+        <p>
+          Contrasta las cuatro aproximaciones con el precio, revisa sus
+          diagnósticos y conserva el análisis completo en Excel.
+        </p>
+      </li>
+    </ol>
+    <p class="section-note">
+      Este recorrido ya existe en la aplicación Streamlit. Su integración en la
+      nueva interfaz web está en preparación.
+    </p>
+  </section>
+  <section id="capacidades" class="capabilities section">
+    <div class="wrap capabilities-layout">
+      <div class="section-heading">
+        <p class="eyebrow">02 / Las herramientas</p>
+        <h2>
+          Más contexto.
+          <br />
+          Menos cajas negras.
+        </h2>
+        <p>
+          Un análisis que permite recorrer los datos, las hipótesis y las
+          diferencias entre modelos.
+        </p>
+        <a class="text-link" href="https://github.com/adndvlp/IntVal#funciones">
+          Conocer la aplicación actual <Arrow />
+        </a>
+      </div>
+      <div class="capability-list">
+        <article>
+          <span class="capability-index">A /</span>
+          <div>
+            <h3>Cuatro aproximaciones, por acción.</h3>
+            <p>
+              FCL, NOPAT, EBITDA ajustado y utilidad neta. Compara sus
+              resultados y la mediana de los modelos disponibles.
+            </p>
+          </div>
+        </article>
+        <article>
+          <span class="capability-index">B /</span>
+          <div>
+            <h3>Dos mercados. Monedas visibles.</h3>
+            <p>
+              Empresas de USA y México, con importes en moneda de cotización y
+              diagnósticos cuando la conversión no puede verificarse.
+            </p>
+          </div>
+        </article>
+        <article>
+          <span class="capability-index">C /</span>
+          <div>
+            <h3>Procedencia a la vista.</h3>
+            <p>
+              Fuentes, períodos, supuestos y datos ausentes acompañan a cada
+              análisis. Una cifra incompleta conserva su explicación.
+            </p>
+          </div>
+        </article>
+        <article>
+          <span class="capability-index">D /</span>
+          <div>
+            <h3>Un Excel para seguir pensando.</h3>
+            <p>
+              Resumen, detalle, históricos y notas en un libro de siete hojas.
+              Exporta el lote completo, independientemente de los filtros de
+              pantalla.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+  <section id="metodologia" class="section wrap methodology-preview">
+    <div class="section-heading">
+      <p class="eyebrow">03 / El criterio</p>
+      <h2>
+        Una estimación.
+        <br />
+        <em>No una certeza.</em>
+      </h2>
+    </div>
+    <div class="methodology-copy">
+      <p class="large-copy">
+        Los cuatro modelos comparten datos e hipótesis. Su mediana aporta una
+        referencia de comparación; no es un consenso de mercado ni una promesa
+        de rentabilidad.
+      </p>
+      <p>
+        Son aproximaciones fundamentales simplificadas. No incorporan todos los
+        ajustes de un DCF completo y no son adecuadas para cualquier tipo de
+        empresa. Conocer esos límites forma parte del análisis.
+      </p>
+      <a class="text-link" href="/metodologia/">
+        Leer la metodología y sus límites <Arrow />
+      </a>
+    </div>
+  </section>
+  <section id="proyecto" class="project-section">
+    <div class="wrap project-grid">
+      <div>
+        <p class="eyebrow">04 / Abierto por dentro</p>
+        <h2>
+          El análisis también
+          <br />
+          se puede revisar.
+        </h2>
+        <p>
+          IntVal es un proyecto de código abierto. Puedes recorrer el motor
+          Python, las decisiones de metodología y la evidencia de sus pruebas.
+        </p>
+        <a class="text-link" href="https://github.com/adndvlp/IntVal">
+          Explorar el repositorio <Arrow />
+        </a>
+      </div>
+      <dl class="evidence-list">
+        <div>
+          <dt>Metodología versionada</dt>
+          <dd>
+            <a href="https://github.com/adndvlp/IntVal/blob/main/docs/methodology.md">
+              proxies-1.0 <span aria-hidden="true">↗</span>
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt>Ejemplo reproducible</dt>
+          <dd>
+            <a href="https://github.com/adndvlp/IntVal/tree/main/examples/demo">
+              Datos sintéticos y Excel <span aria-hidden="true">↗</span>
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt>Pruebas con TDD</dt>
+          <dd>
+            <a href="https://github.com/adndvlp/IntVal/tree/main/docs">
+              Consultar evidencia por fase <span aria-hidden="true">↗</span>
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt>Licencia abierta</dt>
+          <dd>
+            <a href="https://github.com/adndvlp/IntVal/blob/main/LICENSE">
+              MIT · adndvlp <span aria-hidden="true">↗</span>
+            </a>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+  <section class="final-cta section wrap">
+    <p class="eyebrow">Empieza por un ejemplo</p>
+    <h2>
+      Una cifra invita a decidir.
+      <br />
+      <em>El contexto, a entender.</em>
+    </h2>
+    <p>
+      Explora el ejemplo de esta página o entra a la vista previa de la nueva
+      aplicación.
+    </p>
+    <div class="actions">
+      <Action href="/app/?fuente=demo">Explorar la demo</Action>
+      <Action href="/app/?fuente=market" variant="secondary">
+        Analizar empresas
+      </Action>
+    </div>
+    <p class="preview-note">
+      Vista previa web · análisis y exportación en preparación.
+    </p>
+  </section>
 </Base>

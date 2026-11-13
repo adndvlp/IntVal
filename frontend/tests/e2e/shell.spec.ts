@@ -41,7 +41,7 @@ test('conserva contenido y enlaces con JavaScript desactivado', async ({
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:4321');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('IntVal');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('precio');
   await page.getByRole('link', { name: 'Aplicación', exact: true }).click();
   // El selector de texto de Playwright omite NOSCRIPT. Un <p> real dentro
   // de ese elemento sólo existe cuando el navegador lo interpreta sin JS.

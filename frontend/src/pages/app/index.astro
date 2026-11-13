@@ -9,26 +9,28 @@ const baseUrl = (import.meta.env.PUBLIC_API_BASE_URL ?? '').replace(/\/+$/, '');
   title="Aplicación"
   description="Vista previa del espacio de análisis de IntVal."
 >
-  <p class="eyebrow">Vista previa</p>
-  <h1 id="contenido" tabindex="-1">
-    Tu espacio de análisis.
-  </h1>
-  <p class="intro">
-    La nueva interfaz está en preparación. Puedes comprobar la conexión con el
-    servicio.
-  </p>
-  <div class="notice">
-    <h2>Conexión con el servicio</h2>
-    <p>
-      Esta comprobación sólo verifica la disponibilidad del catálogo. El
-      análisis de empresas todavía no está disponible en esta vista.
+  <div class="app-shell wrap">
+    <p class="eyebrow">Vista previa</p>
+    <h1 id="contenido" tabindex="-1">
+      Tu espacio de análisis.
+    </h1>
+    <p class="intro">
+      La nueva interfaz está en preparación. Puedes comprobar la conexión con el
+      servicio.
     </p>
-    <EstadoServicio client:load baseUrl={baseUrl} />
-    <noscript>
+    <div class="notice">
+      <h2>Conexión con el servicio</h2>
       <p>
-        Activa JavaScript para comprobar la conexión. La navegación permanece
-        disponible.
+        Esta comprobación sólo verifica la disponibilidad del catálogo. El
+        análisis de empresas todavía no está disponible en esta vista.
       </p>
-    </noscript>
+      <EstadoServicio client:load baseUrl={baseUrl} />
+      <noscript>
+        <p>
+          Activa JavaScript para comprobar la conexión. La navegación permanece
+          disponible.
+        </p>
+      </noscript>
+    </div>
   </div>
 </Base>

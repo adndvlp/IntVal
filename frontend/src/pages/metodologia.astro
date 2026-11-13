@@ -1,0 +1,191 @@
+---
+import Base from '../layouts/Base.astro';
+import Action from '../components/ui/Action.astro';
+import demo from '../data/demo.json';
+---
+
+<Base
+  title="Metodología y límites"
+  description="Cómo calcula IntVal sus cuatro aproximaciones por acción, qué supuestos utiliza y qué límites debes revisar antes de interpretar un resultado."
+>
+  <article class="wrap methodology-page">
+    <header class="article-header">
+      <p class="eyebrow">
+        El criterio detrás de las cifras · {demo.methodology_version}
+      </p>
+      <h1 id="contenido" tabindex="-1">
+        Entender el cálculo.
+        <br />
+        <em>Reconocer sus límites.</em>
+      </h1>
+      <p class="intro">
+        IntVal compara cuatro aproximaciones heurísticas por acción. No
+        implementa un DCF completo de FCFF/FCFE ni garantiza un valor
+        intrínseco.
+      </p>
+      <p>
+        <a
+          class="text-link"
+          href="https://github.com/adndvlp/IntVal/blob/main/docs/methodology.md"
+        >
+          Consultar la metodología completa y sus referencias ↗
+        </a>
+      </p>
+    </header>
+    <div class="article-content">
+      <section>
+        <p class="eyebrow">01 / Datos</p>
+        <h2>Primero, una base verificable.</h2>
+        <p>
+          El motor utiliza ingresos y estados anuales, precio, acciones, deuda,
+          efectivo y divisas. Conserva procedencia y períodos disponibles. Un
+          dato ausente no se convierte automáticamente en cero.
+        </p>
+        <p>
+          El precio, el balance y las acciones pueden corresponder a momentos
+          distintos. Descargar los datos al mismo tiempo no garantiza su
+          conciliación.
+        </p>
+      </section>
+      <section>
+        <p class="eyebrow">02 / Cuatro perspectivas</p>
+        <h2>Qué aproxima cada modelo.</h2>
+        <div
+          class="table-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Modelos y limitaciones"
+        >
+          <table class="method-table">
+            <caption>
+              Las métricas del modelo no equivalen a flujos de caja completos
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Modelo</th>
+                <th scope="col">Base utilizada</th>
+                <th scope="col">Límite principal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">FCL</th>
+                <td>
+                  FCL publicado; en su ausencia, flujo operativo menos el valor
+                  absoluto de CapEx.
+                </td>
+                <td>
+                  Se trata como proxy del accionista. No se concilia
+                  financiación neta ni se demuestra que sea FCFE.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">NOPAT</th>
+                <td>EBIT × (1 − T).</td>
+                <td>
+                  No descuenta reinversión neta ni cambios de capital de
+                  trabajo; no es FCFF.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">EBITDA ajustado</th>
+                <td>EBITDA − max(EBIT, 0) × T − |CapEx|.</td>
+                <td>
+                  No separa inversión de mantenimiento y crecimiento ni
+                  incorpora capital de trabajo.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Utilidad neta</th>
+                <td>Utilidad contable proyectada como proxy del accionista.</td>
+                <td>No demuestra que esa utilidad sea caja distribuible.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          NOPAT y EBITDA ajustado restan deuda neta conciliable antes de dividir
+          entre acciones. FCL y utilidad neta no vuelven a restarla. Si falta
+          conciliación, los dos modelos de empresa se excluyen.
+        </p>
+      </section>
+      <section>
+        <p class="eyebrow">03 / Supuestos</p>
+        <h2>El resultado depende de lo que asumes.</h2>
+        <p>
+          El horizonte inicial es de {demo.configuration.anos_proyeccion} años.
+          El crecimiento parte del histórico disponible y se modera; los
+          márgenes positivos se ajustan con un factor inicial de 0.80. No se
+          normalizan automáticamente ciclos ni extraordinarios.
+        </p>
+        <p>
+          Las tasas iniciales son 10 % para accionista y empresa, ingresadas
+          manualmente: no se estima un WACC. Los múltiplos terminales iniciales
+          son 12x para FCL, NOPAT y EBITDA ajustado, y 15x para utilidad neta.
+          Son supuestos editables, no múltiplos obtenidos de comparables
+          actuales.
+        </p>
+        <p>
+          El terminal se aplica a la métrica proyectada al cierre del último
+          año. Puede dominar la estimación; no es un crecimiento perpetuo de
+          Gordon.
+        </p>
+      </section>
+      <section>
+        <p class="eyebrow">04 / Comparación</p>
+        <h2>La mediana es una referencia.</h2>
+        <p>
+          Se calcula sobre los valores por acción positivos, disponibles y
+          aplicables. Con cuatro o dos valores, se promedian los dos centrales.
+          Con uno, coincide con él y se marca para revisión; sin modelos,
+          permanece ausente.
+        </p>
+        <p>
+          Los modelos comparten hipótesis y datos. Su mediana no aporta cuatro
+          observaciones independientes ni constituye consenso externo.
+        </p>
+        <div class="formula-note">
+          <p>Brecha relativa, o upside</p>
+          <code>valor por acción / precio − 1</code>
+          <p>
+            No incluye dividendos, horizonte de inversión, comisiones, impuestos
+            o probabilidad de ocurrencia. No es rentabilidad esperada.
+          </p>
+        </div>
+      </section>
+      <section>
+        <p class="eyebrow">05 / Aplicabilidad</p>
+        <h2>También importa cuándo no usarlo.</h2>
+        <p>
+          Estos modelos se excluyen para empresas financieras, bancos,
+          aseguradoras, REIT/FIBRA e instrumentos no operativos como ETF.
+          Requieren modelos específicos que IntVal no implementa. Las reglas
+          automáticas de clasificación pueden fallar y deben revisarse.
+        </p>
+        <p>
+          El estado «OK» sólo indica disponibilidad según las reglas del
+          producto; no califica la inversión ni valida sus supuestos. Las
+          pruebas verifican aritmética y comportamiento, no capacidad
+          predictiva.
+        </p>
+        <div class="notice">
+          <h3>Uso educativo y exploratorio</h3>
+          <p>
+            Contrasta fuentes, períodos y supuestos con documentación de la
+            empresa antes de interpretar una cifra. IntVal no constituye
+            asesoría financiera ni una recomendación de inversión.
+          </p>
+        </div>
+      </section>
+      <div class="article-end">
+        <Action href="/app/?fuente=demo">Explorar la demo</Action>
+        <a class="text-link" href="/">
+          Volver a IntVal
+        </a>
+        <p class="preview-note">
+          La nueva experiencia de análisis web está en preparación.
+        </p>
+      </div>
+    </div>
+  </article>
+</Base>

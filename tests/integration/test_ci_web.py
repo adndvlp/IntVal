@@ -35,6 +35,7 @@ def test_ci_web_instala_lock_y_comprueba_tipos_y_api_real():
         "npm run test:shell",
         "npm run test:e2e",
         "python -m valoracion.web.contratos --check",
+        "python -m examples.exportar_demo_web --check",
         "npm run types:generate",
         "git diff --exit-code",
         "playwright install --with-deps chromium",

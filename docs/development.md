@@ -11,7 +11,8 @@ verificación local usa macOS ARM64/Python 3.12.2; CI apunta a Ubuntu. La ejecuc
 remota de CI y la validación de una URL publicada son evidencias independientes.
 
 La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora sus
-fundamentos, descritos en la sección 8; F7–F11 siguen pendientes. El contrato de
+fundamentos, descritos en la sección 8; F7 añade la landing (sección 9), con
+revisión de navegador pendiente. F8–F11 siguen pendientes. El contrato de
 ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
 de F11.
 
@@ -345,3 +346,60 @@ Git y se conservan temporalmente como artefactos de CI.
 Evidencia local, incidencias y versiones verificadas: [TDD_F6.md](TDD_F6.md).
 El run remoto del nuevo workflow y una URL pública siguen siendo verificaciones
 posteriores al commit; no se deducen del resultado local.
+
+## 9. Landing y sistema visual (F7)
+
+El build estático incorpora `/`, `/metodologia/`, `/app/` y `/404.html`.
+La landing y metodología no hidratan React ni hacen peticiones a la API.
+Los CTA conservan `fuente=demo|market` al entrar al shell. La nueva experiencia
+de análisis sigue en preparación hasta F8/F9; el servicio actual continúa
+siendo Streamlit.
+
+El diseño comparte tokens de color, tipografía y estados entre las rutas.
+Usa fuentes del sistema, sin descargas de fuentes ni bibliotecas de gráficas
+para el hero. La comparación es una tabla HTML con barras decorativas:
+las cifras completas siguen disponibles sin CSS o JavaScript.
+
+### Derivado reproducible de la demostración
+
+`frontend/src/data/demo.json` se genera leyendo exclusivamente el CSV y manifest
+versionados de `examples/demo`. No ejecuta el motor ni consulta Yahoo:
+
+```bash
+.venv/bin/python -m examples.exportar_demo_web
+.venv/bin/python -m examples.exportar_demo_web --check
+```
+
+El segundo comando se ejecuta en CI antes del build. Si cambia el ejemplo,
+regenerar el JSON, revisar los importes, repetir capturas y versionar los cambios
+coherentes. No editar números del hero a mano. La fecha de referencia del dataset
+no es una fecha de cotización actual.
+
+### Comprobar y capturar
+
+Los comandos de la sección 8 siguen vigentes. `npm run test:shell` ahora incluye
+la narrativa y los enlaces de landing/metodología/404, conciliación visible y
+presupuesto CSS, además del shell. Playwright añade cuatro anchos, movimiento
+reducido, texto al 200 % y contraste de las combinaciones críticas.
+
+Desde `frontend/`, con los navegadores preparados:
+
+```bash
+npm run capture
+```
+
+El comando ejecuta los E2E contra el build y la API real. Sólo después de que
+pasen copia capturas intencionales a `docs/images/` y una imagen del hero a
+`frontend/public/images/social.png`. Con Chrome ya instalado puede ejecutarse
+`PLAYWRIGHT_CHANNEL=chrome npm run capture`. Revisar visualmente las imágenes
+antes de aceptarlas; este comando no actualiza baselines de comparación de píxeles.
+Los reportes efímeros de tests continúan ignorados.
+
+Para etiquetas sociales y canonical, definir `PUBLIC_SITE_URL` con el origen
+público real al hacer el build. Mientras no exista, se omiten URL canónica,
+`og:url` e imagen OG absoluta; no se inventa un dominio. Title, description,
+favicon y metadatos de texto están disponibles en preview. `/app/` tiene
+`noindex, follow`. No se crea sitemap ni robots de producción antes de conocer
+el alojamiento.
+
+La evidencia y sus límites se registran en [TDD_F7.md](TDD_F7.md).

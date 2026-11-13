@@ -50,6 +50,7 @@ jobs:
         run: npm ci
       - name: Comprobar OpenAPI y tipos generados
         run: |
+          python -m examples.exportar_demo_web --check
           python -m valoracion.web.contratos --check
           npm run types:generate --prefix frontend
           git diff --exit-code -- contracts/openapi.v1.json frontend/src/lib/generated/api.ts

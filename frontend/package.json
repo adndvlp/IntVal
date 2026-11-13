@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "build": "astro build",
     "types:generate": "openapi-typescript ../contracts/openapi.v1.json --output src/lib/generated/api.ts --alphabetize --export-type",
-    "test:shell": "node --test tests/shell.test.mjs"
+    "test:shell": "node --test tests/*.test.mjs",
+    "capture": "node scripts/capture.mjs"
   },
   "dependencies": {
     "@astrojs/react": "7.1.8",

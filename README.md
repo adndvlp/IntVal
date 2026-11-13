@@ -201,20 +201,23 @@ no la validez predictiva de una valoración.
 
 - [SDD y continuidad](docs/SDD.md): requisitos, decisiones, fases y trabajo pendiente.
 - [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
-  FastAPI. F6 implementa los fundamentos; F7–F11 permanecen pendientes.
+  FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
+  públicas, con revisión de navegador pendiente. F8–F11 permanecen pendientes.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
   [F3](docs/TDD_F3.md), [corrección de CI](docs/TDD_CI_APPTEST.md),
-  [F4](docs/TDD_F4.md), [F5](docs/TDD_F5.md) y [F6](docs/TDD_F6.md).
+  [F4](docs/TDD_F4.md), [F5](docs/TDD_F5.md), [F6](docs/TDD_F6.md) y
+  [F7](docs/TDD_F7.md).
 
 F1–F5 están implementadas y verificadas localmente. La demo, el ejemplo público,
 las capturas reales revisadas y la licencia MIT completan la presentación del
 repositorio. El [CI del commit F5](https://github.com/adndvlp/IntVal/actions/runs/43370891010)
 está verificado. F6 añade los fundamentos web con validación local; su nuevo
-workflow aún requiere ejecución remota en el commit que se publique. F7 es la
-siguiente fase: sistema visual y landing completa. F8–F11, el despliegue público
-y la validación de su URL quedan pendientes.
+workflow aún requiere ejecución remota en el commit que se publique. F7 añade
+la landing estática, metodología y sistema visual; su cierre espera la revisión
+de navegador/capturas preparada. F8–F11, el despliegue público y la validación de
+su URL quedan pendientes.
 
 ## Licencia
 

@@ -6,17 +6,53 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   workers: 1,
+  testIgnore: process.env.F10_VISUAL ? undefined : '**/visual.spec.ts',
+  snapshotPathTemplate:
+    '{testDir}/__screenshots__/{platform}/{projectName}/{arg}{ext}',
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:4321',
     browserName: 'chromium',
-    channel: process.env.PLAYWRIGHT_CHANNEL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { viewport: { width: 1280, height: 800 } } },
-    { name: 'mobile', use: { viewport: { width: 390, height: 844 } } },
+    {
+      name: 'desktop',
+      use: {
+        channel: process.env.PLAYWRIGHT_CHANNEL,
+        viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: 'mobile',
+      use: {
+        channel: process.env.PLAYWRIGHT_CHANNEL,
+        viewport: { width: 390, height: 844 },
+      },
+    },
+    {
+      name: 'firefox-desktop',
+      use: {
+        browserName: 'firefox',
+        viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: 'firefox-mobile',
+      use: {
+        browserName: 'firefox',
+        viewport: { width: 390, height: 844 },
+      },
+    },
+    {
+      name: 'webkit-desktop',
+      use: { browserName: 'webkit', viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: 'webkit-mobile',
+      use: { browserName: 'webkit', viewport: { width: 390, height: 844 } },
+    },
   ],
   webServer: [
     {

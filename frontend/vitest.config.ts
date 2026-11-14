@@ -8,7 +8,7 @@ const config: ViteUserConfig = {
     coverage: {
       provider: 'v8',
       include: [
-        'src/lib/api.ts',
+        'src/lib/*.ts',
         'src/components/**/*.tsx',
         'src/features/analysis/**/*.{ts,tsx}',
       ],

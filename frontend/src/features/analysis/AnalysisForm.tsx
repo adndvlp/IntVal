@@ -3,6 +3,7 @@ import { configurationFields } from './model';
 import type { useAnalysis } from './use-analysis';
 
 export type AnalysisState = ReturnType<typeof useAnalysis>;
+const formTitle = 'Construye tu análisis.';
 
 export default function AnalysisForm({
   analysis,
@@ -43,12 +44,12 @@ export default function AnalysisForm({
       className="analysis-form"
       action={`${analysis.api.baseUrl}/api/v1/analyses`}
       method="post"
-      aria-labelledby="form-heading"
+      aria-label={formTitle}
       onSubmit={submit}
     >
       <header className="controls-heading">
         <span className="eyebrow">01 / Configuración</span>
-        <h2 id="form-heading">Construye tu análisis.</h2>
+        <h2 id="form-heading">{formTitle}</h2>
         <p>Elige empresas y revisa los supuestos antes de comparar.</p>
       </header>
       <fieldset className="source-options">
@@ -242,7 +243,7 @@ export default function AnalysisForm({
                   : ''
               }
               aria-invalid={invalid.includes(f.key)}
-              aria-describedby="discount-help"
+              aria-describedby={`discount-help${invalid.includes(f.key) ? ` ${f.key}-error` : ''}`}
               onInvalid={() => setInvalid((v) => [...new Set([...v, f.key])])}
               onBlur={(e) => {
                 const valid = e.currentTarget.validity.valid;
@@ -262,6 +263,11 @@ export default function AnalysisForm({
                 );
               }}
             />
+            {invalid.includes(f.key) && (
+              <p className="field-error" id={`${f.key}-error`}>
+                Introduce un valor entre {f.min} y {f.max}.
+              </p>
+            )}
           </div>
         ))}
         <details className="assumptions">
@@ -289,6 +295,9 @@ export default function AnalysisForm({
                     : ''
                 }
                 aria-invalid={invalid.includes(f.key)}
+                aria-describedby={
+                  invalid.includes(f.key) ? `${f.key}-error` : undefined
+                }
                 onInvalid={() => setInvalid((v) => [...new Set([...v, f.key])])}
                 onBlur={(e) => {
                   const valid = e.currentTarget.validity.valid;
@@ -308,6 +317,11 @@ export default function AnalysisForm({
                   );
                 }}
               />
+              {invalid.includes(f.key) && (
+                <p className="field-error" id={`${f.key}-error`}>
+                  Introduce un valor entre {f.min} y {f.max}.
+                </p>
+              )}
             </div>
           ))}
         </details>

@@ -14,7 +14,7 @@ La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora s
 fundamentos, descritos en la sección 8; F7 añade la landing (sección 9), con
 revisión local y capturas completadas. F8 incorpora análisis HTTP (sección 10);
 F9 añade el dashboard React conectado a esa API (sección 11).
-F10–F11 siguen pendientes. El contrato de
+F10 está implementada y verificada localmente ([procedimiento](QA_F10.md)); F11 sigue pendiente. El contrato de
 ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
 de F11.
 
@@ -327,7 +327,7 @@ que un HTTP 200 con HTML sea una respuesta de API válida.
 Desde `frontend/`, tras preparar Python y Node:
 
 ```bash
-npx --no-install playwright install chromium
+npx --no-install playwright install chromium firefox webkit
 npm run test:e2e
 ```
 
@@ -339,7 +339,8 @@ Chrome, `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e` permite usarlo sin descarga
 otro navegador. La suite cierra sus procesos al terminar.
 
 `web.yml` prepara entornos nuevos, instala el lock, comprueba OpenAPI/tipos sin
-drift, lint, formato, tipos, tests, build, HTML y Chromium contra la API real.
+drift, lint, formato, tipos, tests, build, HTML, presupuestos y los tres motores
+contra la API real.
 `tests.yml` conserva todas las regresiones Python, incluidas las de API, y el
 umbral de cobertura combinada de 85 %. Ambos workflows sólo tienen permisos
 de lectura y no despliegan. Los reportes y capturas de tests están ignorados en
@@ -589,6 +590,24 @@ el cliente sólo da formato. Recharts se carga con import dinámico y cada gráf
 tiene una alternativa tabular con encabezados y desplazamiento por teclado.
 
 Evidencia y límites: [TDD_F9.md](TDD_F9.md). F10 conserva la auditoría integrada
-en varios motores, lector de pantalla, rendimiento y memoria; F11 prepara la
+en varios motores, accesibilidad automática, rendimiento y memoria; F11 prepara la
 distribución y cambia el arranque. No actualizar dependencias por avisos de npm
 ni tratar estos comandos de desarrollo como instrucciones de un PaaS concreto.
+
+## 12. Calidad integrada (F10)
+
+[QA_F10.md](QA_F10.md) define la matriz Chromium/Firefox/WebKit, accesibilidad
+automática, referencias visuales por entorno y mediciones de laboratorio. La
+evidencia de implementación y el alcance final están en [TDD_F10.md](TDD_F10.md).
+
+Tras el build, `npm run test:assets` comprueba los presupuestos de scripts,
+estilos e imágenes y la carga diferida de gráficas. `npm run test:shell`
+comprueba además contrastes críticos de la paleta. `npm run test:visual` compara
+sólo referencias revisadas en el OS/Chromium que las generó; no aceptar candidatos
+sin inspección ni equiparar píxeles de Ubuntu y macOS.
+
+`python -m benchmarks.web_capacity --count 604 --output /tmp/intval-capacity.json`
+ejecuta una campaña independiente con un proveedor sintético de pruebas y la
+pausa market conservada. No cambia el catálogo demo, no consulta Yahoo y no
+acredita el consumo de un PaaS. El resultado contextualizado está en
+[quality/f10-capacity.json](quality/f10-capacity.json).

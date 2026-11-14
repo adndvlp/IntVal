@@ -1,0 +1,63 @@
+{
+  "base_commit": "6c7ffbf",
+  "working_tree": "F10 sin commit; imágenes revisadas visualmente antes de copiar",
+  "reviewed_at_utc": "2026-11-14T00:33:28.818377+00:00",
+  "dataset": "demo-1.0",
+  "reference_date": "2025-01-03",
+  "comparison": "Mismo OS/proyecto/Chromium, maxDiffPixelRatio 0.005; no se aceptan actualizaciones automáticas",
+  "images": [
+    {
+      "file": "dashboard-f10-desktop.png",
+      "source_test": "dashboard.spec.ts — demo real (desktop)",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "width": 1280,
+      "height": 4066,
+      "bytes": 436246,
+      "sha256": "7174651890aec43c20d41b3617988f11e865ef1f897578733a387498c794f049",
+      "png_chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "dashboard-f10-mobile.png",
+      "source_test": "dashboard.spec.ts — demo real (mobile)",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "width": 390,
+      "height": 5729,
+      "bytes": 321413,
+      "sha256": "ed81e8c245efb6033d56edba831497dc714b1a08deb92dd279eb866046ebd268",
+      "png_chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "dashboard-f10-controls-mobile.png",
+      "source_test": "visual.spec.ts — panel móvil, candidato inspeccionado",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "width": 390,
+      "height": 844,
+      "bytes": 50574,
+      "sha256": "b81b78bfca0843b426701a4f56c8a9171017c5ebc3f7766875e912c6c8af17a1",
+      "png_chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ]
+    }
+  ],
+  "product_sources_sha256": "8c582e8eec017a7590ffaf60103b8dcfcab5cc850d916e401cf4f9b993af4ae8",
+  "fingerprint_scope": "Rutas y SHA-256 de fuentes productivas frontend/src (sin tests), valoracion (*.py), package-lock y OpenAPI; no es hash del commit ni del bundle"
+}

@@ -123,3 +123,27 @@ El comando `npm run capture` mantiene su selección de imágenes F7; estas de F9
 se seleccionan después de la revisión. No hay actualización automática de
 baselines ni captura de datos de mercado. El viewport móvil de Chrome de
 escritorio no sustituye una prueba en un teléfono físico o en Safari.
+
+## Calidad integrada (F10)
+
+Capturas finales revisadas del build conectado a FastAPI real y demo-1.0,
+referencia 2025-01-03. La matriz tiene 55 aprobadas y cinco omisiones deliberadas
+del perfil de rendimiento duplicado. Se conservan las capturas históricas de F9.
+
+| Archivo | Viewport / imagen | Revisión |
+| --- | --- | --- |
+| [dashboard-f10-desktop.png](dashboard-f10-desktop.png) | 1280 × 800 / 1280 × 4066 | Tres empresas, nombres fuera del botón de ticker, conteos y detalle MXN con valores y tabla alternativa |
+| [dashboard-f10-mobile.png](dashboard-f10-mobile.png) | 390 × 844 / 390 × 5729 | Reflow, tabla con scroll propio, controles, datos ausentes y detalle legible |
+| [dashboard-f10-controls-mobile.png](dashboard-f10-controls-mobile.png) | 390 × 844 | Diálogo abierto, título/cierre y scroll interior; backdrop nativo |
+
+Procedencia y hashes en [captura-f10.json](captura-f10.json). Los PNG originales
+inspeccionados se copiaron sin retoques; contienen sólo IHDR/IDAT/IEND. Build de
+F10 sin commit sobre 6c7ffbf, Chromium 158.0.8127.18 de Playwright, macOS ARM64.
+No acreditan una publicación ni una certificación de accesibilidad.
+
+Tres referencias de viewport separadas de estas imágenes documentales están en
+frontend/tests/e2e/__screenshots__/darwin. Se inspeccionaron antes de incorporarlas;
+la comparación posterior pasó tres casos en 8.5 s, sin actualizar referencias.
+La procedencia registra entorno, dimensiones, SHA-256 y huella de fuentes.
+Para repetir: [procedimiento de F10](../QA_F10.md). Conservar el mismo entorno
+para píxeles; no copiar referencias de macOS como si fueran de Ubuntu.

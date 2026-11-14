@@ -17,6 +17,8 @@
     "check": "astro check",
     "test:unit": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:assets": "node --test scripts/asset-budget.test.mjs && node scripts/asset-budget.mjs",
+    "test:visual": "F10_VISUAL=1 playwright test visual.spec.ts --project=desktop --project=mobile",
     "build": "astro build",
     "types:generate": "openapi-typescript ../contracts/openapi.v1.json --output src/lib/generated/api.ts --alphabetize --export-type",
     "test:shell": "node --test tests/*.test.mjs",

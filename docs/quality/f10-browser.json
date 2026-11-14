@@ -1,0 +1,95 @@
+{
+  "schema": "intval-browser-performance-1",
+  "environment": {
+    "browser": "158.0.8127.18",
+    "os": "darwin",
+    "machine": "arm64",
+    "logicalCpus": 8,
+    "cpuModel": "Apple M1"
+  },
+  "profile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "cpuSlowdown": 4,
+    "network": "localhost sin limitación de red",
+    "cache": "nuevo contexto y caché HTTP deshabilitada por muestra",
+    "samples": 3,
+    "reducedMotion": true
+  },
+  "interpretation": "Mediciones de laboratorio, sin datos de campo. Event Timing conserva muestras cuando existen. El tiempo de click DOM a dos frames es un indicador de respuesta de filtros, no INP de usuarios reales.",
+  "samples": [
+    {
+      "run": 1,
+      "landing": {
+        "lcpMs": 156,
+        "cls": 0
+      },
+      "filterActionToTwoFramesMs": [
+        34.5,
+        25,
+        24.700000002980232,
+        32.599999994039536
+      ],
+      "eventTimingSamples": [],
+      "initialJs": [
+        "http://127.0.0.1:4321/_astro/AnalysisApp.sjzmCOY2.js",
+        "http://127.0.0.1:4321/_astro/client.BzMqA8in.js",
+        "http://127.0.0.1:4321/_astro/react.sySUN5R7.js",
+        "http://127.0.0.1:4321/_astro/with-selector.CVpl7XOM.js",
+        "http://127.0.0.1:4321/_astro/scroll-region.Bqwgwud2.js",
+        "http://127.0.0.1:4321/_astro/react-dom.DqjNsdo2.js"
+      ]
+    },
+    {
+      "run": 2,
+      "landing": {
+        "lcpMs": 156,
+        "cls": 0
+      },
+      "filterActionToTwoFramesMs": [
+        36.70000000298023,
+        24.900000005960464,
+        24.100000008940697,
+        32.20000000298023
+      ],
+      "eventTimingSamples": [],
+      "initialJs": [
+        "http://127.0.0.1:4321/_astro/AnalysisApp.sjzmCOY2.js",
+        "http://127.0.0.1:4321/_astro/client.BzMqA8in.js",
+        "http://127.0.0.1:4321/_astro/scroll-region.Bqwgwud2.js",
+        "http://127.0.0.1:4321/_astro/react.sySUN5R7.js",
+        "http://127.0.0.1:4321/_astro/with-selector.CVpl7XOM.js",
+        "http://127.0.0.1:4321/_astro/react-dom.DqjNsdo2.js"
+      ]
+    },
+    {
+      "run": 3,
+      "landing": {
+        "lcpMs": 156,
+        "cls": 0
+      },
+      "filterActionToTwoFramesMs": [
+        35,
+        26.200000002980232,
+        23.5,
+        25.399999991059303
+      ],
+      "eventTimingSamples": [],
+      "initialJs": [
+        "http://127.0.0.1:4321/_astro/AnalysisApp.sjzmCOY2.js",
+        "http://127.0.0.1:4321/_astro/client.BzMqA8in.js",
+        "http://127.0.0.1:4321/_astro/with-selector.CVpl7XOM.js",
+        "http://127.0.0.1:4321/_astro/react.sySUN5R7.js",
+        "http://127.0.0.1:4321/_astro/scroll-region.Bqwgwud2.js",
+        "http://127.0.0.1:4321/_astro/react-dom.DqjNsdo2.js"
+      ]
+    }
+  ],
+  "base_commit": "6c7ffbf",
+  "working_tree": "F10 sin commit; misma ejecución con 55 aprobadas y cinco omisiones de rendimiento duplicado",
+  "measured_at_utc": "2026-11-14T00:29:36.822766+00:00",
+  "product_sources_sha256": "8c582e8eec017a7590ffaf60103b8dcfcab5cc850d916e401cf4f9b993af4ae8",
+  "fingerprint_scope": "Rutas y SHA-256 de fuentes productivas frontend/src (sin tests), valoracion (*.py), package-lock y OpenAPI; no es hash del commit ni del bundle"
+}

@@ -135,8 +135,8 @@ implementación no modifica la metodología, el servicio de F8 ni el arranque.
 
 Los viewports móviles se prueban en Chrome de escritorio; no equivalen a un
 dispositivo físico, Safari o Firefox. Axe y teclado/Esc no certifican toda la
-accesibilidad: lector de pantalla, contraste manual completo y varios motores
-se revisan en F10. Las capturas son evidencia de UI real; no son baselines
+accesibilidad. La auditoría integrada y varios motores se abordan en F10, con
+el alcance final documentado en TDD_F10.md. Las capturas son evidencia de UI real; no son baselines
 automáticos de comparación de píxeles ni imágenes de diseño conceptual.
 
 La API conserva sus trabajos/cachés temporales en un proceso ASGI. Un reinicio

@@ -3,18 +3,17 @@
 **Especificación y diseño de software de IntVal: formalización del repositorio y evolución de su interfaz web.**
 
 La nueva etapa de landing y dashboard está detallada en la
-[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.16 para
-continuar el trabajo. F1–F9 están implementadas y verificadas localmente; F10–F11 siguen pendientes
-de implementación.
+[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.17 para
+continuar el trabajo. F1–F10 están implementadas y verificadas localmente; F11 sigue pendiente.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.5 |
+| Versión del documento | 2.6 |
 | Fecha de elaboración | 2026-11-12 |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F9 implementadas y verificadas localmente; resultados de F9 en TDD_F9.md. Continuidad en 21.16; CI remoto y publicación se verifican por commit/entorno |
+| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.17; CI remoto y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -1548,7 +1547,7 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 2.5; continuidad vigente en 21.16 y extensión SDD_WEB.md |
+| SDD | Actualizada | Versión 2.6; continuidad vigente en 21.17 y extensión SDD_WEB.md |
 | F1 | Implementada y verificada localmente; incluida en CI previo a F5 | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; incluida en CI previo a F5 | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
@@ -1558,7 +1557,8 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
 | F8 | Implementada y verificada localmente | [TDD_F8.md](TDD_F8.md); API, procesos, snapshots, cachés y Excel |
 | F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), dashboard y capturas reales |
-| F10–F11 | Especificadas, pendientes | [SDD web](SDD_WEB.md), sección 18 |
+| F10 | Implementada y verificada localmente | [TDD_F10.md](TDD_F10.md); calidad integrada y referencias visuales |
+| F11 | Especificada, pendiente | [SDD web](SDD_WEB.md), sección 18.6 |
 
 ## 20. Decisiones y riesgos
 
@@ -2169,6 +2169,18 @@ rehacer F7–F9 ni volver a pedir su preparación externa. Mantener TDD y distin
 evidencia local, CI remoto y URL publicada. El arranque y la distribución
 agnóstica se abordan en F11; no desplegar por inferencia.
 
+### 21.17 Cierre local de F10 y siguiente fase
+
+F10 está implementada y verificada localmente con TDD sobre `6c7ffbf`.
+Leer SDD_WEB.md 18.5/21.9, TDD_F10.md y QA_F10.md. Pasan 460 Python, 65 unitarias
+frontend, 55 de navegador y tres comparaciones visuales; sus omisiones previstas
+y mediciones de capacidad con 604 símbolos están documentadas. Se conservan
+motor, contratos, API, metodología, catálogo y arranque. Por solicitud del usuario,
+se elimina la revisión manual externa como requisito y como pendiente de F10.
+La evidencia de accesibilidad corresponde a las comprobaciones automatizadas y
+visuales realizadas. La siguiente fase es F11, sólo cuando el usuario la solicite;
+no implica autorización para desplegar ni atribuye un resultado al CI remoto.
+
 ## 22. Fuentes y mantenimiento
 
 ### 22.1 Fuente del estado actual
@@ -2208,11 +2220,11 @@ requisitos futuros con software ya implementado.
 | F7 | Sistema visual y landing estática completa | Implementada y revisada: [TDD_F7.md](TDD_F7.md) |
 | F8 | API de análisis, trabajos, cachés, históricos y Excel | Implementada: [TDD_F8.md](TDD_F8.md) |
 | F9 | Dashboard React e integración con paridad funcional | Implementada: [TDD_F9.md](TDD_F9.md) |
-| F10 | Calidad integrada, accesibilidad, móvil, rendimiento y capturas | Especificada, pendiente |
+| F10 | Calidad integrada, accesibilidad, móvil, rendimiento y capturas | Implementada y verificada localmente; [TDD_F10.md](TDD_F10.md) |
 | F11 | Distribución agnóstica, arranque y cierre de la migración | Especificada, pendiente |
 
 Cada fase tiene requisitos, primeros casos RED, criterios de cierre y una matriz
-de verificación en la extensión. La siguiente fase de implementación es F10,
-cuando el usuario la solicite. La publicación de una URL sigue siendo una acción
+de verificación en la extensión. F10 está cerrada con el alcance actualizado;
+implementar F11 sólo cuando el usuario la solicite. La publicación de una URL sigue siendo una acción
 externa separada del diseño y de la preparación del artefacto.
 

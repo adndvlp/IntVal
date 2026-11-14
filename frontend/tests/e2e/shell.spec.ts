@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { navigationTab } from './audit-helpers';
 
 test('navega con teclado y comprueba la API real desde el build estático', async ({
   page,
@@ -6,7 +7,7 @@ test('navega con teclado y comprueba la API real desde el build estático', asyn
   const errores: string[] = [];
   page.on('pageerror', (error) => errores.push(error.message));
   await page.goto('/');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(navigationTab(testInfo));
   await expect(
     page.getByRole('link', { name: 'Saltar al contenido' }),
   ).toBeFocused();

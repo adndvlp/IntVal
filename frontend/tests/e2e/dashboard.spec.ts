@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { auditPage } from './audit-helpers';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -131,9 +131,7 @@ test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapsh
   await openControls(page);
   await page.getByLabel('Tasa de descuento accionista (%)').fill('10');
   await closeControls(page);
-  const audit = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-    .analyze();
+  const audit = await auditPage(page);
   expect(audit.violations).toEqual([]);
   await expectNoOverflow(page);
   await page.screenshot({

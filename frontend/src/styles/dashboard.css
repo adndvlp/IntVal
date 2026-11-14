@@ -149,6 +149,11 @@
   line-height: 1.65;
   margin-block: 0.5rem 1rem;
 }
+.workspace .field-error {
+  color: var(--negative);
+  font-size: 0.8rem;
+  margin: 0;
+}
 .source-options,
 .market-options {
   display: flex;
@@ -578,7 +583,8 @@
   font-family: var(--mono);
   font-size: 0.8rem;
 }
-.company-link span {
+.company-name {
+  display: block;
   font-size: 0.65rem;
   font-weight: 400;
   color: var(--muted);

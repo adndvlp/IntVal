@@ -6,6 +6,35 @@ import { company } from './test-fixtures';
 
 afterEach(cleanup);
 
+it('las flechas desplazan la región de tabla sin interceptar las teclas de sus controles', async () => {
+  render(
+    <ResultsTable rows={[company()]} selected={null} onSelect={vi.fn()} />,
+  );
+  const region = screen.getByRole('region', {
+    name: 'Comparación de empresas, desplazable horizontalmente',
+  });
+  Object.defineProperty(region, 'clientWidth', { value: 400 });
+  Object.defineProperty(region, 'scrollBy', {
+    value: ({ left }: { left: number }) => {
+      region.scrollLeft = Math.max(0, region.scrollLeft + left);
+    },
+  });
+  region.focus();
+  await userEvent.keyboard('{ArrowRight}');
+  expect(region.scrollLeft).toBeGreaterThan(0);
+  const before = region.scrollLeft;
+  screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }).focus();
+  await userEvent.keyboard('{ArrowLeft}');
+  expect(region.scrollLeft).toBe(before);
+  region.focus();
+  await userEvent.keyboard('{ArrowLeft}');
+  expect(region.scrollLeft).toBe(0);
+  await userEvent.keyboard('{Tab}');
+  expect(document.activeElement).toBe(
+    screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
+  );
+});
+
 it('pagina el conjunto completo y conserva la página al seleccionar una empresa', async () => {
   const rows = Array.from({ length: 45 }, (_, i) =>
     company(`EMP${i}`, i / 100),
@@ -17,6 +46,14 @@ it('pagina el conjunto completo y conserva la página al seleccionar una empresa
   expect(
     screen.getByRole('button', { name: 'Ver detalle de EMP0' }),
   ).toBeTruthy();
+  expect(
+    screen
+      .getByRole('button', { name: 'Ver detalle de EMP0' })
+      .textContent?.trim(),
+  ).toBe('EMP0');
+  expect(screen.getByRole('rowheader', { name: /EMP0/ }).textContent).toContain(
+    'Empresa EMP0',
+  );
   expect(
     screen.queryByRole('button', { name: 'Ver detalle de EMP20' }),
   ).toBeNull();

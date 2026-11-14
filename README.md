@@ -175,11 +175,15 @@ npm run check
 npm run test:unit
 npm run build
 npm run test:shell
+npm run test:assets
 ```
 
 La [guía de desarrollo](docs/development.md#8-fundamentos-web-f6) explica cómo
 ejecutar la API, regenerar los tipos y probar el navegador contra el servicio
 real. [TDD de F6](docs/TDD_F6.md) registra los fallos iniciales y las verificaciones.
+La validación integrada de F10 está completada: [procedimiento](docs/QA_F10.md)
+y [evidencia](docs/TDD_F10.md), incluidos tres motores, accesibilidad automática,
+presupuestos del build y capacidad con datos sintéticos.
 
 ## Límites del análisis
 
@@ -206,13 +210,13 @@ no la validez predictiva de una valoración.
 - [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el
-  transporte de análisis y F9 lo integra en el dashboard. F10–F11 permanecen pendientes.
+  transporte de análisis y F9 lo integra en el dashboard. F10 está implementada y verificada localmente, con pruebas integradas, capacidad y referencias visuales. F11 no está implementada.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
   [F3](docs/TDD_F3.md), [corrección de CI](docs/TDD_CI_APPTEST.md),
   [F4](docs/TDD_F4.md), [F5](docs/TDD_F5.md), [F6](docs/TDD_F6.md),
-  [F7](docs/TDD_F7.md), [F8](docs/TDD_F8.md) y [F9](docs/TDD_F9.md).
+  [F7](docs/TDD_F7.md), [F8](docs/TDD_F8.md), [F9](docs/TDD_F9.md) y [F10](docs/TDD_F10.md).
 
 F1–F5 están implementadas y verificadas localmente. La demo, el ejemplo público,
 las capturas reales revisadas y la licencia MIT completan la presentación del
@@ -222,16 +226,15 @@ workflow aún requiere ejecución remota en el commit que se publique. F7 añade
 la landing estática, metodología y sistema visual, con ocho pruebas de navegador
 y capturas finales revisadas. F8 añade API de trabajos, cachés, históricos y
 Excel con snapshots y recuperación de adquisiciones bloqueadas. F9 incorpora
-el dashboard, sus pruebas y capturas reales revisadas. F10–F11,
-el despliegue público y la validación de
-su URL quedan pendientes.
+el dashboard, sus pruebas y capturas reales revisadas. F10 completa la calidad integrada, las mediciones y las referencias visuales.
+F11, el despliegue público y la validación de su URL quedan pendientes.
 
 Capturas de la nueva web: [escritorio](docs/images/landing-desktop.png),
 [móvil](docs/images/landing-mobile.png) y
 [metodología](docs/images/landing-metodologia.png).
 
-Dashboard: [escritorio](docs/images/dashboard-desktop.png) y
-[móvil](docs/images/dashboard-mobile.png). Procedencia y reproducción en
+Dashboard: [escritorio](docs/images/dashboard-f10-desktop.png) y
+[móvil](docs/images/dashboard-f10-mobile.png). Procedencia y reproducción en
 [el registro de capturas](docs/images/README.md).
 
 ## Licencia

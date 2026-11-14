@@ -14,7 +14,8 @@ de F4 y F5 se describen al final; los pendientes del cierre original de F2 son
 históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
 posterior se especifica en [SDD_WEB.md](SDD_WEB.md); F6 incorpora los fundamentos
 web descritos al final. F8 añade el transporte de trabajos del ADR-003;
-F9 incorpora el dashboard del ADR-004; la continuidad vigente es 21.16 de la SDD general.
+F9 incorpora el dashboard del ADR-004; F10 completa la calidad integrada y las
+referencias visuales. La continuidad vigente es 21.17 de la SDD general.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -412,7 +413,7 @@ describen el alcance al cerrar esas fases, ampliado aquí por F8.
 La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
 API FastAPI, manteniendo el motor/proveedores/Excel existentes. F6 implementa
 los fundamentos, F7 la presentación estática y F8 el transporte HTTP completo.
-F9 integra esos contratos en `/app/`. F10–F11 siguen pendientes.
+F9 integra esos contratos en `/app/`. F10 verifica la calidad integrada; F11 sigue pendiente.
 
 El transporte HTTP tiene cachés propias y preserva snapshots/configuración de
 análisis. La entrada actual seguirá funcionando

@@ -1,3 +1,4 @@
+import { scrollRegionOnArrow } from '../../lib/scroll-region';
 import { useMemo } from 'react';
 import {
   columnVisibilityFeature,
@@ -33,16 +34,18 @@ export default function ResultsTable({
           header: 'Empresa',
           enableHiding: false,
           cell: ({ row }) => (
-            <button
-              type="button"
-              className="company-link"
-              aria-label={`Ver detalle de ${row.original.ticker}`}
-              aria-pressed={row.original.ticker === selected}
-              onClick={() => onSelect(row.original.ticker)}
-            >
-              <strong>{row.original.ticker}</strong>
-              <span>{row.original.company_name}</span>
-            </button>
+            <div className="company-label">
+              <button
+                type="button"
+                className="company-link"
+                aria-label={`Ver detalle de ${row.original.ticker}`}
+                aria-pressed={row.original.ticker === selected}
+                onClick={() => onSelect(row.original.ticker)}
+              >
+                <strong>{row.original.ticker}</strong>
+              </button>
+              <span className="company-name">{row.original.company_name}</span>
+            </div>
           ),
         }),
         helper.accessor('market', { header: 'Mercado' }),
@@ -186,6 +189,7 @@ export default function ResultsTable({
         role="region"
         aria-label="Comparación de empresas, desplazable horizontalmente"
         tabIndex={0}
+        onKeyDown={scrollRegionOnArrow}
       >
         <table className="results-table">
           <caption>

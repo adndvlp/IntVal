@@ -9,6 +9,8 @@ import { ApiFault, retryDelay, retryQuery } from './transport';
 import type { Filters, Job, Snapshot } from './types';
 import { useAnalysis } from './use-analysis';
 
+const controlsTitle = 'Configurar análisis';
+const resultsTitle = 'Pon las cifras en perspectiva.';
 const initialFilters: Filters = {
   market: 'all',
   status: 'all',
@@ -46,10 +48,10 @@ function Controls({ analysis }: { analysis: AnalysisState }) {
       <dialog
         ref={dialog}
         className="controls-dialog"
-        aria-labelledby="mobile-controls-title"
+        aria-label={controlsTitle}
       >
         <div className="dialog-heading">
-          <h2 id="mobile-controls-title">Configurar análisis</h2>
+          <h2 id="mobile-controls-title">{controlsTitle}</h2>
           <button
             type="button"
             className="text-button"
@@ -218,14 +220,11 @@ function Workspace({
       <div className="workspace-layout">
         <Controls analysis={analysis} />
         <div className="analysis-content">
-          <section
-            className="results-section"
-            aria-labelledby="results-heading"
-          >
+          <section className="results-section" aria-label={resultsTitle}>
             <header className="results-heading">
               <div>
                 <p className="eyebrow">02 / Comparación</p>
-                <h2 id="results-heading">Pon las cifras en perspectiva.</h2>
+                <h2 id="results-heading">{resultsTitle}</h2>
               </div>
               <button
                 type="button"

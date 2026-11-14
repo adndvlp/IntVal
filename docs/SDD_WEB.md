@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.5 |
+| Versión de esta extensión | 1.6 |
 | Fecha | 2026-11-13 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6–F9 implementadas y verificadas localmente; F10–F11 pendientes |
-| Encargo de esta edición | Implementar sólo F9 con TDD; conservar el servicio Streamlit y no publicar |
+| Estado de F6–F11 | F6–F10 implementadas y verificadas localmente; F11 pendiente |
+| Encargo de esta edición | Implementar sólo F10 con TDD; conservar el servicio Streamlit y no publicar |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -1292,7 +1292,7 @@ casos y regresiones.
 | Componentes React | Testing Library + user-event | Interacción desde nombres/roles accesibles |
 | Frontera HTTP de componentes | MSW o handler de fetch controlado | Errores y reintentos deterministas |
 | Sitio compilado | Playwright | HTML estático, navegador y flujo real con demo |
-| Accesibilidad | axe + revisión manual | Incidencias automáticas, teclado, zoom y lector |
+| Accesibilidad | axe + Playwright y revisión visual | Incidencias automáticas, teclado, zoom, foco y contraste |
 | Visual | Capturas Playwright | Diseño aceptado en un entorno de referencia |
 | Exportación | openpyxl | Estructura, valores, fuentes y configuración reales |
 
@@ -1343,7 +1343,7 @@ Excel reales. No basta interceptar todas las respuestas y demostrar sólo un moc
 | WEBT-32 | Error de descarga conserva filas y permite reintento | F9 |
 | WEBT-33 | E2E landing → demo → filtros → detalle → XLSX real reabierto | F9 |
 | WEBT-34 | Cargas parciales, desconexión, reconexión y expiración sin doble POST | F10 |
-| WEBT-35 | Navegación por teclado/lector, drawer y cierre con retorno de foco | F10 |
+| WEBT-35 | Navegación por teclado, drawer y cierre con retorno de foco | F10 |
 | WEBT-36 | Revisiones visuales desktop/móvil y zoom sin ocultar controles | F10 |
 | WEBT-37 | Presupuestos de JS/assets, estabilidad visual y latencias de demo | F10 |
 | WEBT-38 | Capacidad medida: 604 símbolos sintéticos, memoria y cola acotadas | F10 |
@@ -1589,7 +1589,7 @@ fuente o versión como si siguiera vigente.
 
 ## 18. Fases F6–F11
 
-F6–F9 están implementadas; F10–F11 siguen pendientes. Continuar una por una;
+F6–F10 están implementadas; F11 sigue pendiente. Continuar una por una;
 cada fase incluye código, pruebas, documentación y evidencia propia.
 
 ### 18.1 F6 — Fundamentos web, contratos iniciales y CI
@@ -1700,13 +1700,16 @@ descargado/reabierto. No cerrar sólo porque las pantallas renderizan con JSON m
 
 ### 18.5 F10 — Calidad integrada y validación visual/operativa
 
+**Implementada y verificada localmente.** Evidencia y mediciones en
+[TDD_F10.md](TDD_F10.md); procedimiento en [QA_F10.md](QA_F10.md).
+
 **Objetivo:** comprobar el producto completo y corregir defectos con TDD antes de
 cambiar el servicio por defecto.
 
 | ID | Requisito verificable |
 | --- | --- |
 | F10-R01 | Pruebas de carreras, desconexión, expiración y capacidad integrada |
-| F10-R02 | Auditoría automática y manual de teclado/zoom/lector/contraste |
+| F10-R02 | Auditoría automática de accesibilidad y recorridos de teclado, zoom, foco y contraste |
 | F10-R03 | Recorridos Chromium/Firefox/WebKit y revisión móvil |
 | F10-R04 | Medición de bundles, estabilidad, demo y memoria con límites publicados |
 | F10-R05 | Capturas finales reales y baselines revisados, sin artefactos temporales en Git |
@@ -1761,7 +1764,7 @@ flowchart LR
 | F7 | Implementada y verificada localmente | [TDD_F7.md](TDD_F7.md); capturas revisadas |
 | F8 | Implementada y verificada localmente | TDD_F8.md; 458 pruebas Python, procesos reales y contratos sin drift |
 | F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), demo/XLSX reales y capturas revisadas |
-| F10 | Especificada, pendiente | Ninguna todavía |
+| F10 | Implementada y verificada localmente | [TDD_F10.md](TDD_F10.md); automatización, capacidad y referencias visuales verificadas |
 | F11 | Especificada, pendiente | Ninguna todavía |
 
 Que una fase tenga un plan detallado o un ejemplo JSON no significa que esté
@@ -1780,7 +1783,7 @@ implementada. No marcar casillas de ejecución hasta aportar evidencia.
 | Configuración del análisis estable | WEB-INV-05, APP-13/14 | Cambiar borrador y conciliar descarga |
 | Lotes sin congelar servidor | 9–10, F8-R02/R07 | Progreso, idempotencia y proveedor bloqueado |
 | Caché sin contaminación | 11, F8-R03 | Claves, TTL, FX y timestamps |
-| Móvil y accesibilidad | 8, 15, F10-R02/R03 | Teclado, lector, axe y viewports |
+| Móvil y accesibilidad | 8, 15, F10-R02/R03 | Teclado, foco, axe, contraste y viewports |
 | Agnosticismo del alojamiento | WEB-INV-10, 13, F11 | Imagen, PORT, rutas y señales |
 | Continuidad sin historial | 1–2, 18, 21 | Documentación y estados sin contradicciones |
 
@@ -1844,8 +1847,8 @@ La carpeta temp es una referencia del usuario, ajena al producto y a las
 resoluciones; conservar sus archivos y no añadirla en bloque.
 
 No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-pide el siguiente punto después del cierre de F9, corresponde **F10**. Leer
-primero 21.8; no rehacer F7–F9 ni solicitar de nuevo sus capturas o instalaciones.
+pide el siguiente punto después del cierre de F10, corresponde **F11**. Leer
+primero 21.9; no rehacer F7–F10 ni solicitar de nuevo sus capturas o instalaciones.
 
 ### 21.2 Encargo histórico de F6 (ya implementado)
 
@@ -2052,12 +2055,54 @@ permanentes en [development.md, sección 11](development.md#11-dashboard-react-f
 **Siguiente fase: F10**, únicamente al solicitarla. Leer 14, 15 y 18.5 junto
 con TDD_F9.md, estado Git y los reportes disponibles. No rehacer landing/API/
 dashboard ni pedir de nuevo las instalaciones o capturas ya acreditadas.
-Completar auditoría manual de lector/contraste, varios motores de navegador,
+Completar auditoría de accesibilidad/contraste, varios motores de navegador,
 escenarios integrados de transporte y mediciones de bundles/estabilidad/demo/
 memoria con contexto. No atribuir RSS al presupuesto de payload ni capacidad
 PaaS a una medición local. Mantener TDD y registrar verificaciones ya correctas
 sin RED artificial. F11 conserva la distribución agnóstica y el cambio de arranque.
 No hubo commit/push, CI remoto de esta entrega ni publicación de URL.
+
+### 21.9 Cierre local de F10 y continuidad hacia F11
+
+Base 6c7ffbf; F10 está implementada y verificada localmente. Automatización,
+mediciones y capturas revisadas están completas. No se cambian fórmulas, contratos/datos financieros,
+proveedores, resoluciones, CLI, Streamlit o arranque; no adelantar F11.
+
+Leer TDD_F10.md, QA_F10.md y los reportes seleccionados de docs/quality. Pasan
+460 Python (95.28 % combinado), 65 unitarias frontend (todas las dimensiones
+superiores al 85 %), seis HTML/contraste y dos del medidor de assets. La matriz
+normal de Chromium/Firefox/WebKit en dos tamaños consigue 55 aprobadas y cinco
+omisiones del perfil CDP duplicado. Las tres referencias visuales revisadas se
+comparan con éxito en Darwin/Chromium; un caso de panel desktop no aplica.
+
+Se corrigieron errores numéricos descritos, nombre del botón de ticker y
+scroll por teclado de las tablas React/Astro en WebKit móvil. La landing añade
+un módulo mínimo sin islas ni dependencia de JS para leer. La cobertura incluye
+los helpers directos de src/lib. Firefox/macOS reproducía un cierre nativo al
+leer ariaLabelledByElements en la app; los cuatro contenedores usan nombres
+equivalentes con aria-label y constantes compartidas con sus títulos.
+La suite final no usa legacy, reglas desactivadas ni preferencias especiales.
+No repetir los diagnósticos anteriores ni atribuir todas las caídas a ENOSPC.
+
+La campaña real usa 604 símbolos sintéticos, procesos spawn, cola/caché acotadas
+y XLSX reabierto, sin Yahoo ni cambios del catálogo demo. Memoria JSON y RSS
+son medidas diferentes y no acreditan capacidad de un PaaS. LCP/CLS se miden
+sobre localhost con CPU 4×; el indicador de filtros no acredita INP de campo.
+Cifras y contexto completos en TDD_F10.md.
+
+**Ajuste de alcance solicitado por el usuario:** la revisión manual externa se
+elimina como requisito de cierre y como pendiente de F10. Se conservan pruebas
+automáticas de accesibilidad, teclado, zoom, foco y contraste y la revisión
+visual realizada. No reintroducir ese requisito en otra conversación ni atribuir
+una prueba manual no realizada. La evidencia no equivale a certificación WCAG.
+
+Los comandos permanentes están en QA_F10.md. No repetir la matriz, las capturas
+o la preparación de dependencias sin cambios o fallos que lo justifiquen.
+CI remoto, dispositivo físico y publicación son evidencias distintas.
+
+**Siguiente fase: F11**, únicamente cuando se solicite: distribución agnóstica,
+arranque y cierre de migración de 18.6. Mantener TDD, el dominio financiero y los
+contratos; no interpretar esta continuidad como permiso para desplegar.
 
 ## 22. Fuentes y mantenimiento
 

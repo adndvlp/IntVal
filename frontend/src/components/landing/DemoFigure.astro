@@ -38,6 +38,7 @@ const escala = Math.max(...filas.map((fila) => fila.value));
     <p class="comparison-hint">Desplaza la tabla para comparar los importes.</p>
     <div
       class="comparison-scroll"
+      data-demo-scroll
       tabindex="0"
       role="region"
       aria-label="Comparación por acción, desplazable horizontalmente"
@@ -91,3 +92,12 @@ const escala = Math.max(...filas.map((fila) => fila.value));
     </a>
   </figcaption>
 </figure>
+
+<script>
+  import { scrollRegionOnArrow } from '../../lib/scroll-region';
+  document
+    .querySelectorAll<HTMLElement>('[data-demo-scroll]')
+    .forEach((region) => {
+      region.addEventListener('keydown', scrollRegionOnArrow);
+    });
+</script>

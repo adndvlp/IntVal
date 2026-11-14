@@ -1,0 +1,72 @@
+{
+  "base_commit": "6c7ffbf",
+  "working_tree": "F10 sin commit; imágenes revisadas visualmente antes de copiar",
+  "reviewed_at_utc": "2026-11-14T00:33:28.818377+00:00",
+  "dataset": "demo-1.0",
+  "reference_date": "2025-01-03",
+  "comparison": "Mismo OS/proyecto/Chromium, maxDiffPixelRatio 0.005; no se aceptan actualizaciones automáticas",
+  "images": [
+    {
+      "file": "__screenshots__/darwin/desktop/dashboard-top.png",
+      "source_test": "visual-baseline-visual-revisado-del-dashboard-desktop",
+      "source_artifact": "test-failed-1.png (captura de página tras informar baseline ausente)",
+      "environment": {
+        "browser": "158.0.8127.18",
+        "os": "darwin",
+        "release": "27.0.0",
+        "machine": "arm64",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      },
+      "width": 1280,
+      "height": 800,
+      "bytes": 110541,
+      "sha256": "5fa1be46bc18ea4e76f56bbc58c9e38df05a0284544afabf19f66394b2dd0034",
+      "png_chunks": ["IHDR", "IDAT", "IEND"]
+    },
+    {
+      "file": "__screenshots__/darwin/mobile/dashboard-top.png",
+      "source_test": "visual-baseline-visual-revisado-del-dashboard-mobile",
+      "source_artifact": "test-failed-1.png (captura de página tras informar baseline ausente)",
+      "environment": {
+        "browser": "158.0.8127.18",
+        "os": "darwin",
+        "release": "27.0.0",
+        "machine": "arm64",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "width": 390,
+      "height": 844,
+      "bytes": 54821,
+      "sha256": "19d735af65cd29a68a44cf8caa749ba8169bf15a2a6c6c062c1e3a5d783035c0",
+      "png_chunks": ["IHDR", "IDAT", "IEND"]
+    },
+    {
+      "file": "__screenshots__/darwin/mobile/controls.png",
+      "source_test": "visual-baseline-visual-revisado-del-panel-móvil-mobile",
+      "source_artifact": "test-failed-1.png (captura de página tras informar baseline ausente)",
+      "environment": {
+        "browser": "158.0.8127.18",
+        "os": "darwin",
+        "release": "27.0.0",
+        "machine": "arm64",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      "width": 390,
+      "height": 844,
+      "bytes": 50574,
+      "sha256": "b81b78bfca0843b426701a4f56c8a9171017c5ebc3f7766875e912c6c8af17a1",
+      "png_chunks": ["IHDR", "IDAT", "IEND"]
+    }
+  ],
+  "product_sources_sha256": "8c582e8eec017a7590ffaf60103b8dcfcab5cc850d916e401cf4f9b993af4ae8",
+  "fingerprint_scope": "Rutas y SHA-256 de fuentes productivas frontend/src (sin tests), valoracion (*.py), package-lock y OpenAPI; no es hash del commit ni del bundle"
+}

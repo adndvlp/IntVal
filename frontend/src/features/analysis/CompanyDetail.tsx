@@ -6,6 +6,7 @@ import type { Prices, Snapshot } from './types';
 import type { ChartKind } from './Charts';
 
 const Charts = lazy(() => import('./Charts'));
+const detailTitle = 'Detrás de cada cifra.';
 const panels = [
   { id: 'comparison', name: 'Comparación' },
   { id: 'prices', name: 'Precio histórico' },
@@ -100,13 +101,13 @@ export default function CompanyDetail({
   return (
     <section
       className="company-detail"
-      aria-labelledby="detail-heading"
+      aria-label={detailTitle}
       data-company-detail
     >
       <header className="detail-heading">
         <div>
           <p className="eyebrow">03 / En detalle</p>
-          <h2 id="detail-heading">Detrás de cada cifra.</h2>
+          <h2 id="detail-heading">{detailTitle}</h2>
         </div>
         <div className="field">
           <label htmlFor="detail-company">Empresa del detalle</label>

@@ -1,0 +1,50 @@
+{
+  "schema": "intval-assets-1",
+  "measurement": "Suma de cada recurso único comprimido con gzip; incluye inline y dependencias estáticas de islas client:load; no equivale a transferencia HTTP real.",
+  "pages": [
+    {
+      "path": "index.html",
+      "jsGzipBytes": 354,
+      "inlineJsGzipBytes": 0,
+      "cssGzipBytes": 5025,
+      "initialJsFiles": [
+        "_astro/DemoFigure.astro_astro_type_script_index_0_lang.Boep4buW.js",
+        "_astro/scroll-region.Bqwgwud2.js"
+      ],
+      "deferredJsFiles": [],
+      "images": []
+    },
+    {
+      "path": "metodologia/index.html",
+      "jsGzipBytes": 0,
+      "inlineJsGzipBytes": 0,
+      "cssGzipBytes": 5025,
+      "initialJsFiles": [],
+      "deferredJsFiles": [],
+      "images": []
+    },
+    {
+      "path": "app/index.html",
+      "jsGzipBytes": 109356,
+      "inlineJsGzipBytes": 2049,
+      "cssGzipBytes": 9167,
+      "initialJsFiles": [
+        "_astro/AnalysisApp.sjzmCOY2.js",
+        "_astro/react.sySUN5R7.js",
+        "_astro/with-selector.CVpl7XOM.js",
+        "_astro/scroll-region.Bqwgwud2.js",
+        "_astro/client.BzMqA8in.js",
+        "_astro/react-dom.DqjNsdo2.js"
+      ],
+      "deferredJsFiles": [
+        "_astro/Charts.DJvT8lh3.js"
+      ],
+      "images": []
+    }
+  ],
+  "base_commit": "6c7ffbf",
+  "working_tree": "F10 sin commit; misma ejecución con 55 aprobadas y cinco omisiones de rendimiento duplicado",
+  "measured_at_utc": "2026-11-14T00:31:15.716810+00:00",
+  "product_sources_sha256": "8c582e8eec017a7590ffaf60103b8dcfcab5cc850d916e401cf4f9b993af4ae8",
+  "fingerprint_scope": "Rutas y SHA-256 de fuentes productivas frontend/src (sin tests), valoracion (*.py), package-lock y OpenAPI; no es hash del commit ni del bundle"
+}

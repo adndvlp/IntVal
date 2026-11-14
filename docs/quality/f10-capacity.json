@@ -1,0 +1,60 @@
+{
+  "schema": "intval-capacity-1",
+  "environment": {
+    "python": "3.12.2",
+    "os": "Darwin",
+    "release": "27.0.0",
+    "machine": "arm64",
+    "logical_cpus": 8
+  },
+  "method": "TestClient ASGI sin TCP; dominio y procesos spawn reales; proveedor sintético por símbolo, pausas market de 0.15 s conservadas; no mide Yahoo ni capacidad de un PaaS.",
+  "rows": 604,
+  "unique_tickers": 604,
+  "counts": {
+    "OK": 604,
+    "DATOS INCOMPLETOS": 0,
+    "REVISAR": 0,
+    "ERROR": 0
+  },
+  "seconds": 109.7326087919937,
+  "queue_rejection_status": 429,
+  "idempotent_same_id": true,
+  "health_seconds": [
+    0.0006822499999543652,
+    0.00031208399741444737,
+    0.000244333001319319,
+    0.0002908750029746443,
+    0.0002266670053359121
+  ],
+  "memory_budget_bytes": 67108864,
+  "managed_payload_bytes": 6169968,
+  "cache_entries": 512,
+  "parent_peak_before_bytes": 143097856,
+  "parent_peak_rss_bytes": 232128512,
+  "child_peak_rss_bytes": 149340160,
+  "rss_method": "ru_maxrss: máximo del padre y máximo de un hijo recolectado, por separado; no se suman ni se presentan como pico simultáneo del árbol.",
+  "first_median": 116.1879930510067,
+  "excel": {
+    "sheets": 7,
+    "data_rows": 604,
+    "bytes": 393496,
+    "seconds": 2.603953207988525
+  },
+  "demo_runs": [
+    {
+      "cache": "cold",
+      "seconds": 1.3963905830023577
+    },
+    {
+      "cache": "warm",
+      "seconds": 0.0028790000069420785
+    },
+    {
+      "cache": "warm",
+      "seconds": 0.0013878329918952659
+    }
+  ],
+  "measured_at_utc": "2026-11-13T23:19:41.138760+00:00",
+  "base_commit": "6c7ffbf",
+  "implementation": "Árbol de F10 sin commit; benchmarks/web_capacity.py, sin cambios de fórmulas o datos de producto."
+}

@@ -53,7 +53,7 @@ test('la landing entrega su narrativa, CTA y ejemplo en el HTML inicial', async 
   assert.match(figura.textContent, /16.2/);
   assert.match(figura.textContent, /No es rentabilidad/);
   assert.equal(doc.querySelectorAll('astro-island').length, 0);
-  assert.equal(doc.querySelectorAll('script[src]').length, 0);
+  // La mejora de teclado no hidrata una isla; test:assets limita todo su JS.
 });
 
 test('metodología y 404 son páginas completas y enlazan destinos reales', async () => {

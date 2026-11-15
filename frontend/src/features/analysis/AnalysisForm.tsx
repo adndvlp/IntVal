@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
+import CompanyPicker from './CompanyPicker';
 import { configurationFields } from './model';
 import type { useAnalysis } from './use-analysis';
 
@@ -12,25 +13,9 @@ export default function AnalysisForm({
   analysis: AnalysisState;
   onSubmitted?: () => void;
 }) {
-  const { draft, meta, catalog } = analysis;
-  const [search, setSearch] = useState('');
-  const [offset, setOffset] = useState(0);
+  const { draft, meta } = analysis;
   const [invalid, setInvalid] = useState<string[]>([]);
-  const error = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (analysis.formError) error.current?.focus();
-  }, [analysis.formError]);
-  useEffect(() => {
-    setOffset(0);
-  }, [search, draft?.market, draft?.source]);
   if (!draft || !meta) return null;
-  const ready = catalog?.source === draft.source;
-  const items = (ready ? catalog.items : []).filter(
-    (c) =>
-      (draft.market === 'all' || c.market === draft.market) &&
-      c.ticker.toLowerCase().includes(search.toLowerCase()),
-  );
-  const shown = items.slice(offset, offset + 30);
   const marketEnabled = meta.sources.some(
     (s) => s.id === 'market' && s.enabled,
   );
@@ -79,121 +64,9 @@ export default function AnalysisForm({
           demostración.
         </p>
       )}
-      <fieldset>
-        <legend>Mercado</legend>
-        <div className="market-options">
-          {(['all', 'USA', 'MX'] as const).map((m) => (
-            <label
-              key={m}
-              className={draft.market === m ? 'choice active' : 'choice'}
-            >
-              <input
-                type="radio"
-                name="market"
-                value={m}
-                checked={draft.market === m}
-                onChange={() => analysis.changeMarket(m)}
-              />
-              <span>
-                {m === 'all' ? 'Todos' : m === 'USA' ? 'USA' : 'México'}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>Empresas</legend>
-        <div className="catalog-search">
-          <label htmlFor="catalog-search">Buscar símbolo en el catálogo</label>
-          <input
-            id="catalog-search"
-            name="catalog_search"
-            type="search"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="compact-actions">
-          <button
-            type="button"
-            className="text-button"
-            onClick={analysis.selectAll}
-            disabled={!ready}
-          >
-            Seleccionar todo el mercado
-          </button>
-          <button
-            type="button"
-            className="text-button"
-            onClick={analysis.selectNone}
-          >
-            Quitar selección
-          </button>
-        </div>
-        <p className="selection-count">
-          <strong>{draft.selected.length}</strong> seleccionadas · máximo{' '}
-          {meta.limits.max_tickers}
-        </p>
-        {analysis.catalogQuery.isPending && <p>Cargando catálogo…</p>}
-        {analysis.catalogQuery.error && (
-          <div className="inline-warning">
-            <p>{analysis.catalogQuery.error.message}</p>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => void analysis.catalogQuery.refetch()}
-            >
-              Reintentar catálogo
-            </button>
-          </div>
-        )}
-        {ready && (
-          <div className="catalog-options">
-            {shown.map((c) => (
-              <label key={c.ticker} className="ticker-option">
-                <input
-                  name="tickers"
-                  type="checkbox"
-                  value={c.ticker}
-                  checked={draft.selected.includes(c.ticker)}
-                  onChange={() => analysis.toggleTicker(c.ticker)}
-                />
-                <span>{c.ticker}</span>
-                <small>{c.market}</small>
-              </label>
-            ))}
-            {!shown.length && (
-              <p>No hay símbolos que coincidan con la búsqueda.</p>
-            )}
-          </div>
-        )}
-        {items.length > 30 && (
-          <div className="catalog-pages">
-            <button
-              type="button"
-              className="text-button"
-              disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - 30))}
-            >
-              Empresas anteriores
-            </button>
-            <span>
-              {offset + 1}–{Math.min(offset + 30, items.length)} de{' '}
-              {items.length}
-            </span>
-            <button
-              type="button"
-              className="text-button"
-              disabled={offset + 30 >= items.length}
-              onClick={() => setOffset(offset + 30)}
-            >
-              Más empresas del catálogo
-            </button>
-          </div>
-        )}
+      <CompanyPicker key={draft.source} analysis={analysis} />
+      <fieldset className="extra-symbols">
+        <legend className="sr-only">Símbolos adicionales</legend>
         {draft.source === 'market' && (
           <div className="field">
             <label htmlFor="extra-tickers">Símbolos adicionales</label>
@@ -324,33 +197,6 @@ export default function AnalysisForm({
           ))}
         </details>
       </fieldset>
-      {analysis.formError && (
-        <div
-          ref={error}
-          id="form-error"
-          className="inline-warning"
-          role="alert"
-          tabIndex={-1}
-        >
-          {analysis.formError}
-        </div>
-      )}
-      <button
-        type="submit"
-        className="analyze-button"
-        disabled={
-          analysis.submitting ||
-          !ready ||
-          (draft.source === 'market' && !marketEnabled)
-        }
-      >
-        {analysis.submitting ? 'Enviando análisis…' : 'Analizar empresas'}
-        <span aria-hidden="true">↗</span>
-      </button>
-      <p className="field-help">
-        Analizar genera un resultado con estos supuestos. Los cambios
-        posteriores se aplican al volver a analizar.
-      </p>
     </form>
   );
 }

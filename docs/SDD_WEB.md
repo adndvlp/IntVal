@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.8 |
+| Versión de esta extensión | 1.9 |
 | Fecha | 2026-11-15 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
 | Estado de F6–F11 | F6–F10 implementadas y verificadas localmente; F11 pendiente |
-| Encargo de esta edición | UI-1 de SDD_UI integrado y verificado localmente; UI-2–5 y publicación pendientes |
+| Encargo de esta edición | UI-1 y UI-2 de SDD_UI integrados y verificados localmente; UI-3–5 y publicación pendientes |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -23,8 +23,8 @@ propuestas anteriores de presentación e interacción: entrada directa al
 analizador, sin landing, con selección y tabla escalables, Liquid Glass,
 color elegido por el usuario y modo claro/oscuro. Las secciones históricas de
 landing y capturas se conservan como registro de F7–F10. Los contratos financieros,
-API, transporte, calidad y despliegue de este documento siguen vigentes. UI-1 ya está integrado en el frontend; la migración completa sigue pendiente
-(UI-2–5). Evidencia en [TDD_UI1.md](TDD_UI1.md).
+API, transporte, calidad y despliegue de este documento siguen vigentes. UI-1 y UI-2 ya están integrados en el frontend; la migración completa sigue pendiente
+(UI-3–5). Evidencia en [TDD_UI1.md](TDD_UI1.md) y [TDD_UI2.md](TDD_UI2.md).
 
 El estado actual no se deduce del diseño futuro. Un archivo, ruta o comando de los
 apartados «propuestos» sólo existe cuando una fase lo crea y registra su evidencia.
@@ -2134,8 +2134,9 @@ calculados, datos sintéticos y carga; su revisión visual en navegador está
 pendiente. Tras la solicitud de implementar el primer punto, UI-1 integra en
 Astro/React entrada directa, composición, tokens, paletas y claro/oscuro. La
 regresión local del transporte pasa; [TDD_UI1.md](TDD_UI1.md) separa la evidencia
-automatizada de la validación de navegador todavía pendiente. UI-2–5 continúan
-según la SDD de interfaz. F11 no se considera iniciada.
+automatizada de la validación de navegador todavía pendiente. UI-2 integra después catálogo, búsqueda, paginación y selección escalables;
+[TDD_UI2.md](TDD_UI2.md) registra sus pruebas, límites y extensión compatible
+de metadatos del catálogo. UI-3–5 continúan según la SDD de interfaz. F11 no se considera iniciada.
 
 ## 22. Fuentes y mantenimiento
 

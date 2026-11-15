@@ -355,6 +355,17 @@
       "EmpresaCatalogo": {
         "additionalProperties": false,
         "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
           "market": {
             "enum": [
               "USA",
@@ -362,6 +373,17 @@
             ],
             "title": "Market",
             "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "ticker": {
             "title": "Ticker",

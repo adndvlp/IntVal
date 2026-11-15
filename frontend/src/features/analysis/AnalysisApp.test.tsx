@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import AnalysisApp from './AnalysisApp';
 import { server } from './test-server';
-import { catalog, config, metadata } from './test-fixtures';
+import { config, metadata } from './test-fixtures';
 
 const nativeShowModal = HTMLDialogElement.prototype.showModal;
 const nativeClose = HTMLDialogElement.prototype.close;
@@ -21,15 +21,15 @@ afterEach(() => {
 });
 
 async function startDemo() {
-  const select = await screen.findByRole('button', {
-    name: 'Seleccionar todo el mercado',
+  const select = await screen.findByRole('checkbox', {
+    name: 'Seleccionar página',
   });
   await waitFor(() =>
     expect((select as HTMLButtonElement).disabled).toBe(false),
   );
   await userEvent.click(select);
   await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar empresas' }),
+    screen.getByRole('button', { name: 'Analizar selección' }),
   );
 }
 
@@ -79,9 +79,9 @@ it('presenta el formulario, elige demo y permite filtrar sin perder el Excel ni 
 it('una selección vacía anuncia el error y no consulta el motor', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
-  await screen.findByRole('button', { name: 'Seleccionar todo el mercado' });
+  await screen.findByRole('checkbox', { name: 'Seleccionar página' });
   await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar empresas' }),
+    screen.getByRole('button', { name: 'Analizar selección' }),
   );
   expect(
     await screen.findByText(/Selecciona al menos una empresa/),
@@ -145,20 +145,20 @@ it('cambiar a demo conserva la decisión de analizar en manos del usuario', asyn
 it('permite buscar, elegir todo un mercado, normalizar extras y editar los nueve supuestos', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
-  await screen.findByRole('button', { name: 'Seleccionar todo el mercado' });
-  await userEvent.click(screen.getByRole('radio', { name: 'USA' }));
+  await screen.findByRole('checkbox', { name: 'Seleccionar página' });
+  await userEvent.selectOptions(
+    screen.getByRole('combobox', { name: 'Mercado de las empresas' }),
+    'USA',
+  );
   await userEvent.click(
-    screen.getByRole('button', { name: 'Seleccionar todo el mercado' }),
+    screen.getByRole('checkbox', { name: 'Seleccionar página' }),
   );
   expect(
     (screen.getByRole('checkbox', { name: /AAPL/ }) as HTMLInputElement)
       .checked,
   ).toBe(true);
   await userEvent.click(screen.getByRole('checkbox', { name: /AAPL/ }));
-  await userEvent.type(
-    screen.getByLabelText('Buscar símbolo en el catálogo'),
-    'AAPL',
-  );
+  await userEvent.type(screen.getByLabelText('Buscar empresas'), 'AAPL');
   await userEvent.click(screen.getByRole('checkbox', { name: /AAPL/ }));
   await userEvent.type(
     screen.getByLabelText('Símbolos adicionales'),
@@ -185,7 +185,7 @@ it('permite buscar, elegir todo un mercado, normalizar extras y editar los nueve
     await userEvent.type(input, '10');
   }
   await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar empresas' }),
+    screen.getByRole('button', { name: 'Analizar selección' }),
   );
   await waitFor(() => expect(api.created).toHaveLength(1));
   const accepted = JSON.parse(api.created[0]!);
@@ -270,7 +270,7 @@ it('permite reconectar metadatos y comunica un mercado deshabilitado sin analiza
   expect(
     (
       screen.getByRole('button', {
-        name: 'Analizar empresas',
+        name: 'Analizar selección',
       }) as HTMLButtonElement
     ).disabled,
   ).toBe(true);
@@ -319,50 +319,6 @@ it('el formulario se puede usar en móvil sin abrir una pantalla o diálogo prev
   expect(api.created).toHaveLength(0);
 });
 
-it('pagina un catálogo de 604 empresas y la selección masiva incluye las páginas no visibles', async () => {
-  const api = server();
-  const original = api.fetcher.getMockImplementation()!;
-  api.fetcher.mockImplementation(async (input, init) => {
-    if (String(input).includes('/catalog'))
-      return new Response(
-        JSON.stringify({
-          ...catalog('market'),
-          total: 604,
-          items: Array.from({ length: 604 }, (_, i) => ({
-            ticker: `EMP${i}`,
-            market: 'USA',
-          })),
-        }),
-      );
-    return original(input, init);
-  });
-  render(<AnalysisApp baseUrl="" initialSource="market" />);
-  await screen.findByRole('checkbox', { name: /EMP0/ });
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Más empresas del catálogo' }),
-  );
-  expect(screen.getByRole('checkbox', { name: /EMP30/ })).toBeTruthy();
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Empresas anteriores' }),
-  );
-  expect(screen.getByRole('checkbox', { name: /EMP0/ })).toBeTruthy();
-  await userEvent.type(
-    screen.getByLabelText('Buscar símbolo en el catálogo'),
-    'INEXISTENTE',
-  );
-  expect(
-    screen.getByText('No hay símbolos que coincidan con la búsqueda.'),
-  ).toBeTruthy();
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Seleccionar todo el mercado' }),
-  );
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar empresas' }),
-  );
-  await waitFor(() => expect(api.created).toHaveLength(1));
-  expect(JSON.parse(api.created[0]!).tickers).toHaveLength(604);
-});
-
 it('valida al abandonar un campo numérico y bloquea el envío hasta corregirlo', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
@@ -373,7 +329,7 @@ it('valida al abandonar un campo numérico y bloquea el envío hasta corregirlo'
   await userEvent.tab();
   expect(input.getAttribute('aria-invalid')).toBe('true');
   await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar empresas' }),
+    screen.getByRole('button', { name: 'Analizar selección' }),
   );
   expect(api.created).toHaveLength(0);
   await userEvent.type(input, '10');

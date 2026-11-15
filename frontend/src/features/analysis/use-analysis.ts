@@ -17,6 +17,13 @@ import {
   viewReducer,
 } from './model';
 import { AnalysisApi, ApiFault, retryDelay, retryQuery } from './transport';
+import {
+  cleanSelection,
+  indexCatalog,
+  readSelection,
+  saveSelection,
+  selectionKey,
+} from './catalog-model';
 import type {
   Configuration,
   CreateRequest,
@@ -243,6 +250,61 @@ export function useAnalysis({
     refetchOnWindowFocus: false,
   });
   const catalog = catalogQuery.data;
+  const catalogIndex = useMemo(
+    () => indexCatalog(catalog?.items ?? []),
+    [catalog],
+  );
+  const selectionScope =
+    draft && catalog?.source === draft.source
+      ? selectionKey(baseUrl, draft.source, catalog.dataset_version)
+      : null;
+  const restoredSelection = useRef<string | null>(null);
+  const [selectionReady, setSelectionReady] = useState<string | null>(null);
+  useEffect(() => {
+    if (
+      !selectionScope ||
+      !draft ||
+      restoredSelection.current === selectionScope
+    )
+      return;
+    restoredSelection.current = selectionScope;
+    const saved = readSelection(selectionScope);
+    const request =
+      initialSaved.current?.source === draft.source
+        ? initialSaved.current.request
+        : undefined;
+    const selected = cleanSelection(
+      saved?.selected ?? draft.selected,
+      catalogIndex,
+    );
+    // Las referencias antiguas pueden contener símbolos adicionales de mercado.
+    const extras =
+      draft.source === 'market'
+        ? (saved?.extras ??
+          (request?.tickers
+            .filter((t) => !catalogIndex.byTicker.has(t))
+            .join(', ') ||
+            draft.extras))
+        : '';
+    setDraft((old) =>
+      old?.source === draft.source ? { ...old, selected, extras } : old,
+    );
+    setSelectionReady(selectionScope);
+  }, [selectionScope, catalogIndex, draft]);
+  useEffect(() => {
+    if (!selectionScope || selectionReady !== selectionScope || !draft) return;
+    const selected = cleanSelection(draft.selected, catalogIndex);
+    if (
+      selected.length !== draft.selected.length ||
+      selected.some((t, i) => t !== draft.selected[i])
+    ) {
+      setDraft((old) =>
+        old?.source === draft.source ? { ...old, selected } : old,
+      );
+      return;
+    }
+    saveSelection(selectionScope, { selected, extras: draft.extras });
+  }, [selectionScope, selectionReady, catalogIndex, draft]);
   const statusQuery = useQuery({
     queryKey: [
       'intval',
@@ -395,21 +457,20 @@ export function useAnalysis({
         : old,
     );
   const changeMarket = (market: Market) =>
-    setDraft((old) =>
-      old
-        ? {
-            ...old,
-            market,
-            selected: old.selected.filter(
-              (t) =>
-                market === 'all' ||
-                catalog?.items.some(
-                  (c) => c.ticker === t && c.market === market,
-                ),
-            ),
-          }
-        : old,
-    );
+    setDraft((old) => (old ? { ...old, market } : old));
+  const selectTickers = (tickers: string[], checked: boolean) => {
+    setFormError(null);
+    setDraft((old) => {
+      if (!old || catalog?.source !== old.source) return old;
+      const selected = new Set(old.selected);
+      for (const ticker of tickers) {
+        if (!catalogIndex.byTicker.has(ticker)) continue;
+        if (checked) selected.add(ticker);
+        else selected.delete(ticker);
+      }
+      return { ...old, selected: [...selected] };
+    });
+  };
   const toggleTicker = (ticker: string) =>
     setDraft((old) =>
       old
@@ -426,14 +487,23 @@ export function useAnalysis({
       old && catalog
         ? {
             ...old,
-            selected: catalog.items
-              .filter((t) => old.market === 'all' || t.market === old.market)
-              .map((t) => t.ticker),
+            selected: [
+              ...new Set([
+                ...old.selected,
+                ...catalog.items
+                  .filter(
+                    (t) => old.market === 'all' || t.market === old.market,
+                  )
+                  .map((t) => t.ticker),
+              ]),
+            ],
           }
         : old,
     );
-  const selectNone = () =>
-    setDraft((old) => (old ? { ...old, selected: [] } : old));
+  const selectNone = () => {
+    setFormError(null);
+    setDraft((old) => (old ? { ...old, selected: [], extras: '' } : old));
+  };
   const changeExtras = (extras: string) =>
     setDraft((old) => (old ? { ...old, extras } : old));
   const retryCreate = async () => {
@@ -483,6 +553,9 @@ export function useAnalysis({
     meta,
     metadataQuery,
     catalog,
+    catalogIndex,
+    selectionReady:
+      selectionReady === selectionScope && selectionScope !== null,
     catalogQuery,
     draft,
     view,
@@ -503,6 +576,7 @@ export function useAnalysis({
     reconnect,
     changeConfiguration,
     changeMarket,
+    selectTickers,
     toggleTicker,
     selectAll,
     selectNone,

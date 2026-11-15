@@ -1,0 +1,226 @@
+/* UI-2: una lista paginada comparte la selección de ambas vistas. */
+.workspace .analysis-controls:has(.company-workspace) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.company-workspace {
+  min-inline-size: 0;
+  border: 1px solid var(--glass-edge);
+  border-radius: 28px;
+  background: var(--panel);
+  box-shadow: var(--glass-shadow);
+}
+.selection-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  padding: 24px;
+}
+.selection-search-field {
+  flex: 1 1 18rem;
+  min-inline-size: 0;
+}
+.selection-market-field {
+  flex: 0 1 15rem;
+  min-inline-size: min(100%, 12rem);
+}
+.selection-search label {
+  display: block;
+  margin-block-end: 8px;
+}
+.workspace .selection-search input,
+.workspace .selection-search select {
+  inline-size: 100%;
+  min-inline-size: 0;
+  font-size: 1rem;
+}
+.selection-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  inline-size: 100%;
+}
+.workspace .selection-views button {
+  min-block-size: 48px;
+  border-color: var(--line);
+  font-size: 1rem;
+}
+.workspace .selection-views button[aria-pressed='true'] {
+  background: var(--palette-tint);
+  border-color: var(--control-border);
+  color: var(--primary);
+  font-weight: 600;
+}
+.batch-summary {
+  position: sticky;
+  inset-block-start: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 16px 24px;
+  border-block: 1px solid var(--line);
+  background: var(--dialog-surface);
+}
+.batch-selection,
+.selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  min-inline-size: 0;
+}
+.workspace .page-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 48px;
+  cursor: pointer;
+  margin: 0;
+}
+.workspace .page-selector input,
+.workspace .company-option input[type='checkbox'] {
+  inline-size: 1.35rem;
+  block-size: 1.35rem;
+  min-block-size: 0;
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  flex: none;
+  accent-color: var(--blue);
+}
+.workspace .selection-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+.workspace .selection-count strong {
+  color: var(--ink);
+}
+.workspace .selection-actions .analyze-button {
+  inline-size: auto;
+  margin: 0;
+  min-block-size: 48px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-size: 1rem;
+}
+.company-list {
+  min-inline-size: 0;
+}
+.workspace .company-option {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-block-size: 80px;
+  margin: 0;
+  padding: 16px 24px;
+  border-block-end: 1px solid var(--line);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.company-option:has(input:checked) {
+  background: var(--blue-soft);
+}
+.company-option:has(input:focus-visible) {
+  outline: 3px solid var(--blue);
+  outline-offset: -4px;
+}
+.company-identity {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+.company-identity strong {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.company-identity small {
+  color: var(--muted);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.selection-empty {
+  padding: 24px;
+  margin: 0;
+}
+.selection-error {
+  padding: 16px 24px;
+  margin: 0;
+  max-inline-size: none;
+  color: var(--negative);
+  border-block-end: 1px solid var(--line);
+}
+.selection-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 16px 24px;
+  color: var(--muted);
+}
+.selection-pagination > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.workspace .selection-pagination button {
+  min-block-size: 48px;
+  min-inline-size: 48px;
+  padding: 6px 12px;
+  color: var(--ink);
+  border-color: var(--line);
+  font-size: 1.25rem;
+}
+.company-workspace button:disabled {
+  opacity: 0.5;
+}
+.workspace .extra-symbols:has(.field) {
+  padding-block: 24px 0;
+}
+.workspace .extra-symbols:not(:has(.field)) {
+  display: none;
+}
+@media (hover: hover) {
+  .company-option:hover {
+    background: var(--palette-tint);
+  }
+}
+@media (max-width: 600px) {
+  .selection-search,
+  .batch-summary,
+  .workspace .company-option,
+  .selection-pagination {
+    padding-inline: 20px;
+  }
+  .selection-market-field {
+    flex: 1 1 15rem;
+  }
+  .selection-actions {
+    inline-size: 100%;
+    justify-content: space-between;
+  }
+}
+@media (forced-colors: active) {
+  .company-workspace,
+  .batch-summary {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+  .company-option:has(input:checked) {
+    border-inline-start: 4px solid Highlight;
+  }
+  .workspace .selection-views button[aria-pressed='true'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

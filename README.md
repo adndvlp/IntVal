@@ -61,7 +61,10 @@ operaciones sobre datos inventados, no oportunidades de inversión.
 
 - Analizador web directo, apariencia Liquid Glass, seis paletas o color propio y
   modo claro/oscuro con preferencias persistentes.
-- Selección de empresas por mercado, símbolos adicionales y análisis por lotes.
+- Catálogo y vista de seleccionadas con búsqueda y páginas de 25; la selección se
+  conserva entre páginas y mercados. Se distingue seleccionar la página de elegir
+  todas las coincidencias, respetando el límite del servicio.
+- Símbolos adicionales y análisis por lotes.
 - Proxies de FCL, NOPAT, EBITDA ajustado y utilidad neta; mediana y cantidad de
   proxies aplicables, con precio objetivo de analistas cuando existe.
 - Filtros por estado y diferencia frente al precio, detalle de supuestos,
@@ -221,8 +224,9 @@ no la validez predictiva de una valoración.
 - [SDD de interfaz Liquid Glass](docs/SDD_UI.md), con el
   [HTML interactivo adjunto](prototipo-intval-liquid-glass.html): especificación
   vigente del analizador, selección escalable, paleta/color elegible y modo oscuro.
-  UI-1 ya integra la entrada directa, composición y apariencia en la app real;
-  UI-2–5 siguen pendientes. [Evidencia de UI-1](docs/TDD_UI1.md).
+  UI-1 y UI-2 integran apariencia y selección en la app real: catálogo único,
+  búsquedas por nombre disponible o símbolo, páginas de 25 y selección persistente.
+  UI-3–5 siguen pendientes. Evidencia de [UI-1](docs/TDD_UI1.md) y [UI-2](docs/TDD_UI2.md).
 - [Arquitectura web y entregas F6–F10](docs/SDD_WEB.md): Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el

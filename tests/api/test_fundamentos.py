@@ -73,6 +73,24 @@ def test_catalogo_local_por_fuente_y_mercado(source, market, total):
             assert {item["market"] for item in catalogo["items"]} == {market}
 
 
+def test_catalogo_publica_identidad_local_sin_obtener_estados_ni_inventar_metadatos(monkeypatch):
+    proveedor = import_module("valoracion.proveedores.demo").ProveedorDemo
+
+    def no_consultar(*args, **kwargs):
+        raise AssertionError("Abrir catálogo no debe obtener datos financieros")
+
+    monkeypatch.setattr(proveedor, "obtener_empresa", no_consultar)
+    with cliente() as client:
+        empresas = client.get("/api/v1/catalog", params={"source": "demo"}).json()["items"]
+        assert empresas[0]["name"] == "Industrial Aurora (demo)"
+        assert empresas[0]["currency"] == "USD"
+        mx = next(e for e in empresas if e["market"] == "MX")
+        assert mx["name"] == "Manufacturas Horizonte (demo)"
+        assert mx["currency"] == "MXN"
+        mercado = client.get("/api/v1/catalog", params={"source": "market"}).json()["items"]
+        assert all("name" not in e and "currency" not in e for e in mercado)
+
+
 @pytest.mark.parametrize(
     "params,field",
     [

@@ -194,6 +194,8 @@ class ConsultaCatalogo(ContratoEstricto):
 class EmpresaCatalogo(ContratoEstricto):
     ticker: str
     market: Mercado
+    name: str | None = None
+    currency: str | None = None
 
 
 class Catalogo(ContratoEstricto):

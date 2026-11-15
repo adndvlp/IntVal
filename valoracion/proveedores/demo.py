@@ -35,6 +35,18 @@ class ProveedorDemo:
             raise ValueError(f"Ticker no disponible en la demostración: {ticker}")
         return self._empresas[ticker]
 
+    def catalogo(self) -> list[dict[str, str]]:
+        """Identidad del archivo local, sin cargar estados de cada empresa."""
+        return [
+            {
+                "ticker": ticker,
+                "market": mercado_de_ticker(ticker),
+                "name": empresa["nombre"],
+                "currency": empresa["moneda"],
+            }
+            for ticker, empresa in self._empresas.items()
+        ]
+
     def obtener_empresa(self, ticker: str) -> DatosEmpresa:
         empresa = self._empresa(ticker)
         tabla = self._estados[self._estados["ticker"] == ticker].set_index("periodo").sort_index()

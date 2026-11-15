@@ -2,12 +2,10 @@ import { expect, type Page } from '@playwright/test';
 
 export async function startDemo(page: Page) {
   await expect(
-    page.getByRole('button', { name: 'Seleccionar todo el mercado' }),
+    page.getByRole('checkbox', { name: 'Seleccionar página' }),
   ).toBeEnabled();
+  await page.getByRole('checkbox', { name: 'Seleccionar página' }).click();
   await page
-    .getByRole('button', { name: 'Seleccionar todo el mercado' })
-    .click();
-  await page
-    .getByRole('button', { name: 'Analizar empresas', exact: true })
+    .getByRole('button', { name: 'Analizar selección', exact: true })
     .click();
 }

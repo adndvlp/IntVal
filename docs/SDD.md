@@ -6,17 +6,17 @@ La arquitectura web está detallada en la [SDD web: Astro, React y FastAPI](SDD_
 La presentación e interacción vigentes están en la [SDD de interfaz Liquid Glass](SDD_UI.md),
 con el [HTML completo como anexo normativo](../prototipo-intval-liquid-glass.html).
 Leer primero 21.18 para continuar. F1–F10 están implementadas y verificadas localmente;
-UI-1 del diseño está integrado; UI-2–5 y F11 siguen pendientes.
+UI-1 y UI-2 del diseño están integrados; UI-3–5 y F11 siguen pendientes.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.8 |
+| Versión del documento | 2.9 |
 | Fecha de elaboración | 2026-11-12 |
-| Última revisión de interfaz | 2026-11-15; UI-1 y TDD_UI1.md |
+| Última revisión de interfaz | 2026-11-15; UI-1–2 y TDD_UI2.md |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.18; interfaz Liquid Glass con UI-1 integrado y verificado localmente; UI-2–5 pendientes. CI remoto y publicación se verifican por commit/entorno |
+| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.18; interfaz Liquid Glass con UI-1 y UI-2 integrados y verificados localmente; UI-3–5 pendientes. CI remoto y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -25,7 +25,7 @@ UI-1 del diseño está integrado; UI-2–5 y F11 siguen pendientes.
 | Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
 | Entorno implementado | F4: servicio web agnóstico, Python 3.12, resoluciones pip-tools, arranque mediante PORT, configuración central y Ruff |
 | Presentación implementada | F5: demo sintética, ejemplo público, documentación, capturas reales revisadas y licencia MIT elegida por el usuario |
-| Último encargo documentado | Implementar UI-1 de SDD_UI.md; composición, tokens, apariencia y entrada directa integrados en la app. Evidencia en TDD_UI1.md |
+| Último encargo documentado | UI-1 y UI-2 de SDD_UI.md integrados: composición, apariencia y selección escalable; evidencia en TDD_UI1.md y TDD_UI2.md |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
@@ -2205,7 +2205,10 @@ El usuario solicitó posteriormente implementar UI-1. Ya están integrados en
 Astro/React los tokens, composición, apariencia persistente, entrada directa y
 Cómo se calcula. [TDD_UI1.md](TDD_UI1.md) registra los 70 tests unitarios y los
 69 de shell/anexo aprobados, los checks locales y la revisión visual pendiente.
-UI-2–5 siguen pendientes; la siguiente integración es UI-2. Se mantienen motor,
+UI-2 incorpora después el catálogo único, búsquedas normalizadas, páginas de 25,
+selección entre vistas/mercados, persistencia y límites efectivos del servicio.
+[TDD_UI2.md](TDD_UI2.md) registra su verificación local. UI-3–5 siguen pendientes;
+la siguiente integración es UI-3. Se mantienen motor,
 contratos y transporte. No rehacer F1–F10, iniciar F11 ni desplegar por inferencia.
 
 ## 22. Fuentes y mantenimiento

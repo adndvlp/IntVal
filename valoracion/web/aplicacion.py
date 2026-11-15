@@ -164,6 +164,7 @@ def create_app(ajustes: Ajustes | None = None, *, gestor: GestorTrabajos | None 
     @app.get(
         "/api/v1/catalog",
         response_model=Catalogo,
+        response_model_exclude_none=True,
         operation_id="getCatalog",
         responses={422: {"model": RespuestaError}},
     )
@@ -176,12 +177,12 @@ def create_app(ajustes: Ajustes | None = None, *, gestor: GestorTrabajos | None 
                 fields=[{"field": "source", "message": "Selecciona una fuente habilitada."}],
             )
         es_demo = consulta.source == "demo"
-        tickers = demo.tickers() if es_demo else universo.todos
-        items = [
-            {"ticker": t, "market": mercado_de_ticker(t)}
-            for t in tickers
-            if consulta.market in {"all", mercado_de_ticker(t)}
-        ]
+        catalogo_local = (
+            demo.catalogo()
+            if es_demo
+            else [{"ticker": t, "market": mercado_de_ticker(t)} for t in universo.todos]
+        )
+        items = [e for e in catalogo_local if consulta.market in {"all", e["market"]}]
         return {
             "source": consulta.source,
             "market": consulta.market,

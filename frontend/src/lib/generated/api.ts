@@ -407,11 +407,15 @@ export type components = {
         };
         /** EmpresaCatalogo */
         EmpresaCatalogo: {
+            /** Currency */
+            currency?: string | null;
             /**
              * Market
              * @enum {string}
              */
             market: "USA" | "MX";
+            /** Name */
+            name?: string | null;
             /** Ticker */
             ticker: string;
         };

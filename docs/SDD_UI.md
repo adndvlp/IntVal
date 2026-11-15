@@ -4,14 +4,14 @@
 
 | Campo                          | Valor                                                                                                                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Versión                        | 1.1                                                                                                                                                                         |
+| Versión                        | 1.2                                                                                                                                                                         |
 | Fecha                          | 2026-11-15                                                                                                                                                                  |
-| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1: composición, tokens, apariencia y entrada directa en el frontend real                              |
+| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1 y UI-2 en el frontend real: apariencia, entrada directa y selección escalable                       |
 | Anexo normativo                | [prototipo-intval-liquid-glass.html](../prototipo-intval-liquid-glass.html)                                                                                                 |
-| Estado                         | UI-1 integrado en Astro/React y verificado localmente; UI-2–5 pendientes. Evidencia en TDD_UI1.md; navegador y capturas del frontend nuevo pendientes                       |
+| Estado                         | UI-1 y UI-2 integrados en Astro/React y verificados localmente; UI-3–5 pendientes. Evidencia en TDD_UI1.md y TDD_UI2.md; navegador y capturas del frontend nuevo pendientes |
 | Base de producto inspeccionada | `f04b8b8`, cierre F10, más los archivos locales del prototipo                                                                                                               |
 | Relación con otras SDD         | Revisa la presentación e interacción de [SDD_WEB.md](SDD_WEB.md); mantiene sus contratos financieros, API y condiciones operativas salvo cambios expresos de este documento |
-| Autorización de esta entrega   | El usuario solicitó implementar el primer incremento: UI-1. No autoriza desplegar ni hacer commit/push                                                                      |
+| Autorización de esta entrega   | El usuario solicitó UI-1 y posteriormente el siguiente incremento: UI-2. No autoriza desplegar ni hacer commit/push                                                         |
 
 ## Índice
 
@@ -450,6 +450,8 @@ El JSON completo está integrado en el anexo: incluye métodos, históricos, aud
 
 En producción se mantienen referencias de sesión propias del transporte. No migrar los trabajos simulados como si fueran IDs reales ni borrar sesiones ajenas. Versionar y validar el almacenamiento; un fallo de lectura/escritura no impide usar la herramienta durante la visita. No guardar secretos, objetos de proveedor, configuración de despliegue o datos de otra sesión.
 
+En UI-2, la selección de producción se guarda en `sessionStorage` bajo `intval.selection.v1:{api}:{source}:{dataset}` con versión 1, símbolos y entrada adicional. El sufijo `:views` guarda Catálogo/Seleccionadas y sus contextos independientes. Estas claves no sustituyen `intval.analysis.v1:{api}` ni los snapshots o referencias de transporte; no importan trabajos de la demostración HTML. La selección se valida contra el catálogo vigente, conserva un vacío explícito y tolera almacenamiento corrupto o bloqueado.
+
 ### 13.3 Estados y errores que deben quedar cubiertos
 
 | Situación                                               | Respuesta requerida                                                                        |
@@ -566,7 +568,7 @@ La verificación cubre DOM, interacciones, persistencia, contraste calculado, l�
 
 ### 16.3 Secuencia de implementación
 
-El usuario autorizó UI-1 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
+El usuario autorizó UI-1 y después UI-2 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
 
 | Incremento | Entrega                                                                                | Criterio mínimo                                              |
 | ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -578,7 +580,11 @@ El usuario autorizó UI-1 tras la redacción de la SDD. Avanzar por incrementos 
 
 **Estado de UI-1 (2026-11-15):** integrado en el frontend real. Entrada directa `/` y `/app/`, sidebar/cabecera adaptable, tokens, seis paletas y color propio, modo de sistema/claro/oscuro, persistencia independiente y Cómo se calcula con cinco apartados visibles. Los 70 tests de componentes/estado y los 69 tests de shell/anexo pasan; estos últimos incluyen los 58 del prototipo. Build, tipos, lint, formato y presupuesto de assets pasan. Evidencia y límites en [TDD_UI1.md](TDD_UI1.md).
 
-La revisión visual del diseño conectado queda en UI-5: los resultados DOM y de contraste calculado no acreditan render, reflow real, óptica ni tiempos de interacción. Se han adaptado los escenarios E2E sin ejecutarlos en esta sesión, que bloquea los navegadores/puertos. No se han aprobado referencias visuales nuevas. UI-2–4 siguen pendientes: no confundir la aplicación de tokens al dashboard existente con la migración completa de sus vistas. Historial y las nuevas pantallas de resultados/detalle se incorporan en UI-3, sin enlaces a funciones todavía inexistentes.
+La revisión visual del diseño conectado queda en UI-5: los resultados DOM y de contraste calculado no acreditan render, reflow real, óptica ni tiempos de interacción. Se han adaptado los escenarios E2E sin ejecutarlos en esta sesión, que bloquea los navegadores/puertos. No se han aprobado referencias visuales nuevas. UI-3–4 siguen pendientes: no confundir la aplicación de tokens al dashboard existente con la migración completa de sus vistas. Historial y las nuevas pantallas de resultados/detalle se incorporan en UI-3, sin enlaces a funciones todavía inexistentes.
+
+**Estado de UI-2 (2026-11-15):** integrado y verificado localmente. Un único catálogo con vistas Catálogo/Seleccionadas, filtros y página independientes, búsquedas normalizadas antes de paginar y hasta 25 filas montadas. Selección de página con estado parcial, selección global explícita de coincidencias, limpieza sin perder resultados y Enter que selecciona sin analizar. Se recuperan selección, vacío intencional y contexto de cada vista dentro de la sesión. Se mantiene el límite comunicado por la API, sin truncar ni enviar un lote excesivo. Evidencia en [TDD_UI2.md](TDD_UI2.md). La siguiente integración funcional es UI-3.
+
+El catálogo HTTP admite `name` y `currency` opcionales. La demo los obtiene de su archivo de identidad local; el catálogo de mercado mantiene símbolo/mercado cuando no dispone de ellos. No se infieren monedas ni nombres, ni se consulta al proveedor financiero para rellenarlos. El esquema OpenAPI y los tipos TypeScript se regeneran juntos. Los metadatos de mercado que todavía no existen no se presentan como incorporados.
 
 F11 continúa como entrega separada de distribución/arranque, después de resolver el alcance que realmente se solicite. La aprobación de esta SDD no autoriza publicar la web.
 

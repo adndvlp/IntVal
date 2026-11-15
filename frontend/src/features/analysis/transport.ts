@@ -93,7 +93,15 @@ function validCatalog(v: unknown): v is Catalog {
     ['USA', 'MX', 'all'].includes(String(v.market)) &&
     integer(v.total) &&
     keys(v, ['dataset_version', 'reference_date', 'description'], text) &&
-    list(v.items, (x) => object(x) && text(x.ticker) && market(x.market)) &&
+    list(
+      v.items,
+      (x) =>
+        object(x) &&
+        text(x.ticker) &&
+        market(x.market) &&
+        (x.name == null || text(x.name)) &&
+        (x.currency == null || text(x.currency)),
+    ) &&
     v.items.length === v.total
   );
 }

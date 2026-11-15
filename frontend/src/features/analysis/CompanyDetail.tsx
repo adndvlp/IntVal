@@ -1,44 +1,52 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useId, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatDate, formatMoney, formatNumber, formatPercent } from './model';
+import Modal from '../../components/Modal';
+import { formatDate, formatMoney, formatNumber } from './model';
+import { companyName, formatDifference } from './ResultsTable';
 import { AnalysisApi, ApiFault, retryDelay, retryQuery } from './transport';
 import type { Prices, Snapshot } from './types';
-import type { ChartKind } from './Charts';
-
 const Charts = lazy(() => import('./Charts'));
-const detailTitle = 'Detrás de cada cifra.';
 const panels = [
-  { id: 'comparison', name: 'Comparación' },
+  { id: 'summary', name: 'Resumen' },
   { id: 'prices', name: 'Precio histórico' },
-  { id: 'financials', name: 'Estados financieros' },
+  { id: 'financials', name: 'Finanzas' },
   { id: 'margins', name: 'Márgenes' },
 ] as const;
-const valueText = (value: unknown): string =>
-  value === null
-    ? '—'
-    : typeof value === 'object'
-      ? JSON.stringify(value)
-      : String(value);
-
+type Panel = (typeof panels)[number]['id'];
+const tabScrollOptions = {
+  block: 'nearest',
+  inline: 'nearest',
+  container: 'nearest',
+} as const;
+const methods = {
+  fcl: 'Flujo de caja libre',
+  nopat: 'NOPAT',
+  ebitda_adjusted: 'EBITDA ajustado',
+  net_income: 'Utilidad neta',
+};
 export default function CompanyDetail({
   snapshot,
   selected,
-  onSelect,
-  visibleTickers,
   api,
   referenceDate,
+  onClose,
+  exportControl,
 }: {
   snapshot: Snapshot;
   selected: string | null;
-  onSelect: (ticker: string) => void;
-  visibleTickers: string[];
   api: AnalysisApi;
   referenceDate: string;
+  onClose: () => void;
+  exportControl?: ReactNode;
 }) {
-  const [panel, setPanel] = useState<ChartKind>('comparison');
+  const [panel, setPanel] = useState<Panel>('summary');
   const [period, setPeriod] = useState<Prices['period']>('1y');
-  const company =
-    snapshot.rows.find((r) => r.ticker === selected) ?? snapshot.rows[0];
+  const id = useId();
+  const nativeFocus =
+    typeof HTMLElement !== 'undefined' &&
+    Object.hasOwn(HTMLElement.prototype, 'focusGroup');
+  const tabs = useRef<HTMLDivElement>(null);
+  const company = snapshot.rows.find((r) => r.ticker === selected);
   const prefix = [
     'intval',
     api.baseUrl,
@@ -98,259 +106,269 @@ export default function CompanyDetail({
   const emptyHistory =
     resource?.availability === 'empty' ||
     (panel === 'margins' && financials.data?.margins.items.length === 0);
+  const configuration = snapshot.job.configuration;
+  const maximum = Math.max(
+    1,
+    ...company.proxies.map((p) => p.value_per_share ?? 0),
+  );
   return (
-    <section
-      className="company-detail"
-      aria-label={detailTitle}
-      data-company-detail
+    <Modal
+      title={companyName(company)}
+      onClose={onClose}
+      closeLabel="Cerrar detalle"
+      className="detail-dialog"
     >
-      <header className="detail-heading">
+      <header className="company-dialog-heading">
         <div>
-          <p className="eyebrow">03 / En detalle</p>
-          <h2 id="detail-heading">{detailTitle}</h2>
-        </div>
-        <div className="field">
-          <label htmlFor="detail-company">Empresa del detalle</label>
-          <select
-            id="detail-company"
-            name="detail_company"
-            value={company.ticker}
-            onChange={(e) => onSelect(e.target.value)}
-          >
-            {snapshot.rows.map((c) => (
-              <option key={c.ticker} value={c.ticker}>
-                {c.ticker} · {c.company_name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </header>
-      {!visibleTickers.includes(company.ticker) && (
-        <p className="inline-note">
-          Esta empresa queda fuera del filtro actual; pertenece al análisis
-          completo.
-        </p>
-      )}
-      <div className="company-identity">
-        <span className="ticker-mark" aria-hidden="true">
-          {company.market}
-        </span>
-        <div>
-          <h3>{company.company_name}</h3>
+          <h2>{companyName(company)}</h2>
           <p>
-            {company.ticker} · {company.currency ?? 'Moneda no disponible'} ·{' '}
-            <span className="status-text">{company.status}</span>
+            {company.ticker} · {company.market === 'MX' ? 'México' : 'USA'}
+            {company.currency ? ` · ${company.currency}` : ''}
           </p>
         </div>
-      </div>
-      <p className="source-line">
-        {snapshot.job.source === 'demo'
-          ? `Demostración · datos sintéticos · referencia ${referenceDate}`
-          : 'Mercado · Yahoo Finance vía yfinance'}
-      </p>
-      <dl className="company-metrics">
-        <div>
-          <dt>Precio de mercado</dt>
-          <dd>{formatMoney(company.market_price, company.currency)}</dd>
-        </div>
-        <div>
-          <dt>Mediana de proxies</dt>
-          <dd>
-            {formatMoney(company.median.value_per_share, company.currency)}
-          </dd>
-        </div>
-        <div>
-          <dt>Upside mediana</dt>
-          <dd>{formatPercent(company.median.upside)}</dd>
-        </div>
-        <div>
-          <dt>
-            {snapshot.job.source === 'demo'
-              ? 'Objetivo ficticio de analistas'
-              : 'Objetivo de analistas'}
-          </dt>
-          <dd>{formatMoney(company.analyst_target.value, company.currency)}</dd>
-        </div>
-      </dl>
+        {exportControl}
+      </header>
       <div
-        className="detail-views"
-        role="group"
-        aria-label="Vistas del detalle"
+        className="detail-tabs"
+        role="tablist"
+        aria-label="Detalle de empresa"
+        ref={tabs}
+        {...{ focusgroup: 'tablist nomemory' }}
+        onKeyDown={(e) => {
+          if (Object.hasOwn(HTMLElement.prototype, 'focusGroup')) return;
+          const buttons = [
+            ...tabs.current!.querySelectorAll<HTMLButtonElement>('[role=tab]'),
+          ];
+          const index = buttons.indexOf(
+            document.activeElement as HTMLButtonElement,
+          );
+          const next =
+            e.key === 'ArrowRight'
+              ? (index + 1) % buttons.length
+              : e.key === 'ArrowLeft'
+                ? (index + buttons.length - 1) % buttons.length
+                : e.key === 'Home'
+                  ? 0
+                  : e.key === 'End'
+                    ? buttons.length - 1
+                    : -1;
+          if (next >= 0) {
+            e.preventDefault();
+            buttons[next]!.focus();
+            buttons[next]!.scrollIntoView?.(tabScrollOptions);
+          }
+        }}
       >
         {panels.map((p) => (
           <button
-            type="button"
             key={p.id}
-            aria-pressed={panel === p.id}
-            aria-controls="company-chart-panel"
-            className={panel === p.id ? 'view-button active' : 'view-button'}
-            onClick={() => setPanel(p.id)}
+            type="button"
+            id={`${id}-${p.id}`}
+            role="tab"
+            aria-selected={panel === p.id}
+            tabIndex={nativeFocus ? undefined : panel === p.id ? 0 : -1}
+            {...{ focusgroupstart: panel === p.id ? '' : undefined }}
+            onClick={(e) => {
+              setPanel(p.id);
+              e.currentTarget.scrollIntoView?.(tabScrollOptions);
+            }}
           >
             {p.name}
           </button>
         ))}
       </div>
-      <div id="company-chart-panel" className="chart-panel">
-        {panel === 'prices' && (
-          <div className="period-control">
-            <label htmlFor="price-period">Período del precio histórico</label>
-            <select
-              name="price_period"
-              id="price-period"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as Prices['period'])}
-            >
-              <option value="1y">1 año</option>
-              <option value="2y">2 años</option>
-              <option value="5y">5 años</option>
-              <option value="10y">10 años</option>
-            </select>
-          </div>
-        )}
-        {panel !== 'comparison' && (
+      <div
+        role="tabpanel"
+        aria-labelledby={`${id}-${panel}`}
+        tabIndex={0}
+        className="detail-panel"
+      >
+        {panel === 'summary' ? (
           <>
-            <p className="resource-note">
-              Este histórico se obtiene por separado del análisis.{' '}
-              {resource
-                ? `${resource.provenance} Consulta: ${formatDate(resource.fetched_at)} (UTC). ${resource.cache_hit ? 'Dato reutilizado de caché.' : ''}`
-                : 'Las valoraciones y sus supuestos permanecen disponibles.'}
-            </p>
-            {history.isPending && (
-              <p role="status" className="panel-message">
-                Cargando{' '}
-                {panel === 'prices' ? 'precios' : 'estados financieros'}…
-              </p>
-            )}
-            {history.error && (
-              <div className="panel-message inline-warning" role="status">
-                <p>{history.error.message}</p>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => void history.refetch()}
+            <dl className="valuation-comparison">
+              <div>
+                <dt>Precio</dt>
+                <dd>{formatMoney(company.market_price, company.currency)}</dd>
+              </div>
+              <div
+                className={`valuation-difference ${company.median.upside === null ? 'muted' : company.median.upside < 0 ? 'negative' : 'positive'}`}
+              >
+                <dt>Diferencia</dt>
+                <dd>{formatDifference(company.median.upside)}</dd>
+                <span aria-hidden="true">→</span>
+              </div>
+              <div>
+                <dt>Estimado</dt>
+                <dd>
+                  {company.median.value_per_share === null
+                    ? 'Sin estimación'
+                    : formatMoney(
+                        company.median.value_per_share,
+                        company.currency,
+                      )}
+                </dd>
+              </div>
+            </dl>
+            <section className="detail-section">
+              <h3>Métodos</h3>
+              <p className="detail-note">Mediana de los métodos disponibles.</p>
+              <table className="methods-table">
+                <caption className="sr-only">
+                  Cuatro métodos de valoración
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Método</th>
+                    <th scope="col">
+                      {company.currency ?? 'Moneda no disponible'} / acción
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {company.proxies.map((p) => (
+                    <tr key={p.id}>
+                      <th scope="row">
+                        {methods[p.id]}
+                        {!p.included && (
+                          <small>
+                            {p.exclusion_reason ?? 'Excluido del estimado'}
+                          </small>
+                        )}
+                      </th>
+                      <td>
+                        <span className="method-meter" aria-hidden="true">
+                          <span
+                            style={{
+                              inlineSize: `${Math.max(0, (p.value_per_share ?? 0) / maximum) * 100}%`,
+                            }}
+                          />
+                        </span>
+                        <span>{formatNumber(p.value_per_share)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+            <section className="detail-section">
+              <h3>Supuestos</h3>
+              <dl className="snapshot-assumptions">
+                <div>
+                  <dt>Fuente</dt>
+                  <dd>
+                    {company.traceability.source ??
+                      (snapshot.job.source === 'demo'
+                        ? 'Datos ficticios'
+                        : 'Mercado')}{' '}
+                    · {snapshot.job.dataset_version}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Fecha de referencia</dt>
+                  <dd>
+                    {formatDate(
+                      snapshot.job.source === 'demo'
+                        ? referenceDate
+                        : company.traceability.price_date,
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Moneda</dt>
+                  <dd>{company.currency ?? 'No disponible'}</dd>
+                </div>
+                <div>
+                  <dt>Proyección</dt>
+                  <dd>{configuration.anos_proyeccion} años</dd>
+                </div>
+                <div>
+                  <dt>Descuento accionista / empresa</dt>
+                  <dd>
+                    {formatNumber(configuration.tasa_descuento * 100)} % /{' '}
+                    {formatNumber(configuration.tasa_descuento_empresa * 100)} %
+                  </dd>
+                </div>
+                <div>
+                  <dt>Objetivo de analistas</dt>
+                  <dd>
+                    {formatMoney(
+                      company.analyst_target.value,
+                      company.currency,
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Estado</dt>
+                  <dd>
+                    {company.status === 'OK'
+                      ? 'Datos suficientes'
+                      : company.status}
+                  </dd>
+                </div>
+              </dl>
+              {company.notes && <p className="detail-note">{company.notes}</p>}
+            </section>
+          </>
+        ) : (
+          <>
+            {panel === 'prices' && (
+              <div className="period-control">
+                <label htmlFor={`${id}-period`}>
+                  Período del precio histórico
+                </label>
+                <select
+                  id={`${id}-period`}
+                  name="price_period"
+                  value={period}
+                  onChange={(e) =>
+                    setPeriod(e.target.value as Prices['period'])
+                  }
                 >
+                  <option value="1y">1 año</option>
+                  <option value="2y">2 años</option>
+                  <option value="5y">5 años</option>
+                  <option value="10y">10 años</option>
+                </select>
+              </div>
+            )}
+            {history.isPending && <p role="status">Cargando histórico…</p>}
+            {history.error && (
+              <div className="inline-warning" role="status">
+                <p>{history.error.message}</p>
+                <button type="button" onClick={() => void history.refetch()}>
                   Reintentar histórico
                 </button>
               </div>
             )}
             {emptyHistory && (
-              <p className="panel-message">
-                No hay observaciones disponibles para este histórico.
-              </p>
+              <p>No hay observaciones disponibles para este histórico.</p>
+            )}
+            {resource?.availability === 'available' && !emptyHistory && (
+              <>
+                <p className="detail-note">
+                  {resource.provenance} · Consulta{' '}
+                  {formatDate(resource.fetched_at)} ·{' '}
+                  {panel === 'prices'
+                    ? prices.data?.price_kind === 'synthetic'
+                      ? 'Precio sintético'
+                      : 'Cierre ajustado'
+                    : financials.data?.unit === 'millions'
+                      ? `Millones de ${resource.currency ?? 'moneda no disponible'}`
+                      : resource.currency}
+                </p>
+                <Suspense fallback={<p role="status">Preparando gráfica…</p>}>
+                  <Charts
+                    kind={panel}
+                    company={company}
+                    prices={prices.data}
+                    financials={financials.data}
+                  />
+                </Suspense>
+              </>
             )}
           </>
         )}
-        {(panel === 'comparison' ||
-          (resource?.availability === 'available' && !emptyHistory)) && (
-          <Suspense
-            fallback={<p className="panel-message">Preparando gráfica…</p>}
-          >
-            <Charts
-              key={`${snapshot.job.id}:${company.ticker}`}
-              kind={panel}
-              company={company}
-              prices={prices.data}
-              financials={financials.data}
-            />
-          </Suspense>
-        )}
       </div>
-      <div className="diagnostics-grid">
-        <section>
-          <h3>Qué entra en la mediana</h3>
-          <p>
-            {company.median.count} de 4 proxies incluidos. La mediana es una
-            referencia heurística.
-          </p>
-          <ul className="proxy-decisions">
-            {company.proxies.map((p) => (
-              <li key={p.id}>
-                <span>
-                  {
-                    {
-                      fcl: 'FCL',
-                      nopat: 'NOPAT',
-                      ebitda_adjusted: 'EBITDA ajustado',
-                      net_income: 'Utilidad neta',
-                    }[p.id]
-                  }
-                </span>
-                <strong>{p.included ? 'Incluido' : 'Excluido'}</strong>
-                {p.exclusion_reason && <p>{p.exclusion_reason}</p>}
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section>
-          <h3>Procedencia y vigencia</h3>
-          <dl className="trace-list">
-            <div>
-              <dt>Fuente</dt>
-              <dd>{company.traceability.source ?? 'No disponible'}</dd>
-            </div>
-            <div>
-              <dt>Fecha del precio</dt>
-              <dd>{formatDate(company.traceability.price_date)}</dd>
-            </div>
-            <div>
-              <dt>Tipo de cambio</dt>
-              <dd>
-                {formatNumber(company.traceability.fx_rate, 6)} ·{' '}
-                {company.traceability.reporting_currency ?? '—'}/
-                {company.traceability.quote_currency ?? '—'}
-              </dd>
-            </div>
-            <div>
-              <dt>Fuente FX</dt>
-              <dd>{company.traceability.fx_source ?? 'No disponible'}</dd>
-            </div>
-            <div>
-              <dt>Cálculo (UTC)</dt>
-              <dd>
-                {formatDate(company.calculation.computed_at)}
-                {company.calculation.cache_hit ? ' · reutilizado de caché' : ''}
-              </dd>
-            </div>
-            <div>
-              <dt>Objetivo de analistas</dt>
-              <dd>
-                {company.analyst_target.statistic ??
-                  'Estadístico no disponible'}{' '}
-                · cobertura {company.analyst_target.coverage ?? 'no disponible'}{' '}
-                · horizonte {company.analyst_target.horizon ?? 'no disponible'}
-              </dd>
-            </div>
-          </dl>
-        </section>
-      </div>
-      {company.notes && <p className="diagnostic-note">{company.notes}</p>}
-      <details className="audit">
-        <summary>
-          Supuestos aceptados y auditoría completa (
-          {company.audit_fields.length} campos)
-        </summary>
-        <p>
-          Estos datos corresponden al resultado, aunque el formulario tenga
-          cambios sin aplicar. Metodología {snapshot.job.methodology_version};
-          contrato financiero {snapshot.job.financial_contract_version}.
-        </p>
-        <dl className="accepted-config">
-          {Object.entries(snapshot.job.configuration).map(([key, value]) => (
-            <div key={key}>
-              <dt>{key}</dt>
-              <dd>{valueText(value)}</dd>
-            </div>
-          ))}
-        </dl>
-        <dl className="audit-list">
-          {company.audit_fields.map((f) => (
-            <div key={f.key}>
-              <dt>{f.label}</dt>
-              <dd>{valueText(f.value)}</dd>
-            </div>
-          ))}
-        </dl>
-      </details>
-    </section>
+    </Modal>
   );
 }

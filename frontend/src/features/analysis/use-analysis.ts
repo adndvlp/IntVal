@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueries, useQueryClient } from '@tanstack/react-query';
 import {
   configurationChanged,
   configurationFields,
@@ -17,6 +17,20 @@ import {
   viewReducer,
 } from './model';
 import { AnalysisApi, ApiFault, retryDelay, retryQuery } from './transport';
+import {
+  historyKey,
+  readHistory,
+  saveHistory,
+  mergeHistory,
+  requestIdentity,
+  type HistoryEntry,
+} from './analysis-history';
+import {
+  configurationKey,
+  readConfiguration,
+  saveConfiguration,
+  validConfiguration,
+} from './configuration-storage';
 import {
   cleanSelection,
   indexCatalog,
@@ -133,6 +147,26 @@ export function useAnalysis({
     refetchOnWindowFocus: false,
   });
   const meta = metadataQuery.data;
+  const [history, setHistory] = useState<HistoryEntry[]>(() =>
+    readHistory(historyKey(api.baseUrl)),
+  );
+  const clearedCreates = useRef(new Set<number>());
+  const requestedSelection = useRef<CreateRequest | null>(null);
+  const historyLimit = meta?.limits.max_retained ?? 1;
+  const remember = useCallback(
+    (job: Job, request?: CreateRequest, labels?: string[]) => {
+      setHistory((old) =>
+        mergeHistory(old, job, historyLimit, request, labels),
+      );
+    },
+    [historyLimit],
+  );
+  useEffect(() => {
+    if (!meta) return;
+    if (history.length > historyLimit)
+      setHistory((old) => old.slice(0, historyLimit));
+    else saveHistory(historyKey(api.baseUrl), history);
+  }, [history, historyLimit, meta, api.baseUrl]);
 
   useEffect(() => {
     mounted.current = true;
@@ -168,8 +202,12 @@ export function useAnalysis({
       saveSession(key, { source: request.source, suppressed: false, request });
       try {
         const job = await api.create(request);
+        remember(job, request);
         if (current !== generation.current) {
-          await api.cancel(job.id).catch(() => undefined);
+          if (clearedCreates.current.has(current)) {
+            const cancelled = await api.cancel(job.id).catch(() => null);
+            if (cancelled) remember(cancelled, request);
+          }
           return;
         }
         saveSession(key, {
@@ -198,7 +236,7 @@ export function useAnalysis({
           setSubmitting(false);
       }
     },
-    [acceptJob, api, key],
+    [acceptJob, api, key, remember],
   );
 
   useEffect(() => {
@@ -218,21 +256,25 @@ export function useAnalysis({
       market: 'all',
       selected: matching?.request?.tickers ?? [],
       extras: '',
-      configuration: matching?.request?.configuration
-        ? {
-            ...editableConfiguration(meta.configuration),
-            ...matching.request.configuration,
-          }
-        : editableConfiguration(meta.configuration),
+      configuration:
+        readConfiguration(configurationKey(api.baseUrl)) ??
+        (matching?.request?.configuration
+          ? {
+              ...editableConfiguration(meta.configuration),
+              ...matching.request.configuration,
+            }
+          : editableConfiguration(meta.configuration)),
     });
-    if (saved?.analysis && saved.source !== source)
-      void api.cancel(saved.analysis.id).catch(() => undefined);
-    if (matching?.analysis && !matching.suppressed) {
+    if (saved?.analysis && !saved.suppressed) {
       const current = ++generation.current;
       dispatch({ type: 'begin', generation: current });
-      setReference({ ...matching.analysis, source, generation: current });
-    } else if (matching?.request && !matching.suppressed) {
-      void create(matching.request);
+      setReference({
+        ...saved.analysis,
+        source: saved.source,
+        generation: current,
+      });
+    } else if (saved?.request && !saved.suppressed) {
+      void create(saved.request);
     } else {
       saveSession(key, { source, suppressed: matching?.suppressed ?? false });
     }
@@ -268,13 +310,19 @@ export function useAnalysis({
     )
       return;
     restoredSelection.current = selectionScope;
-    const saved = readSelection(selectionScope);
+    const restoredRequest =
+      requestedSelection.current?.source === draft.source
+        ? requestedSelection.current
+        : null;
+    requestedSelection.current = null;
+    const saved = restoredRequest ? null : readSelection(selectionScope);
     const request =
-      initialSaved.current?.source === draft.source
+      restoredRequest ??
+      (initialSaved.current?.source === draft.source
         ? initialSaved.current.request
-        : undefined;
+        : undefined);
     const selected = cleanSelection(
-      saved?.selected ?? draft.selected,
+      restoredRequest?.tickers ?? saved?.selected ?? draft.selected,
       catalogIndex,
     );
     // Las referencias antiguas pueden contener símbolos adicionales de mercado.
@@ -340,6 +388,64 @@ export function useAnalysis({
       });
   }, [reference, statusQuery.data]);
 
+  useEffect(() => {
+    if (view.current) {
+      const accepted = readSession(key);
+      remember(
+        view.current.job,
+        accepted?.analysis?.id === view.current.job.id
+          ? accepted.request
+          : undefined,
+        view.current.rows.length
+          ? view.current.rows.slice(0, 3).map((c) => c.company_name)
+          : undefined,
+      );
+    }
+  }, [view.current, remember, key]);
+  const backgroundEntries = history.filter(
+    (e) => e.id !== reference?.id && !e.expired && !terminal(e.state),
+  );
+  const background = useQueries({
+    queries: backgroundEntries.map((e) => ({
+      queryKey: ['intval', baseUrl, e.source, e.dataset, e.id, 'status'],
+      queryFn: async ({ signal }: { signal: AbortSignal }) => {
+        const job = await api.status(e.id, signal);
+        if (job.source !== e.source) throw new ApiFault('INVALID_RESPONSE');
+        return job;
+      },
+      staleTime: 1000,
+      retry: retryQuery,
+      retryDelay,
+      refetchInterval: (q: { state: { data?: Job; error: unknown } }) =>
+        q.state.error || (q.state.data && terminal(q.state.data.state))
+          ? false
+          : 5000,
+      refetchOnWindowFocus: false,
+    })),
+  });
+  const backgroundVersion = background
+    .map(
+      (q, i) =>
+        `${backgroundEntries[i]!.id}:${q.data?.revision}:${q.error instanceof ApiFault ? q.error.status : ''}`,
+    )
+    .join('|');
+  useEffect(() => {
+    background.forEach((q, i) => {
+      if (q.data) remember(q.data);
+      else if (
+        q.error instanceof ApiFault &&
+        [404, 410].includes(q.error.status)
+      ) {
+        const id = backgroundEntries[i]!.id;
+        setHistory((old) =>
+          old.map((e) =>
+            e.id === id && !e.expired ? { ...e, expired: true } : e,
+          ),
+        );
+      }
+    });
+  }, [backgroundVersion, remember]);
+
   const after = view.current?.rows.length ?? 0;
   const processed =
     statusQuery.data?.processed ?? view.current?.job.processed ?? 0;
@@ -375,6 +481,8 @@ export function useAnalysis({
   const invalidate = useCallback(
     (nextSource: Source, suppressed: boolean) => {
       const previous = reference?.id ?? view.current?.job.id;
+      if (creating.current !== null)
+        clearedCreates.current.add(creating.current);
       generation.current += 1;
       pendingRequest.current = null;
       setReference(null);
@@ -397,16 +505,63 @@ export function useAnalysis({
   const changeSource = useCallback(
     (source: Source) => {
       if (!draft || source === draft.source) return;
-      invalidate(source, false);
       setDraft({ ...draft, source, market: 'all', selected: [], extras: '' });
     },
-    [draft, invalidate],
+    [draft],
   );
   const clear = useCallback(() => {
     if (draft) invalidate(draft.source, true);
   }, [draft, invalidate]);
 
-  async function submit() {
+  function openAnalysis(entry: HistoryEntry, restoreSelection = true) {
+    const current = ++generation.current;
+    pendingRequest.current = null;
+    setSubmitting(false);
+    setFormError(null);
+    setCancelError(null);
+    const request = entry.request;
+    if (request && restoreSelection) {
+      requestedSelection.current = request;
+      restoredSelection.current = null;
+      setDraft((old) =>
+        old
+          ? {
+              ...old,
+              source: entry.source,
+              selected: request.tickers,
+              extras: '',
+              market: 'all',
+            }
+          : old,
+      );
+    }
+    saveSession(key, {
+      source: entry.source,
+      suppressed: false,
+      request,
+      analysis: { id: entry.id, dataset: entry.dataset },
+    });
+    dispatch({ type: 'begin', generation: current });
+    setReference({
+      id: entry.id,
+      dataset: entry.dataset,
+      source: entry.source,
+      generation: current,
+    });
+  }
+  function cancelSubmission() {
+    const previous =
+      view.previous && history.find((e) => e.id === view.previous!.job.id);
+    clear();
+    if (previous) openAnalysis(previous, false);
+  }
+  function commitConfiguration(value: Configuration) {
+    if (!validConfiguration(value)) return false;
+    setDraft((old) => (old ? { ...old, configuration: { ...value } } : old));
+    saveConfiguration(configurationKey(api.baseUrl), value);
+    return true;
+  }
+  async function submit(onStart?: () => void) {
     if (!draft || !meta || !catalog || catalog.source !== draft.source) return;
     try {
       if (
@@ -427,12 +582,26 @@ export function useAnalysis({
         meta.limits.max_tickers,
         catalog.items.map((c) => c.ticker),
       );
-      return !!(await create({
+      const request: CreateRequest = {
         client_request_id: crypto.randomUUID(),
         source: draft.source,
         tickers,
         configuration: { ...draft.configuration },
-      }));
+      };
+      const existing = history.find(
+        (e) =>
+          !e.expired &&
+          !terminal(e.state) &&
+          e.request &&
+          requestIdentity(e.request) === requestIdentity(request),
+      );
+      if (existing) {
+        openAnalysis(existing);
+        onStart?.();
+        return true;
+      }
+      onStart?.();
+      return !!(await create(request));
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Revisa la selección.');
     }
@@ -443,7 +612,9 @@ export function useAnalysis({
     setCancelPending(true);
     setCancelError(null);
     try {
-      acceptJob(await api.cancel(ref.id), ref);
+      const job = await api.cancel(ref.id);
+      remember(job);
+      acceptJob(job, ref);
     } catch (e) {
       if (ref.generation === generation.current) setCancelError(message(e));
     } finally {
@@ -539,6 +710,14 @@ export function useAnalysis({
   const unavailable =
     transportError instanceof ApiFault &&
     [404, 410].includes(transportError.status);
+  useEffect(() => {
+    if (unavailable && reference)
+      setHistory((old) =>
+        old.map((e) =>
+          e.id === reference.id && !e.expired ? { ...e, expired: true } : e,
+        ),
+      );
+  }, [unavailable, reference]);
   async function reconnect() {
     await statusQuery.refetch();
     if (resultsQuery.error) await resultsQuery.refetch();
@@ -550,6 +729,10 @@ export function useAnalysis({
 
   return {
     api,
+    history,
+    openAnalysis,
+    commitConfiguration,
+    cancelSubmission,
     meta,
     metadataQuery,
     catalog,

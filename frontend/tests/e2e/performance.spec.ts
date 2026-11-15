@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtros', async ({
+test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordenación', async ({
   browser,
 }, info) => {
   test.skip(
@@ -106,15 +106,14 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
     await expect(
       page.getByText('Análisis completado con observaciones', { exact: true }),
     ).toBeVisible();
-    await expect(
-      page.locator('[data-chart="comparison"]').getByRole('application'),
-    ).toBeVisible();
+    const table = page.getByRole('table', { name: 'Resultados por empresa' });
+    await expect(table.getByRole('rowheader')).toHaveCount(3);
     await page.waitForLoadState('networkidle');
     const paint = [];
     for (let i = 0; i < 4; i++)
       paint.push(
         await page
-          .getByLabel('Filtrar por upside mínimo')
+          .getByRole('button', { name: 'Diferencia', exact: true })
           .evaluate(async (el) => {
             const before = performance.now();
             (el as HTMLInputElement).click();
@@ -131,7 +130,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
     samples.push({
       run: run + 1,
       entry,
-      filterActionToTwoFramesMs: paint,
+      sortActionToTwoFramesMs: paint,
       eventTimingSamples: events,
       initialJs,
     });
@@ -156,7 +155,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
       reducedMotion: true,
     },
     interpretation:
-      'Mediciones de laboratorio, sin datos de campo. Event Timing conserva muestras cuando existen. El tiempo de click DOM a dos frames es un indicador de respuesta de filtros, no INP de usuarios reales.',
+      'Mediciones de laboratorio, sin datos de campo. Event Timing conserva muestras cuando existen. El tiempo de click DOM a dos frames es un indicador de respuesta de ordenación, no INP de usuarios reales.',
     samples,
   };
   const output = info.outputPath('performance.json');

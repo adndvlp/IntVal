@@ -1,131 +1,43 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import AnalysisApp from './AnalysisApp';
 import { server } from './test-server';
 import { config, metadata } from './test-fixtures';
-
-const nativeShowModal = HTMLDialogElement.prototype.showModal;
-const nativeClose = HTMLDialogElement.prototype.close;
-
-vi.mock('./Charts', () => ({
-  default: () => <p>Gráfica con datos de la empresa seleccionada.</p>,
-}));
-beforeEach(() => sessionStorage.clear());
+import { mockDialogs, mountShell } from '../../../tests/support/dialog';
+vi.mock('./Charts', () => ({ default: () => <p>Gráfica histórica.</p> }));
+beforeEach(() => {
+  sessionStorage.clear();
+  history.replaceState({}, '', '/#analizar');
+  mockDialogs();
+  mountShell();
+});
 afterEach(() => {
   cleanup();
+  document.body.innerHTML = '';
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
-  HTMLDialogElement.prototype.showModal = nativeShowModal;
-  HTMLDialogElement.prototype.close = nativeClose;
 });
-
-async function startDemo() {
+async function run() {
   const select = await screen.findByRole('checkbox', {
     name: 'Seleccionar página',
   });
   await waitFor(() =>
-    expect((select as HTMLButtonElement).disabled).toBe(false),
+    expect((select as HTMLInputElement).disabled).toBe(false),
   );
   await userEvent.click(select);
   await userEvent.click(
     screen.getByRole('button', { name: 'Analizar selección' }),
   );
+  return screen.findByRole('link', { name: /Empresa DEMO-USA/ });
 }
-
-it('presenta el formulario, elige demo y permite filtrar sin perder el Excel ni los supuestos aceptados', async () => {
-  const api = server();
-  render(<AnalysisApp baseUrl="" initialSource="market" />);
-  await screen.findByRole('radio', { name: 'Demostración' });
-  expect(api.created).toHaveLength(0);
-  await userEvent.click(screen.getByRole('radio', { name: 'Demostración' }));
-  await startDemo();
-  await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
-  await userEvent.selectOptions(
-    screen.getByLabelText('Estado del resultado'),
-    'ERROR',
-  );
-  expect(
-    screen.getByText('No hay empresas que coincidan con estos filtros.'),
-  ).toBeTruthy();
-  expect(
-    (
-      screen.getByRole('button', {
-        name: 'Descargar Excel completo',
-      }) as HTMLButtonElement
-    ).disabled,
-  ).toBe(false);
-  await userEvent.clear(
-    screen.getByLabelText('Tasa de descuento accionista (%)'),
-  );
-  await userEvent.type(
-    screen.getByLabelText('Tasa de descuento accionista (%)'),
-    '15',
-  );
-  expect(screen.getByText(/Hay cambios sin aplicar/)).toBeTruthy();
-  expect(api.created).toHaveLength(1);
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Limpiar resultados' }),
-  );
-  expect(
-    screen.queryByRole('button', { name: 'Descargar Excel completo' }),
-  ).toBeNull();
-  expect(
-    screen.queryByRole('region', { name: 'Pon las cifras en perspectiva.' }),
-  ).toBeNull();
-  await waitFor(() => expect(api.created).toHaveLength(1));
-});
-
-it('una selección vacía anuncia el error y no consulta el motor', async () => {
-  const api = server();
-  render(<AnalysisApp baseUrl="" initialSource="market" />);
-  await screen.findByRole('checkbox', { name: 'Seleccionar página' });
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar selección' }),
-  );
-  expect(
-    await screen.findByText(/Selecciona al menos una empresa/),
-  ).toBeTruthy();
-  expect(api.created).toHaveLength(0);
-  expect(screen.getByRole('alert').getAttribute('tabindex')).toBe('-1');
-});
-
-it('un lote con todas sus filas ERROR termina con observaciones y conserva diagnóstico y Excel', async () => {
-  const api = server();
-  const original = api.fetcher.getMockImplementation()!;
-  api.fetcher.mockImplementation(async (input, init) => {
-    const response = await original(input, init);
-    const data = await response.json();
-    if (data.counts)
-      data.counts = { OK: 0, 'DATOS INCOMPLETOS': 0, REVISAR: 0, ERROR: 1 };
-    if (String(input).includes('/results'))
-      data.items = data.items.map((row: object) => ({
-        ...row,
-        status: 'ERROR',
-        notes: 'Datos no disponibles en este caso.',
-      }));
-    return new Response(JSON.stringify(data));
-  });
-  render(<AnalysisApp baseUrl="" initialSource="demo" />);
-  await startDemo();
-  expect(
-    await screen.findByText('Análisis completado con observaciones'),
-  ).toBeTruthy();
-  expect(screen.getByText('Error: 1')).toBeTruthy();
-  expect(
-    (
-      screen.getByRole('button', {
-        name: 'Descargar Excel completo',
-      }) as HTMLButtonElement
-    ).disabled,
-  ).toBe(false);
-  expect(
-    screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  ).toBeTruthy();
-  expect(screen.getByText('Datos no disponibles en este caso.')).toBeTruthy();
-});
-
-it('cambiar a demo conserva la decisión de analizar en manos del usuario', async () => {
+it('selección vacía localizada y demo sin autoinicio, también en móvil', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
   await userEvent.click(
@@ -133,140 +45,201 @@ it('cambiar a demo conserva la decisión de analizar en manos del usuario', asyn
   );
   await screen.findByRole('checkbox', { name: /DEMO-USA/ });
   expect(api.created).toHaveLength(0);
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Analizar selección' }),
+  );
   expect(
-    (screen.getByRole('checkbox', { name: /DEMO-USA/ }) as HTMLInputElement)
-      .checked,
-  ).toBe(false);
-  await startDemo();
-  await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
-  expect(JSON.parse(api.created[0]!).source).toBe('demo');
+    await screen.findByText(/Selecciona al menos una empresa/),
+  ).toBeTruthy();
+  expect(document.activeElement).toBe(screen.getByRole('alert'));
+  expect(api.created).toHaveLength(0);
 });
-
-it('permite buscar, elegir todo un mercado, normalizar extras y editar los nueve supuestos', async () => {
+it('un lote con errores conserva la empresa, su diagnóstico y el Excel', async () => {
+  const api = server(),
+    original = api.fetcher.getMockImplementation()!;
+  api.fetcher.mockImplementation(async (input, init) => {
+    const response = await original(input, init),
+      data = await response.json();
+    if (data.counts)
+      data.counts = { OK: 0, 'DATOS INCOMPLETOS': 0, REVISAR: 0, ERROR: 1 };
+    if (data.items?.[0]?.proxies) {
+      data.items[0].status = 'ERROR';
+      data.items[0].median = {
+        value_per_share: null,
+        upside: null,
+        count: 0,
+        included_models: [],
+      };
+      data.items[0].notes = 'Datos no disponibles en este caso.';
+    }
+    return new Response(JSON.stringify(data), { status: response.status });
+  });
+  render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  const link = await run();
+  expect(
+    await screen.findByText('Análisis completado con observaciones'),
+  ).toBeTruthy();
+  expect(screen.getByText('Sin estimación')).toBeTruthy();
+  expect(
+    (screen.getByRole('button', { name: 'Excel' }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(false);
+  await userEvent.click(link);
+  expect(screen.getByText('Datos no disponibles en este caso.')).toBeTruthy();
+});
+it('envía los nueve ajustes guardados y normaliza los símbolos adicionales', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
-  await screen.findByRole('checkbox', { name: 'Seleccionar página' });
-  await userEvent.selectOptions(
-    screen.getByRole('combobox', { name: 'Mercado de las empresas' }),
-    'USA',
-  );
-  await userEvent.click(
-    screen.getByRole('checkbox', { name: 'Seleccionar página' }),
-  );
-  expect(
-    (screen.getByRole('checkbox', { name: /AAPL/ }) as HTMLInputElement)
-      .checked,
-  ).toBe(true);
-  await userEvent.click(screen.getByRole('checkbox', { name: /AAPL/ }));
-  await userEvent.type(screen.getByLabelText('Buscar empresas'), 'AAPL');
+  await screen.findByRole('checkbox', { name: /AAPL/ });
   await userEvent.click(screen.getByRole('checkbox', { name: /AAPL/ }));
   await userEvent.type(
     screen.getByLabelText('Símbolos adicionales'),
-    ' aapl, pe&oles.mx, AAPL ',
+    'aapl, pe&oles.mx, AAPL',
   );
-  await userEvent.click(screen.getByText('Más supuestos de valoración'));
-  for (const label of [
-    'Factor conservador de margen (%)',
-    'Crecimiento 1–5 como % del CAGR',
-    'Crecimiento 6–10 como % del inicial',
-  ]) {
-    const input = screen.getByLabelText(label);
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Ajustes de valoración' }),
+  );
+  const dialog = screen.getByRole('dialog');
+  for (const input of within(dialog).getAllByRole('spinbutton')) {
+    const value = input.getAttribute('name')?.startsWith('multiplo')
+      ? '10'
+      : input.getAttribute('name')?.includes('descuento')
+        ? '15'
+        : '50';
     await userEvent.clear(input);
-    await userEvent.type(input, '50');
+    await userEvent.type(input, value);
   }
-  for (const label of [
-    'Múltiplo terminal FCL',
-    'Múltiplo terminal NOPAT',
-    'Múltiplo terminal EBITDA ajustado',
-    'Múltiplo terminal utilidad neta',
-  ]) {
-    const input = screen.getByLabelText(label);
-    await userEvent.clear(input);
-    await userEvent.type(input, '10');
-  }
+  await userEvent.click(
+    within(dialog).getByRole('button', { name: 'Guardar' }),
+  );
   await userEvent.click(
     screen.getByRole('button', { name: 'Analizar selección' }),
   );
   await waitFor(() => expect(api.created).toHaveLength(1));
-  const accepted = JSON.parse(api.created[0]!);
-  expect(accepted.tickers).toEqual(['AAPL', 'PE&OLES.MX']);
-  expect(accepted.configuration.factor_margen_conservador).toBe(0.5);
-  expect(accepted.configuration.multiplo_terminal_ebitda).toBe(10);
+  const sent = JSON.parse(api.created[0]!);
+  expect(sent.tickers).toEqual(['AAPL', 'PE&OLES.MX']);
+  expect(sent.configuration).toEqual({
+    ...config(),
+    tasa_descuento: 0.15,
+    tasa_descuento_empresa: 0.15,
+    factor_margen_conservador: 0.5,
+    factor_crecimiento_inicial: 0.5,
+    factor_crecimiento_final: 0.5,
+    multiplo_terminal_fcl: 10,
+    multiplo_terminal_ebit: 10,
+    multiplo_terminal_ebitda: 10,
+    multiplo_terminal_utilidad_neta: 10,
+  });
 });
-
-it('una descarga fallida conserva resultados y permite reintentar el mismo snapshot', async () => {
-  const api = server();
-  render(<AnalysisApp baseUrl="" initialSource="demo" />);
-  await startDemo();
-  const button = await screen.findByRole('button', {
-    name: 'Descargar Excel completo',
-  });
-  const original = api.fetcher.getMockImplementation()!;
-  let attempts = 0;
-  api.fetcher.mockImplementation(async (input, init) => {
-    if (String(input).endsWith('/export.xlsx')) {
-      attempts += 1;
-      return new Response(
-        JSON.stringify({
-          error: { code: 'EXPORT_FAILED', retryable: false, fields: [] },
-        }),
-        { status: 500 },
-      );
-    }
-    return original(input, init);
-  });
-  await userEvent.click(button);
-  expect(await screen.findByText(/No se pudo preparar el Excel/)).toBeTruthy();
-  expect(
-    screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  ).toBeTruthy();
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Descargar Excel completo' }),
+it('una descarga fallida conserva búsqueda y snapshot y permite reintentar sin otro análisis', async () => {
+  const api = server(),
+    original = api.fetcher.getMockImplementation()!;
+  let fail = true;
+  api.fetcher.mockImplementation((input, init) =>
+    String(input).endsWith('/export.xlsx')
+      ? fail
+        ? Promise.reject(new Error('network'))
+        : Promise.resolve(
+            new Response('PK\x03\x04', {
+              headers: {
+                'Content-Type':
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              },
+            }),
+          )
+      : original(input, init),
   );
-  await waitFor(() => expect(attempts).toBe(2));
+  const create = vi.fn(() => 'blob:excel');
+  const revoke = vi.fn();
+  vi.stubGlobal(
+    'URL',
+    class extends URL {
+      static createObjectURL = create;
+      static revokeObjectURL = revoke;
+    },
+  );
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  await run();
+  await userEvent.type(
+    screen.getByRole('searchbox', { name: 'Buscar en resultados' }),
+    'DEMO-USA',
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Excel' }));
+  await screen.findByText(
+    'No se pudo conectar con el servicio. Puedes reintentar.',
+  );
+  fail = false;
+  await userEvent.click(screen.getByRole('button', { name: 'Excel' }));
+  await waitFor(() => expect(create).toHaveBeenCalled());
   expect(api.created).toHaveLength(1);
+  expect(
+    (
+      screen.getByRole('searchbox', {
+        name: 'Buscar en resultados',
+      }) as HTMLInputElement
+    ).value,
+  ).toBe('DEMO-USA');
+  await waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:excel'), {
+    timeout: 2000,
+  });
 });
-
-it('una recuperación expirada muestra la explicación sin anunciar un envío nuevo', async () => {
-  server({ lost: true });
+it('una recuperación expirada conserva el borrador y no anuncia un envío nuevo', async () => {
+  const api = server({ lost: true });
   sessionStorage.setItem(
     'intval.analysis.v1:',
     JSON.stringify({
       source: 'demo',
       suppressed: false,
-      analysis: { id: 'trabajo', dataset: 'demo-1.0' },
       request: {
         source: 'demo',
-        client_request_id: '00000000-0000-4000-8000-000000000009',
+        client_request_id: crypto.randomUUID(),
         tickers: ['DEMO-USA'],
         configuration: config(),
       },
+      analysis: { id: 'trabajo', dataset: 'demo-1.0' },
     }),
   );
+  history.replaceState({}, '', '/#resultados');
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
-  expect(await screen.findByText(/El análisis expiró/)).toBeTruthy();
+  await screen.findByText(/El análisis expiró/);
+  expect(api.created).toHaveLength(0);
   expect(screen.queryByText('Enviando análisis…')).toBeNull();
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Volver a analizar' }),
+  );
+  await waitFor(() =>
+    expect(
+      (screen.getByRole('checkbox', { name: /DEMO-USA/ }) as HTMLInputElement)
+        .checked,
+    ).toBe(true),
+  );
 });
-
-it('permite reconectar metadatos y comunica un mercado deshabilitado sin analizarlo', async () => {
+it('metadatos fallidos se reintentan y Mercado deshabilitado no envía análisis', async () => {
   const meta = metadata();
   meta.sources[1]!.enabled = false;
-  const api = server({ meta });
-  const original = api.fetcher.getMockImplementation()!;
+  const api = server({ meta }),
+    original = api.fetcher.getMockImplementation()!;
   let fail = true;
-  api.fetcher.mockImplementation(async (input, init) =>
+  api.fetcher.mockImplementation((input, init) =>
     String(input).endsWith('/meta') && fail
-      ? new Response('<html>')
+      ? Promise.resolve(
+          new Response(
+            JSON.stringify({
+              error: { code: 'INVALID_REQUEST', fields: [], retryable: false },
+            }),
+            { status: 422 },
+          ),
+        )
       : original(input, init),
   );
   render(<AnalysisApp baseUrl="" initialSource="market" />);
-  const retry = await screen.findByRole('button', {
-    name: 'Reintentar conexión',
-  });
-  expect(screen.getByText('Retomemos la conexión.')).toBeTruthy();
+  await screen.findByRole('button', { name: 'Reintentar conexión' });
   fail = false;
-  await userEvent.click(retry);
-  expect(await screen.findByText(/Mercado está deshabilitado/)).toBeTruthy();
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Reintentar conexión' }),
+  );
+  await screen.findByText(/Mercado está deshabilitado/);
   expect(
     (
       screen.getByRole('button', {
@@ -276,130 +249,20 @@ it('permite reconectar metadatos y comunica un mercado deshabilitado sin analiza
   ).toBe(true);
   expect(api.created).toHaveLength(0);
 });
-
-it('cancela un lote desde la vista de progreso conservando las filas parciales', async () => {
+it('cancelar conserva los parciales y consultar selección no cancela automáticamente', async () => {
   const api = server({ state: 'running' });
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
-  await startDemo();
-  await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
+  await run();
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Editar selección' }),
+  );
+  expect(api.paths.filter((p) => p.endsWith('/cancel'))).toHaveLength(0);
+  await userEvent.click(screen.getByRole('link', { name: 'Resultados' }));
   await userEvent.click(
     screen.getByRole('button', { name: 'Cancelar análisis' }),
   );
-  expect(
-    await screen.findByText('Análisis cancelado', { exact: true }),
-  ).toBeTruthy();
-  expect(
-    screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  ).toBeTruthy();
-  expect(
-    (
-      screen.getByRole('button', {
-        name: 'Descargar Excel completo',
-      }) as HTMLButtonElement
-    ).disabled,
-  ).toBe(true);
-  expect(api.created).toHaveLength(1);
-});
-
-it('el formulario se puede usar en móvil sin abrir una pantalla o diálogo previo', async () => {
-  const api = server();
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn(() => ({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    })),
-  );
-  render(<AnalysisApp baseUrl="" initialSource="market" />);
-  expect(
-    await screen.findByRole('form', { name: 'Construye tu análisis.' }),
-  ).toBeTruthy();
-  expect(screen.queryByRole('dialog')).toBeNull();
-  expect(api.created).toHaveLength(0);
-});
-
-it('valida al abandonar un campo numérico y bloquea el envío hasta corregirlo', async () => {
-  const api = server();
-  render(<AnalysisApp baseUrl="" initialSource="market" />);
-  const input = await screen.findByLabelText(
-    'Tasa de descuento accionista (%)',
-  );
-  await userEvent.clear(input);
-  await userEvent.tab();
-  expect(input.getAttribute('aria-invalid')).toBe('true');
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Analizar selección' }),
-  );
-  expect(api.created).toHaveLength(0);
-  await userEvent.type(input, '10');
-  await userEvent.tab();
-  expect(input.getAttribute('aria-invalid')).toBe('false');
-});
-
-it('aplica filtros locales y descarga el snapshot completo liberando la URL temporal', async () => {
-  const api = server();
-  const original = api.fetcher.getMockImplementation()!;
-  api.fetcher.mockImplementation(async (input, init) =>
-    String(input).endsWith('/export.xlsx')
-      ? new Response(new Uint8Array([80, 75, 3, 4]), {
-          headers: {
-            'Content-Type':
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          },
-        })
-      : original(input, init),
-  );
-  const create = vi.fn(() => 'blob:test-download');
-  const revoke = vi.fn();
-  vi.stubGlobal(
-    'URL',
-    class extends URL {
-      static createObjectURL = create;
-      static revokeObjectURL = revoke;
-    },
-  );
-  const click = vi
-    .spyOn(HTMLAnchorElement.prototype, 'click')
-    .mockImplementation(() => {});
-  render(<AnalysisApp baseUrl="" initialSource="demo" />);
-  await startDemo();
-  await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
-  await userEvent.selectOptions(
-    screen.getByLabelText('Mercado del resultado'),
-    'MX',
-  );
-  expect(
-    screen.queryByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  ).toBeNull();
-  await userEvent.selectOptions(
-    screen.getByLabelText('Mercado del resultado'),
-    'USA',
-  );
-  await userEvent.click(screen.getByLabelText('Filtrar por upside mínimo'));
-  const minimum = screen.getByLabelText('Upside mínimo (%)');
-  await userEvent.clear(minimum);
-  await userEvent.type(minimum, '20');
-  expect(
-    screen.queryByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  ).toBeNull();
-  await userEvent.click(screen.getByLabelText('Filtrar por upside mínimo'));
-  expect(
-    screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  ).toBeTruthy();
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Descargar Excel completo' }),
-  );
-  await waitFor(() => expect(click).toHaveBeenCalledOnce());
-  expect(create).toHaveBeenCalledOnce();
-  expect(
-    api.fetcher.mock.calls
-      .map(([input]) => String(input))
-      .filter((p) => p.endsWith('/export.xlsx')),
-  ).toEqual(['/api/v1/analyses/trabajo/export.xlsx']);
-  await waitFor(
-    () => expect(revoke).toHaveBeenCalledWith('blob:test-download'),
-    { timeout: 2000 },
-  );
-  expect(api.created).toHaveLength(1);
+  await within(
+    screen.getByRole('region', { name: 'Resultados del análisis' }),
+  ).findByText('Análisis cancelado');
+  expect(screen.getByRole('link', { name: /Empresa DEMO-USA/ })).toBeTruthy();
 });

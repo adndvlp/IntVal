@@ -1,82 +1,73 @@
-import { startDemo } from './analysis-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { auditPage } from './audit-helpers';
+import { startDemo } from './analysis-helpers';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-
-async function openControls(page: Page) {
-  await expect(
-    page.getByRole('form', { name: 'Construye tu análisis.' }),
-  ).toBeVisible();
-}
-async function expectNoOverflow(page: Page) {
-  const layout = await page.evaluate(() => ({
-    width: document.documentElement.scrollWidth,
-    viewport: innerWidth,
-    overflow: Array.from(document.querySelectorAll('body *'))
-      .filter((e) => e.getBoundingClientRect().right > innerWidth + 1)
-      .map((e) => ({
-        tag: e.tagName,
-        class: e.getAttribute('class'),
-        right: e.getBoundingClientRect().right,
-      })),
-  }));
-  expect(layout.width, JSON.stringify(layout.overflow)).toBeLessThanOrEqual(
-    layout.viewport,
-  );
+async function noOverflow(page: Page) {
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 }
 
-test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapshot completo', async ({
+test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot', async ({
   page,
-}, testInfo) => {
-  const errors: string[] = [];
-  const creations: string[] = [];
+}, info) => {
+  const errors: string[] = [],
+    posts: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('request', (r) => {
-    if (r.method() === 'POST' && r.url().endsWith('/api/v1/analyses'))
-      creations.push(r.postData() ?? '');
+    if (r.method() === 'POST' && r.url().endsWith('/analyses'))
+      posts.push(r.postData() ?? '');
   });
   await page.goto('/?fuente=demo');
   await startDemo(page);
   await expect(
     page.getByText('Análisis completado con observaciones', { exact: true }),
-  ).toBeVisible({ timeout: 20000 });
-  await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
   ).toBeVisible();
+  const table = page.getByRole('table', { name: 'Resultados por empresa' });
+  await expect(table.getByRole('columnheader')).toHaveCount(4);
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-MX.MX' }),
+    table.getByRole('link', { name: 'Industrial Aurora', exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-INCOMPLETA' }),
-  ).toBeVisible();
-  expect(creations).toHaveLength(1);
-  await expect(
-    page.getByRole('group', { name: 'Resultados por estado' }),
-  ).toContainText('Datos incompletos: 1');
-  await expect(page.locator('.kpi-grid')).toContainText('+10.38%');
-  await page.getByLabel('Filtrar por upside mínimo').check();
-  await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-INCOMPLETA' }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-MX.MX' }),
-  ).toHaveCount(0);
-  await page.getByLabel('Mercado del resultado').selectOption('MX');
-  await expect(
-    page.getByText('No hay empresas que coincidan con estos filtros.'),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Descargar Excel completo' }),
-  ).toBeEnabled();
-  await openControls(page);
-  await page.getByLabel('Tasa de descuento accionista (%)').fill('15');
-  await expect(page.getByText(/Hay cambios sin aplicar/)).toBeVisible();
+  await expect(table).toContainText('Sin estimación');
+  const alignment = await table.evaluate((t) =>
+    [1, 2, 3].map((index) => {
+      const heading = t.querySelectorAll('thead th')[index]!;
+      const header = heading
+        .querySelector('button > span')!
+        .getBoundingClientRect();
+      const cell = t.querySelectorAll('tbody tr')[0]!.children[index]!;
+      const range = document.createRange();
+      range.selectNodeContents(cell);
+      const value = range.getBoundingClientRect();
+      return Math.abs(
+        header.left + header.width / 2 - value.left - value.width / 2,
+      );
+    }),
+  );
+  for (const offset of alignment) expect(offset).toBeLessThanOrEqual(1);
+
+  await table.getByRole('button', { name: 'Precio', exact: true }).click();
+  await expect(table.locator('th[aria-sort]')).toHaveAttribute(
+    'aria-sort',
+    'ascending',
+  );
+  await page
+    .getByRole('searchbox', { name: 'Buscar en resultados' })
+    .fill('DEMO-MX.MX');
+  await expect(table.getByRole('rowheader')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Ajustes de valoración' }).click();
+  const settings = page.getByRole('dialog', { name: 'Ajustes de valoración' });
+  await settings
+    .getByLabel('Tasa de descuento (%)', { exact: true })
+    .fill('15');
+  await settings.getByRole('button', { name: 'Guardar' }).click();
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Descargar Excel completo' }).click();
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe('demo_valoraciones_USA_MX.xlsx');
-  const file = testInfo.outputPath('analisis-demo.xlsx');
+  await page.getByRole('button', { name: 'Excel', exact: true }).click();
+  const download = await downloadPromise,
+    file = info.outputPath('analisis-demo.xlsx');
   await download.saveAs(file);
   const python = fileURLToPath(
     new URL('../../../.venv/bin/python', import.meta.url),
@@ -87,88 +78,78 @@ test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapsh
   expect(execFileSync(python, [verify, file], { encoding: 'utf8' })).toContain(
     'conciliados',
   );
-  expect(creations).toHaveLength(1);
-  await page.getByLabel('Filtrar por upside mínimo').uncheck();
-  await page.getByRole('button', { name: 'Ver detalle de DEMO-MX.MX' }).click();
-  await expect(page.getByLabel('Empresa del detalle')).toHaveValue(
-    'DEMO-MX.MX',
-  );
-  await page
-    .getByRole('button', { name: 'Precio histórico', exact: true })
+  await table
+    .getByRole('link', { name: 'Manufacturas Horizonte', exact: true })
     .click();
-  await expect(
-    page.locator('[data-chart="prices"] svg.recharts-surface'),
-  ).toBeVisible({ timeout: 15000 });
-  await page.getByLabel('Período del precio histórico').selectOption('5y');
-  await expect(page.locator('[data-chart="prices"]')).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Estados financieros', exact: true })
-    .click();
-  await expect(page.getByText('Millones de MXN', { exact: true })).toBeVisible({
-    timeout: 15000,
+  const detail = page.getByRole('dialog', {
+    name: 'Manufacturas Horizonte',
+    exact: true,
   });
-  await page.getByRole('button', { name: 'Márgenes', exact: true }).click();
+  await expect(detail.getByRole('heading', { name: 'Métodos' })).toBeVisible();
   await expect(
-    page.locator('[data-chart="margins"]').getByRole('application'),
+    detail.getByRole('heading', { name: 'Supuestos' }),
   ).toBeVisible();
-  await page.getByText('Ver datos de la gráfica', { exact: true }).click();
+  await expect(detail).toContainText('10.00 % / 10.00 %');
+  await detail.getByRole('tab', { name: 'Precio histórico' }).click();
   await expect(
-    page.getByRole('table', { name: 'Datos de márgenes · porcentajes' }),
+    detail.locator('[data-chart=prices]').getByRole('application'),
+  ).toBeVisible();
+  await detail.getByLabel('Período del precio histórico').selectOption('5y');
+  await detail.getByRole('tab', { name: 'Finanzas' }).click();
+  await expect(detail.getByRole('figure')).toContainText('Millones de MXN');
+  await detail.getByRole('tab', { name: 'Márgenes' }).click();
+  await detail.getByText('Datos', { exact: true }).click();
+  await expect(
+    detail.getByRole('table', { name: 'Datos de márgenes · porcentajes' }),
   ).toContainText('+13%');
-  await page.getByRole('button', { name: 'Comparación', exact: true }).click();
-  await page.getByLabel('Mercado del resultado').selectOption('all');
-  await openControls(page);
-  await page.getByLabel('Tasa de descuento accionista (%)').fill('10');
-  const audit = await auditPage(page);
-  expect(audit.violations).toEqual([]);
-  await expectNoOverflow(page);
+  await page.keyboard.press('Escape');
+  await expect(detail).not.toBeVisible();
+  await expect(
+    table.getByRole('link', { name: 'Manufacturas Horizonte', exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole('searchbox', { name: 'Buscar en resultados' }),
+  ).toHaveValue('DEMO-MX.MX');
+  await expect(table.locator('th[aria-sort]')).toHaveAttribute(
+    'aria-sort',
+    'ascending',
+  );
+  await expect(page.locator('input[name=min_upside]')).toHaveCount(0);
+  expect(posts).toHaveLength(1);
+  expect(errors).toEqual([]);
+  expect((await auditPage(page)).violations).toEqual([]);
+  await noOverflow(page);
   await page.screenshot({
-    path: testInfo.outputPath('dashboard.png'),
+    path: info.outputPath('ui3-results.png'),
     fullPage: true,
   });
-  expect(errors).toEqual([]);
-  await page.getByRole('button', { name: 'Limpiar resultados' }).click();
-  await expect(page.locator('#resultados')).not.toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Descargar Excel completo' }),
-  ).toHaveCount(0);
-  expect(creations).toHaveLength(1);
 });
 
-test('Mercado no analiza al abrir; reflow a 320 px y texto al 200 por ciento', async ({
+test('Mercado no analiza al abrir; selector y ajustes a 320 px y texto al 200 por ciento', async ({
   page,
-}, testInfo) => {
-  const creations: string[] = [];
+}, info) => {
+  const posts: string[] = [];
   page.on('request', (r) => {
-    if (r.method() === 'POST' && r.url().endsWith('/api/v1/analyses'))
-      creations.push(r.url());
+    if (r.method() === 'POST') posts.push(r.url());
   });
   await page.goto('/app/?fuente=market');
   await expect(
     page.getByText('Servicio conectado', { exact: true }),
   ).toBeVisible();
-  expect(creations).toEqual([]);
   await page.setViewportSize({ width: 320, height: 900 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addStyleTag({ content: 'html { font-size: 200%; }' });
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await noOverflow(page);
+  await page.getByRole('button', { name: 'Ajustes de valoración' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Ajustes de valoración' });
+  await expect(dialog.getByRole('spinbutton')).toHaveCount(9);
+  expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
   await page.screenshot({
-    path: testInfo.outputPath('dashboard-zoom-before.png'),
+    path: info.outputPath('ui3-settings-zoom.png'),
     fullPage: true,
   });
-  await expectNoOverflow(page);
-  await openControls(page);
-  await expect(
-    page.getByLabel('Tasa de descuento accionista (%)'),
-  ).toBeVisible();
-  expect(
-    await page
-      .getByRole('form', { name: 'Construye tu análisis.' })
-      .evaluate((el) => el.scrollWidth <= el.clientWidth),
-  ).toBe(true);
-  await page.screenshot({
-    path: testInfo.outputPath('dashboard-zoom.png'),
-    fullPage: true,
-  });
-  expect(creations).toEqual([]);
+  await dialog.getByRole('button', { name: 'Cerrar ajustes' }).click();
+  expect(posts).toEqual([]);
 });

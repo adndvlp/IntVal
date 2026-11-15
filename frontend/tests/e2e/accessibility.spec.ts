@@ -1,74 +1,69 @@
-import { startDemo } from './analysis-helpers';
 import { test, expect } from '@playwright/test';
 import { auditPage, navigationTab } from './audit-helpers';
+import { startDemo } from './analysis-helpers';
 
-test('estructura, contraste automático, errores descritos y formulario directo con teclado', async ({
+test('estructura, contraste automático, validación y modales nativos con teclado', async ({
   page,
-}, testInfo) => {
+}, info) => {
   test.setTimeout(45000);
   for (const path of ['/', '/metodologia/', '/app/?fuente=market']) {
     await page.goto(path);
-    if (path.includes('/app/'))
+    if (path !== '/metodologia/')
       await expect(
         page.getByText('Servicio conectado', { exact: true }),
       ).toBeVisible();
-    const axe = await auditPage(page);
-    expect(axe.violations, JSON.stringify(axe.violations)).toEqual([]);
-    await page.keyboard.press(navigationTab(testInfo));
+    expect((await auditPage(page)).violations).toEqual([]);
+    await page.keyboard.press(navigationTab(info));
     await expect(
       page.getByRole('link', { name: 'Saltar al contenido' }),
     ).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   }
-  const compact = testInfo.project.name.endsWith('mobile');
-  // Los nombres deben seguir coincidiendo con el título visible tras el ajuste
-  // de interoperabilidad de referencias ARIA observado en Firefox 159/macOS.
-  const form = page.getByRole('form', { name: 'Construye tu análisis.' });
-  await expect(form.getByRole('heading', { level: 2 })).toHaveText(
-    'Construye tu análisis.',
-  );
-  const input = page.getByLabel('Tasa de descuento accionista (%)');
-  await input.fill('');
-  await input.press('Tab');
-  const reason = page.getByText('Introduce un valor entre 5 y 20.');
-  await expect(reason).toBeVisible();
-  await expect(input).toHaveAttribute(
+  await page.getByRole('button', { name: 'Ajustes de valoración' }).click();
+  const settings = page.getByRole('dialog', { name: 'Ajustes de valoración' });
+  const rate = settings.getByLabel('Tasa de descuento (%)', { exact: true });
+  await rate.fill('');
+  await rate.press('Tab');
+  await expect(rate).toHaveAttribute('aria-invalid', 'true');
+  await expect(rate).toHaveAttribute(
     'aria-describedby',
-    /tasa_descuento-error/,
+    /setting-error-tasa_descuento/,
   );
-  await input.fill('10');
-  await input.press('Tab');
-  await expect(reason).toHaveCount(0);
-  await page.goto('/app/?fuente=demo');
-  await startDemo(page);
+  await rate.fill('10');
+  await rate.press('Tab');
+  await expect(rate).toHaveAttribute('aria-invalid', 'false');
+  expect((await auditPage(page)).violations).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(settings).not.toBeVisible();
   await expect(
-    page.getByText('Análisis completado con observaciones', { exact: true }),
-  ).toBeVisible();
-  for (const name of [
-    'Pon las cifras en perspectiva.',
-    'Detrás de cada cifra.',
-  ]) {
-    const section = page.getByRole('region', { name, exact: true });
-    await expect(section.getByRole('heading', { level: 2 })).toHaveText(name);
-  }
-  const region = page.getByRole('region', {
-    name: 'Comparación de empresas, desplazable horizontalmente',
+    page.getByRole('button', { name: 'Ajustes de valoración' }),
+  ).toBeFocused();
+  await page.goto('/?fuente=demo');
+  await startDemo(page);
+  const table = page.getByRole('table', { name: 'Resultados por empresa' });
+  await table
+    .getByRole('link', { name: 'Industrial Aurora', exact: true })
+    .click();
+  const detail = page.getByRole('dialog', {
+    name: 'Industrial Aurora',
+    exact: true,
   });
-  await region.focus();
+  const summary = detail.getByRole('tab', { name: 'Resumen' });
+  await summary.focus();
   await page.keyboard.press('ArrowRight');
-  if (compact)
-    await expect
-      .poll(() => region.evaluate((el) => el.scrollLeft))
-      .toBeGreaterThan(0);
-  const outline = await region.evaluate(
-    (el) => getComputedStyle(el).outlineStyle,
-  );
-  expect(outline).not.toBe('none');
-  await testInfo.attach('comparison-accessibility-tree', {
-    body: await region.ariaSnapshot(),
-    contentType: 'text/yaml',
-  });
-  const axe = await auditPage(page);
-  expect(axe.violations, JSON.stringify(axe.violations)).toEqual([]);
+  await expect(
+    detail.getByRole('tab', { name: 'Precio histórico' }),
+  ).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(detail.getByRole('figure')).toBeVisible();
+  await page.keyboard.press('Home');
+  await expect(summary).toBeFocused();
+  await page.keyboard.press('Enter');
+  expect((await auditPage(page)).violations).toEqual([]);
+  await page.mouse.click(1, 1);
+  await expect(detail).not.toBeVisible();
+  await expect(
+    table.getByRole('link', { name: 'Industrial Aurora', exact: true }),
+  ).toBeFocused();
 });

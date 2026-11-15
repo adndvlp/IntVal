@@ -82,7 +82,7 @@ it('limpiar durante POST cancela la aceptación tardía y no recarga automática
   expect(api.created).toHaveLength(1);
 });
 
-it('cambiar fuente descarta páginas tardías y preserva sólo la selección de la fuente nueva', async () => {
+it('cambiar fuente conserva el trabajo y sus páginas sin mezclar la selección de otra fuente', async () => {
   const api = server({ deferPage: true });
   const view = render('demo');
   await startDemo(view);
@@ -93,7 +93,8 @@ it('cambiar fuente descarta páginas tardías y preserva sólo la selección de 
   await act(async () => {
     api.finishPage();
   });
-  expect(view.result.current.view.current).toBeNull();
+  expect(view.result.current.view.current?.job.source).toBe('demo');
+  expect(view.result.current.draft?.selected).toEqual([]);
   expect(view.result.current.draft?.selected).toEqual([]);
   expect(api.created).toHaveLength(1);
 });
@@ -254,4 +255,60 @@ it('sigue funcionando con almacenamiento bloqueado y recupera una configuración
     await view.result.current.retryCreate();
   });
   expect(api.created).toHaveLength(1);
+});
+
+it('reabrir un trabajo o repetir su selección activa no crea otro POST y conserva las preferencias', async () => {
+  const api = server({ state: 'running' });
+  const view = render('demo');
+  await startDemo(view);
+  await waitFor(() => expect(view.result.current.history).toHaveLength(1));
+  await act(async () => {
+    await view.result.current.submit();
+  });
+  expect(api.created).toHaveLength(1);
+  act(() => view.result.current.openAnalysis(view.result.current.history[0]!));
+  await waitFor(() =>
+    expect(view.result.current.view.current?.rows).toHaveLength(1),
+  );
+  expect(api.created).toHaveLength(1);
+  act(() =>
+    view.result.current.commitConfiguration({
+      ...config(),
+      tasa_descuento: 0.15,
+    }),
+  );
+  await act(async () => {
+    await view.result.current.submit();
+  });
+  expect(api.created).toHaveLength(2);
+});
+it('aceptar tarde otra solicitud mientras se consulta el historial conserva ambos trabajos sin cancelar', async () => {
+  const api = server();
+  const original = api.fetcher.getMockImplementation()!;
+  let accepted!: (value: Response) => void,
+    posts = 0;
+  api.fetcher.mockImplementation((input, init) => {
+    if (String(input).endsWith('/analyses') && ++posts === 2)
+      return new Promise<Response>((resolve) => {
+        accepted = resolve;
+      });
+    return original(input, init);
+  });
+  const view = render('demo');
+  await startDemo(view);
+  await waitFor(() => expect(view.result.current.history).toHaveLength(1));
+  const first = view.result.current.history[0]!;
+  act(() => view.result.current.changeConfiguration('tasa_descuento', 0.15));
+  await act(async () => {
+    void view.result.current.submit();
+  });
+  act(() => view.result.current.openAnalysis(first));
+  await act(async () =>
+    accepted(new Response(JSON.stringify(job('otro', 1, 'queued')))),
+  );
+  await waitFor(() =>
+    expect(view.result.current.history.some((e) => e.id === 'otro')).toBe(true),
+  );
+  expect(view.result.current.reference?.id).toBe(first.id);
+  expect(api.paths.filter((p) => p.endsWith('/cancel'))).toHaveLength(0);
 });

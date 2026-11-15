@@ -132,7 +132,7 @@ export default function Charts({
                 type="category"
                 dataKey="label"
                 width={155}
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 16 }}
               />
               <Tooltip
                 formatter={(v) =>
@@ -152,7 +152,7 @@ export default function Charts({
           ) : kind === 'prices' ? (
             <LineChart {...common} data={prices?.items}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" minTickGap={45} tick={{ fontSize: 11 }} />
+              <XAxis dataKey="date" minTickGap={45} tick={{ fontSize: 16 }} />
               <YAxis tickFormatter={axis} width={65} />
               <Tooltip
                 formatter={(v) =>
@@ -169,7 +169,7 @@ export default function Charts({
                     ? 'Precio sintético'
                     : 'Cierre ajustado'
                 }
-                stroke={series[0].color}
+                stroke="var(--blue)"
                 strokeWidth={2}
                 dot={false}
                 connectNulls={false}
@@ -179,7 +179,7 @@ export default function Charts({
           ) : (
             <LineChart {...common} data={rows}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" tick={{ fontSize: 11 }} />
+              <XAxis dataKey="year" tick={{ fontSize: 16 }} />
               <YAxis
                 tickFormatter={kind === 'margins' ? formatPercent : axis}
                 width={75}
@@ -209,7 +209,7 @@ export default function Charts({
         </ResponsiveContainer>
       </div>
       <details className="chart-data">
-        <summary>Ver datos de la gráfica</summary>
+        <summary>Datos</summary>
         <div
           className="data-scroll"
           tabIndex={0}

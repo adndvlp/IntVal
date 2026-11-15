@@ -13,7 +13,7 @@ it('comparación conserva los valores y ausencias con una alternativa tabular ac
   const row = company();
   row.proxies[0]!.value_per_share = null;
   render(<Charts kind="comparison" company={row} />);
-  await userEvent.click(screen.getByText('Ver datos de la gráfica'));
+  await userEvent.click(screen.getByText('Datos'));
   const table = within(
     screen.getByRole('table', { name: 'Datos de comparación por acción' }),
   );
@@ -25,7 +25,7 @@ it('comparación conserva los valores y ausencias con una alternativa tabular ac
 it('precio histórico conserva fechas y huecos; financieros permanecen en millones y márgenes en ratios', async () => {
   const row = company();
   const view = render(<Charts kind="prices" company={row} prices={prices()} />);
-  await userEvent.click(screen.getByText('Ver datos de la gráfica'));
+  await userEvent.click(screen.getByText('Datos'));
   const table = within(
     screen.getByRole('table', { name: 'Datos del precio histórico' }),
   );

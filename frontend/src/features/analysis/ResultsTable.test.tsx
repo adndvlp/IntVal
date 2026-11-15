@@ -5,8 +5,107 @@ import ResultsTable from './ResultsTable';
 import { company } from './test-fixtures';
 
 afterEach(cleanup);
+const table = () => screen.getByRole('table');
+const tickers = () =>
+  within(table())
+    .getAllByRole('rowheader')
+    .map((e) => e.textContent);
+const search = () =>
+  screen.getByRole('searchbox', { name: 'Buscar en resultados' });
+const click = (name: string) =>
+  userEvent.click(within(table()).getByRole('button', { name }));
 
-it('las flechas desplazan la región de tabla sin interceptar las teclas de sus controles', async () => {
+it('cuatro columnas, diferencia descendente inicial, ausencias al final y cifras sin duplicados', () => {
+  render(
+    <ResultsTable
+      rows={[
+        company('BAJA', -0.1),
+        company('AUSENTE', null),
+        company('ALTA', 0.3),
+      ]}
+      selected={null}
+      onSelect={vi.fn()}
+    />,
+  );
+  expect(
+    within(table())
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent?.replace(/[↑↓↕]/g, '').trim()),
+  ).toEqual(['Empresa', 'Precio', 'Valor estimado', 'Diferencia']);
+  expect(tickers()).toEqual([
+    expect.stringContaining('ALTA'),
+    expect.stringContaining('BAJA'),
+    expect.stringContaining('AUSENTE'),
+  ]);
+  expect(screen.getByText('Sin estimación')).toBeTruthy();
+  expect(screen.queryByText('Columnas de la comparación')).toBeNull();
+  expect(within(table()).getAllByRole('cell')[2]!.textContent).toBe('+30.00 %');
+});
+
+it('ordena números originales globalmente, conserva los nodos y foco; sólo un encabezado lleva aria-sort', async () => {
+  const rows = [
+    company('A', 0.3),
+    { ...company('B', 0.1), market_price: 20 },
+    { ...company('C', null), market_price: null },
+  ];
+  render(<ResultsTable rows={rows} selected={null} onSelect={vi.fn()} />);
+  const button = within(table()).getByRole('button', { name: 'Precio' });
+  const row = screen.getByRole('rowheader', { name: /Empresa A/ });
+  await userEvent.click(button);
+  expect(document.activeElement).toBe(button);
+  expect(tickers()[0]).toContain('B');
+  expect(table().querySelectorAll('[aria-sort]')).toHaveLength(1);
+  expect(button.parentElement?.getAttribute('aria-sort')).toBe('ascending');
+  expect(screen.getByRole('rowheader', { name: /Empresa A/ })).toBe(row);
+  await userEvent.click(button);
+  expect(tickers()[0]).toContain('A');
+  expect(tickers().at(-1)).toContain('C');
+  await click('Empresa');
+  expect(tickers()[0]).toContain('A');
+  await click('Valor estimado');
+  expect(table().querySelectorAll('[aria-sort]')).toHaveLength(1);
+});
+
+it('1203 resultados: 25 filas, búsqueda normalizada global y última página parcial', async () => {
+  const rows = Array.from({ length: 1203 }, (_, i) => ({
+    ...company(`E${i}`, i / 1000),
+    company_name: i === 1 ? 'Álamo único' : `Empresa ${i}`,
+  }));
+  render(<ResultsTable rows={rows} selected={null} onSelect={vi.fn()} />);
+  expect(tickers()).toHaveLength(25);
+  expect(tickers()[0]).toContain('E1202');
+  await userEvent.click(screen.getByRole('button', { name: 'Última página' }));
+  expect(tickers()).toHaveLength(3);
+  await userEvent.type(search(), 'ALAMO UNICO');
+  expect(tickers()).toEqual([expect.stringContaining('E1')]);
+  expect(
+    screen.queryByRole('navigation', { name: 'Páginas de resultados' }),
+  ).toBeNull();
+  await userEvent.clear(search());
+  expect(tickers()).toHaveLength(25);
+});
+
+it('abrir detalle conserva búsqueda, orden, página y contexto de la comparación', async () => {
+  const select = vi.fn();
+  const rows = Array.from({ length: 80 }, (_, i) => company(`E${i}`, i / 100));
+  const view = render(
+    <ResultsTable rows={rows} selected={null} onSelect={select} />,
+  );
+  await click('Empresa');
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Siguiente página' }),
+  );
+  const link = screen.getByRole('link', { name: /Empresa E25/ });
+  await userEvent.click(link);
+  expect(select).toHaveBeenCalledWith('E25');
+  view.rerender(<ResultsTable rows={rows} selected="E25" onSelect={select} />);
+  expect(screen.getByRole('link', { name: /Empresa E25/ })).toBe(link);
+  expect(tickers()).toHaveLength(25);
+  await userEvent.type(search(), 'NO EXISTE');
+  expect(screen.getByText('No hay coincidencias.')).toBeTruthy();
+});
+
+it('las flechas desplazan únicamente la región enfocada', async () => {
   render(
     <ResultsTable rows={[company()]} selected={null} onSelect={vi.fn()} />,
   );
@@ -15,112 +114,12 @@ it('las flechas desplazan la región de tabla sin interceptar las teclas de sus 
   });
   Object.defineProperty(region, 'clientWidth', { value: 400 });
   Object.defineProperty(region, 'scrollBy', {
-    value: ({ left }: { left: number }) => {
-      region.scrollLeft = Math.max(0, region.scrollLeft + left);
-    },
+    value: ({ left }: { left: number }) => (region.scrollLeft += left),
   });
   region.focus();
   await userEvent.keyboard('{ArrowRight}');
-  expect(region.scrollLeft).toBeGreaterThan(0);
-  const before = region.scrollLeft;
-  screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }).focus();
-  await userEvent.keyboard('{ArrowLeft}');
-  expect(region.scrollLeft).toBe(before);
-  region.focus();
-  await userEvent.keyboard('{ArrowLeft}');
-  expect(region.scrollLeft).toBe(0);
-  await userEvent.keyboard('{Tab}');
-  expect(document.activeElement).toBe(
-    screen.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
-  );
-});
-
-it('pagina el conjunto completo y conserva la página al seleccionar una empresa', async () => {
-  const rows = Array.from({ length: 45 }, (_, i) =>
-    company(`EMP${i}`, i / 100),
-  );
-  const select = vi.fn();
-  const view = render(
-    <ResultsTable rows={rows} selected={null} onSelect={select} />,
-  );
-  expect(
-    screen.getByRole('button', { name: 'Ver detalle de EMP0' }),
-  ).toBeTruthy();
-  expect(
-    screen
-      .getByRole('button', { name: 'Ver detalle de EMP0' })
-      .textContent?.trim(),
-  ).toBe('EMP0');
-  expect(screen.getByRole('rowheader', { name: /EMP0/ }).textContent).toContain(
-    'Empresa EMP0',
-  );
-  expect(
-    screen.queryByRole('button', { name: 'Ver detalle de EMP20' }),
-  ).toBeNull();
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Página siguiente' }),
-  );
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Ver detalle de EMP20' }),
-  );
-  expect(select).toHaveBeenCalledWith('EMP20');
-  view.rerender(
-    <ResultsTable rows={rows} selected="EMP20" onSelect={select} />,
-  );
-  expect(
-    screen
-      .getByRole('button', { name: 'Ver detalle de EMP20' })
-      .getAttribute('aria-pressed'),
-  ).toBe('true');
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Página anterior' }),
-  );
-  expect(
-    screen.getByRole('button', { name: 'Ver detalle de EMP0' }),
-  ).toBeTruthy();
-});
-
-it('muestra todas las columnas financieras y sus ausencias sin perder encabezados semánticos', async () => {
-  const row = company('SIN-DATOS', null);
-  row.market_price = null;
-  row.currency = null;
-  row.notes = null;
-  row.proxies.forEach((p) => {
-    p.value_per_share = null;
-    p.upside = null;
-  });
-  row.analyst_target.value = null;
-  row.analyst_target.upside = null;
-  row.status = 'DATOS INCOMPLETOS';
-  const negative = company('CAIDA', -0.25);
-  negative.status = 'REVISAR';
-  const failed = company('FALLO');
-  failed.status = 'ERROR';
-  render(
-    <ResultsTable
-      rows={[row, negative, failed]}
-      selected={null}
-      onSelect={vi.fn()}
-    />,
-  );
-  await userEvent.click(screen.getByText('Columnas de la comparación'));
-  const options = screen.getByRole('group', { name: 'Mostrar columnas' });
-  for (const input of within(options).getAllByRole('checkbox'))
-    if (!(input as HTMLInputElement).checked) await userEvent.click(input);
-  const table = screen.getByRole('table');
-  expect(
-    within(table).getByRole('columnheader', { name: 'Proxy EBITDA ajustado' }),
-  ).toBeTruthy();
-  expect(
-    within(table).getByRole('columnheader', { name: 'Objetivo de analistas' }),
-  ).toBeTruthy();
-  expect(within(table).getAllByText('—').length).toBeGreaterThan(8);
-  expect(
-    within(table).getByRole('rowheader', { name: /SIN-DATOS/ }),
-  ).toBeTruthy();
-  const populated = within(table).getByRole('row', { name: /CAIDA/ });
-  expect(within(populated).getByText('112.02 USD')).toBeTruthy();
-  expect(within(populated).getAllByText('+12%')).toHaveLength(4);
-  expect(within(populated).getByText('-25%')).toBeTruthy();
-  expect(within(populated).getByText('120.00 USD')).toBeTruthy();
+  expect(region.scrollLeft).toBe(300);
+  await click('Precio');
+  await userEvent.keyboard('{ArrowRight}');
+  expect(region.scrollLeft).toBe(300);
 });

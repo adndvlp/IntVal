@@ -1,14 +1,16 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { afterEach, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import CompanyDetail from './CompanyDetail';
 import { AnalysisApi } from './transport';
 import { company, job } from './test-fixtures';
 import { server } from './test-server';
-
+import { mockDialogs } from '../../../tests/support/dialog';
+beforeEach(mockDialogs);
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 const snapshot = { job: job(), rows: [company(), company('DEMO-MX.MX')] };
@@ -18,45 +20,47 @@ function show(
     emptyHistory?: boolean;
     emptyMargins?: boolean;
   } = {},
+  selected = 'DEMO-USA',
 ) {
-  const api = server(options);
+  const api = server(options),
+    close = vi.fn();
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
-  const select = vi.fn();
-  const view = render(
+  render(
     <QueryClientProvider client={client}>
       <CompanyDetail
         snapshot={snapshot}
-        selected="DEMO-USA"
-        onSelect={select}
-        visibleTickers={[]}
+        selected={selected}
         api={new AnalysisApi('')}
         referenceDate="2025-01-03"
+        onClose={close}
       />
     </QueryClientProvider>,
   );
-  return { api, select, view };
+  return { api, close };
 }
-
-it('adquiere sólo el panel activo, comparte estados/márgenes y cambia el período del precio', async () => {
-  const { api, select } = show();
-  // El primer import de Recharts también se instrumenta en la suite con cobertura.
-  await screen.findByText(
-    'Comparación por acción',
-    { exact: true },
-    { timeout: 5000 },
+it('Resumen visible sin consultas: una comparación, cuatro métodos y supuestos del snapshot', () => {
+  const { api } = show();
+  expect(screen.getByRole('dialog', { name: 'Empresa DEMO-USA' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Métodos' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Supuestos' })).toBeTruthy();
+  expect(screen.getAllByRole('rowheader')).toHaveLength(4);
+  expect(screen.getAllByText('100.00 USD')).toHaveLength(1);
+  expect(screen.getAllByText('116.19 USD')).toHaveLength(1);
+  expect(screen.getByText('10.00 % / 10.00 %')).toBeTruthy();
+  expect(api.paths).toEqual([]);
+});
+it('teclado recorre pestañas sin adquirir al enfocarlas; activa y comparte estados/márgenes', async () => {
+  const { api } = show();
+  const summary = screen.getByRole('tab', { name: 'Resumen' });
+  summary.focus();
+  await userEvent.keyboard('{ArrowRight}');
+  expect(document.activeElement).toBe(
+    screen.getByRole('tab', { name: 'Precio histórico' }),
   );
   expect(api.paths).toEqual([]);
-  expect(screen.getByText(/queda fuera del filtro actual/)).toBeTruthy();
-  await userEvent.selectOptions(
-    screen.getByLabelText('Empresa del detalle'),
-    'DEMO-MX.MX',
-  );
-  expect(select).toHaveBeenCalledWith('DEMO-MX.MX');
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Precio histórico' }),
-  );
+  await userEvent.keyboard('{Enter}');
   await screen.findByRole('figure', { name: 'Precio histórico de DEMO-USA' });
   await userEvent.selectOptions(
     screen.getByLabelText('Período del precio histórico'),
@@ -65,75 +69,55 @@ it('adquiere sólo el panel activo, comparte estados/márgenes y cambia el perí
   await waitFor(() =>
     expect(api.paths.some((p) => p.endsWith('period=5y'))).toBe(true),
   );
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Estados financieros' }),
-  );
-  await screen.findByText('Millones de USD');
-  const financialCalls = api.paths.filter((p) =>
-    p.endsWith('/financials'),
-  ).length;
-  await userEvent.click(screen.getByRole('button', { name: 'Márgenes' }));
+  await userEvent.click(screen.getByRole('tab', { name: 'Finanzas' }));
+  await screen.findByRole('figure', {
+    name: 'Históricos financieros de DEMO-USA',
+  });
+  const calls = api.paths.filter((p) => p.endsWith('/financials')).length;
+  await userEvent.click(screen.getByRole('tab', { name: 'Márgenes' }));
   await screen.findByRole('figure', {
     name: 'Márgenes históricos de DEMO-USA',
   });
   expect(api.paths.filter((p) => p.endsWith('/financials'))).toHaveLength(
-    financialCalls,
+    calls,
   );
-  await userEvent.click(
-    screen.getByText(/Supuestos aceptados y auditoría completa/),
+  await userEvent.click(screen.getByText('Datos', { exact: true }));
+  expect(
+    screen.getByRole('table', { name: 'Datos de márgenes · porcentajes' }),
+  ).toBeTruthy();
+  screen.getByRole('tab', { name: 'Márgenes' }).focus();
+  await userEvent.keyboard('{Home}');
+  expect(document.activeElement).toBe(
+    screen.getByRole('tab', { name: 'Resumen' }),
   );
-  expect(screen.getByText('Tasa de impuestos')).toBeTruthy();
 });
-
-it('un histórico fallido conserva métricas y permite un reintento localizado', async () => {
-  const options = { historyFails: true };
-  const { api } = show(options);
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Precio histórico' }),
-  );
+it('un fallo de histórico conserva Resumen y ofrece reintento localizado', async () => {
+  const { api } = show({ historyFails: true });
+  await userEvent.click(screen.getByRole('tab', { name: 'Precio histórico' }));
   const retry = await screen.findByRole('button', {
     name: 'Reintentar histórico',
   });
-  expect(screen.getAllByText('116.19 USD').length).toBeGreaterThan(0);
-  expect(screen.queryByText('secreto')).toBeNull();
-  options.historyFails = false;
+  api.options.historyFails = false;
   await userEvent.click(retry);
   await screen.findByRole('figure', { name: 'Precio histórico de DEMO-USA' });
-  expect(api.paths.filter((p) => p.includes('/prices'))).toHaveLength(2);
+  await userEvent.click(screen.getByRole('tab', { name: 'Resumen' }));
+  expect(screen.getByText('116.19 USD')).toBeTruthy();
 });
-
-it('una serie vacía se distingue del fallo sin cambiar la valoración', async () => {
-  show({ emptyHistory: true });
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Estados financieros' }),
+it('ausencias de precios y márgenes no se presentan como ceros', async () => {
+  show({ emptyHistory: true, emptyMargins: true });
+  await userEvent.click(screen.getByRole('tab', { name: 'Precio histórico' }));
+  await screen.findByText(
+    'No hay observaciones disponibles para este histórico.',
   );
-  expect(
-    await screen.findByText(
-      'No hay observaciones disponibles para este histórico.',
-    ),
-  ).toBeTruthy();
-  expect(screen.getAllByText('116.19 USD').length).toBeGreaterThan(0);
-  expect(
-    screen.queryByRole('button', { name: 'Reintentar histórico' }),
-  ).toBeNull();
+  await userEvent.click(screen.getByRole('tab', { name: 'Márgenes' }));
+  await screen.findByText(
+    'No hay observaciones disponibles para este histórico.',
+  );
+  await userEvent.click(screen.getByRole('tab', { name: 'Resumen' }));
+  expect(screen.getByText('116.19 USD')).toBeTruthy();
 });
-
-it('informa márgenes vacíos aunque los estados financieros estén disponibles', async () => {
-  const { api } = show({ emptyMargins: true });
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Estados financieros' }),
-  );
-  await screen.findByRole('figure', {
-    name: 'Históricos financieros de DEMO-USA',
-  });
-  await userEvent.click(screen.getByRole('button', { name: 'Márgenes' }));
-  expect(
-    await screen.findByText(
-      'No hay observaciones disponibles para este histórico.',
-    ),
-  ).toBeTruthy();
-  expect(
-    screen.queryByRole('figure', { name: 'Márgenes históricos de DEMO-USA' }),
-  ).toBeNull();
-  expect(api.paths.filter((p) => p.endsWith('/financials'))).toHaveLength(1);
+it('un símbolo ajeno al lote no fabrica un detalle ni consulta históricos', () => {
+  const { api } = show({}, 'AJENO');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(api.paths).toEqual([]);
 });

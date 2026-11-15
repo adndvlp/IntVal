@@ -1,189 +1,139 @@
-import { scrollRegionOnArrow } from '../../lib/scroll-region';
-import { useMemo } from 'react';
 import {
-  columnVisibilityFeature,
-  createColumnHelper,
-  createPaginatedRowModel,
-  rowPaginationFeature,
-  tableFeatures,
-  useTable,
-} from '@tanstack/react-table';
-import { formatMoney, formatPercent } from './model';
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { formatNumber } from './model';
+import { foldSearch } from './catalog-model';
+import { scrollRegionOnArrow } from '../../lib/scroll-region';
 import type { Company } from './types';
 
-const features = tableFeatures({
-  columnVisibilityFeature,
-  rowPaginationFeature,
-  paginatedRowModel: createPaginatedRowModel(),
+const columns = [
+  { id: 'company', label: 'Empresa' },
+  { id: 'price', label: 'Precio' },
+  { id: 'estimate', label: 'Valor estimado' },
+  { id: 'difference', label: 'Diferencia' },
+] as const;
+type SortKey = (typeof columns)[number]['id'];
+const collator = new Intl.Collator('es-MX', {
+  numeric: true,
+  sensitivity: 'base',
 });
-const helper = createColumnHelper<typeof features, Company>();
-
+export const formatDifference = (value: number | null) =>
+  value === null
+    ? '—'
+    : `${value > 0 ? '+' : ''}${formatNumber(value * 100)} %`;
+export const companyName = (c: Company) =>
+  c.company_name.replace(/\s+\(demo\)$/i, '');
 export default function ResultsTable({
   rows,
   selected,
   onSelect,
+  actions,
 }: {
   rows: Company[];
   selected: string | null;
   onSelect: (ticker: string) => void;
+  actions?: ReactNode;
 }) {
-  const columns = useMemo(
-    () =>
-      helper.columns([
-        helper.accessor('ticker', {
-          header: 'Empresa',
-          enableHiding: false,
-          cell: ({ row }) => (
-            <div className="company-label">
-              <button
-                type="button"
-                className="company-link"
-                aria-label={`Ver detalle de ${row.original.ticker}`}
-                aria-pressed={row.original.ticker === selected}
-                onClick={() => onSelect(row.original.ticker)}
-              >
-                <strong>{row.original.ticker}</strong>
-              </button>
-              <span className="company-name">{row.original.company_name}</span>
-            </div>
-          ),
-        }),
-        helper.accessor('market', { header: 'Mercado' }),
-        helper.accessor('currency', {
-          header: 'Moneda',
-          cell: ({ getValue }) => getValue() ?? '—',
-        }),
-        helper.accessor('market_price', {
-          header: 'Precio',
-          cell: ({ row }) =>
-            formatMoney(row.original.market_price, row.original.currency),
-        }),
-        helper.accessor((r) => r.median.value_per_share, {
-          id: 'median',
-          header: 'Mediana de proxies',
-          cell: ({ row, getValue }) =>
-            formatMoney(getValue(), row.original.currency),
-        }),
-        helper.accessor((r) => r.median.upside, {
-          id: 'upside',
-          header: 'Upside mediana',
-          cell: ({ getValue }) => (
-            <span
-              className={
-                getValue() !== null && getValue()! < 0 ? 'negative' : 'positive'
-              }
-            >
-              {formatPercent(getValue())}
-            </span>
-          ),
-        }),
-        helper.accessor((r) => r.median.count, {
-          id: 'models',
-          header: 'Proxies incluidos',
-        }),
-        helper.accessor('status', {
-          header: 'Estado',
-          cell: ({ getValue }) => (
-            <span
-              className={`status-badge status-${getValue() === 'OK' ? 'ok' : getValue() === 'ERROR' ? 'error' : 'review'}`}
-            >
-              {getValue()}
-            </span>
-          ),
-        }),
-        ...(['fcl', 'nopat', 'ebitda_adjusted', 'net_income'] as const).flatMap(
-          (id) => {
-            const names = {
-              fcl: 'FCL',
-              nopat: 'NOPAT',
-              ebitda_adjusted: 'EBITDA ajustado',
-              net_income: 'Utilidad neta',
-            };
-            return [
-              helper.accessor(
-                (r) =>
-                  r.proxies.find((p) => p.id === id)?.value_per_share ?? null,
-                {
-                  id,
-                  header: `Proxy ${names[id]}`,
-                  cell: ({ row, getValue }) =>
-                    formatMoney(getValue(), row.original.currency),
-                },
-              ),
-              helper.accessor(
-                (r) => r.proxies.find((p) => p.id === id)?.upside ?? null,
-                {
-                  id: `${id}_upside`,
-                  header: `Upside ${names[id]}`,
-                  cell: ({ getValue }) => formatPercent(getValue()),
-                },
-              ),
-            ];
-          },
-        ),
-        helper.accessor((r) => r.analyst_target.value, {
-          id: 'analyst',
-          header: 'Objetivo de analistas',
-          cell: ({ row, getValue }) =>
-            formatMoney(getValue(), row.original.currency),
-        }),
-        helper.accessor((r) => r.analyst_target.upside, {
-          id: 'analyst_upside',
-          header: 'Upside analistas',
-          cell: ({ getValue }) => formatPercent(getValue()),
-        }),
-        helper.accessor('notes', {
-          header: 'Diagnóstico',
-          cell: ({ getValue }) => (
-            <span className="table-note">{getValue() ?? '—'}</span>
-          ),
-        }),
-      ]),
-    [onSelect, selected],
-  );
-  const table = useTable({
-    features,
-    data: rows,
-    columns,
-    getRowId: (r) => r.ticker,
-    initialState: {
-      pagination: { pageIndex: 0, pageSize: 20 },
-      columnVisibility: {
-        fcl: false,
-        nopat: false,
-        ebitda_adjusted: false,
-        net_income: false,
-        fcl_upside: false,
-        nopat_upside: false,
-        ebitda_adjusted_upside: false,
-        net_income_upside: false,
-        analyst: false,
-        analyst_upside: false,
-        notes: false,
-      },
-    },
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
+    key: 'difference',
+    desc: true,
   });
+  const [page, setPage] = useState(0);
+  const [announcement, setAnnouncement] = useState('');
+  const id = useId();
+  const table = useRef<HTMLTableElement>(null);
+  const indexed = useMemo(
+    () =>
+      rows.map((row) => ({
+        row,
+        search: foldSearch(`${row.company_name} ${row.ticker}`),
+      })),
+    [rows],
+  );
+  const filtered = useMemo(() => {
+    const needle = foldSearch(query);
+    const value = (c: Company) =>
+      sort.key === 'price'
+        ? c.market_price
+        : sort.key === 'estimate'
+          ? c.median.value_per_share
+          : c.median.upside;
+    return indexed
+      .filter((c) => c.search.includes(needle))
+      .map((c) => c.row)
+      .sort((a, b) => {
+        if (sort.key === 'company')
+          return (
+            (sort.desc ? -1 : 1) *
+            collator.compare(companyName(a), companyName(b))
+          );
+        const x = value(a),
+          y = value(b);
+        if (x === null) return y === null ? 0 : 1;
+        if (y === null) return -1;
+        return (sort.desc ? -1 : 1) * (x - y);
+      });
+  }, [indexed, query, sort]);
+  const last = Math.max(0, Math.ceil(filtered.length / 25) - 1);
+  const current = Math.min(page, last);
+  useEffect(() => {
+    if (page !== current) setPage(current);
+  }, [page, current]);
+  function changeSort(key: SortKey) {
+    const desc = key === sort.key ? !sort.desc : false;
+    setSort({ key, desc });
+    setPage(0);
+    setAnnouncement(
+      `Ordenado por ${columns.find((c) => c.id === key)!.label}, ${desc ? 'descendente' : 'ascendente'}.`,
+    );
+  }
+  const sortAction = useRef(changeSort);
+  sortAction.current = changeSort;
+  useEffect(() => {
+    const element = table.current;
+    const command = (raw: Event) => {
+      const e = raw as Event & { command?: string; source?: HTMLElement };
+      const key = e.source?.dataset.column;
+      if (e.command === '--sort' && columns.some((c) => c.id === key))
+        sortAction.current(key as SortKey);
+    };
+    element?.addEventListener('command', command);
+    return () => element?.removeEventListener('command', command);
+  }, []);
   return (
     <>
-      <details className="column-options">
-        <summary>Columnas de la comparación</summary>
-        <fieldset>
-          <legend>Mostrar columnas</legend>
-          {table
-            .getAllLeafColumns()
-            .filter((c) => c.getCanHide())
-            .map((c) => (
-              <label key={c.id}>
-                <input
-                  type="checkbox"
-                  checked={c.getIsVisible()}
-                  onChange={c.getToggleVisibilityHandler()}
-                />
-                {String(c.columnDef.header)}
-              </label>
-            ))}
-        </fieldset>
-      </details>
+      <div className="results-viewhead">
+        <span role="status">
+          {filtered.length.toLocaleString('es-MX')}{' '}
+          {filtered.length === 1 ? 'empresa' : 'empresas'}
+        </span>
+        <div className="result-actions">{actions}</div>
+      </div>
+      <search className="result-search" aria-label="Buscar resultados">
+        <label htmlFor={`${id}-search`}>Buscar en resultados</label>
+        <input
+          type="search"
+          name="result_search"
+          id={`${id}-search`}
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(0);
+          }}
+        />
+      </search>
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
       <div
         className="result-scroll"
         role="region"
@@ -191,73 +141,142 @@ export default function ResultsTable({
         tabIndex={0}
         onKeyDown={scrollRegionOnArrow}
       >
-        <table className="results-table">
-          <caption>
-            Resultados del análisis · ordenados por upside descendente; valores
-            ausentes al final.
-          </caption>
+        <table ref={table} id={id} className="comparison-table">
+          <caption className="sr-only">Resultados por empresa</caption>
+          <colgroup>
+            <col style={{ width: '37%' }} />
+            <col style={{ width: '21%' }} />
+            <col style={{ width: '21%' }} />
+            <col style={{ width: '21%' }} />
+          </colgroup>
           <thead>
-            {table.getHeaderGroups().map((group) => (
-              <tr key={group.id}>
-                {group.headers.map((header) => (
-                  <th key={header.id} scope="col">
-                    {header.isPlaceholder ? null : (
-                      <table.FlexRender header={header} />
+            <tr>
+              {columns.map((c) => (
+                <th
+                  key={c.id}
+                  scope="col"
+                  aria-sort={
+                    sort.key === c.id
+                      ? sort.desc
+                        ? 'descending'
+                        : 'ascending'
+                      : undefined
+                  }
+                >
+                  <button
+                    type="button"
+                    {...{ commandfor: id, command: '--sort' }}
+                    data-column={c.id}
+                    onClick={() => {
+                      if (!('commandForElement' in HTMLButtonElement.prototype))
+                        changeSort(c.id);
+                    }}
+                  >
+                    <span>{c.label}</span>
+                    {sort.key === c.id && (
+                      <span className="sort-icon" aria-hidden="true">
+                        {sort.desc ? '↓' : '↑'}
+                      </span>
                     )}
-                  </th>
-                ))}
-              </tr>
-            ))}
+                  </button>
+                </th>
+              ))}
+            </tr>
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} data-selected={row.original.ticker === selected}>
-                {row.getVisibleCells().map((cell, index) =>
-                  index === 0 ? (
-                    <th key={cell.id} scope="row">
-                      <table.FlexRender cell={cell} />
-                    </th>
+            {filtered.slice(current * 25, (current + 1) * 25).map((c) => (
+              <tr key={c.ticker} data-selected={selected === c.ticker}>
+                <th scope="row">
+                  <a
+                    href={`#empresa/${encodeURIComponent(c.ticker)}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onSelect(c.ticker);
+                    }}
+                  >
+                    {companyName(c)}
+                  </a>
+                  <small>
+                    {c.ticker}
+                    {c.currency ? ` · ${c.currency}` : ''}
+                  </small>
+                </th>
+                <td>{formatNumber(c.market_price)}</td>
+                <td>
+                  {c.median.value_per_share === null ? (
+                    <span className="muted">Sin estimación</span>
                   ) : (
-                    <td key={cell.id}>
-                      <table.FlexRender cell={cell} />
-                    </td>
-                  ),
-                )}
+                    formatNumber(c.median.value_per_share)
+                  )}
+                </td>
+                <td
+                  className={
+                    c.median.upside === null
+                      ? 'muted'
+                      : c.median.upside < 0
+                        ? 'negative'
+                        : 'positive'
+                  }
+                >
+                  {formatDifference(c.median.upside)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {!rows.length && (
-        <p className="filter-empty">
-          No hay empresas que coincidan con estos filtros.
-        </p>
+      {!filtered.length && (
+        <p className="selection-empty">No hay coincidencias.</p>
       )}
-      <div className="table-pages">
-        <span>
-          {rows.length
-            ? `Página ${table.state.pagination.pageIndex + 1} de ${Math.max(1, table.getPageCount())}`
-            : '0 empresas mostradas'}
-        </span>
-        <div>
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={!table.getCanPreviousPage()}
-            onClick={() => table.previousPage()}
-          >
-            Página anterior
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={!table.getCanNextPage()}
-            onClick={() => table.nextPage()}
-          >
-            Página siguiente
-          </button>
-        </div>
-      </div>
+      {filtered.length > 25 && (
+        <nav
+          className="selection-pagination"
+          aria-label="Páginas de resultados"
+        >
+          <span>
+            {current * 25 + 1}–{Math.min((current + 1) * 25, filtered.length)}{' '}
+            de {filtered.length.toLocaleString('es-MX')}
+          </span>
+          <div>
+            {[
+              {
+                name: 'Primera página',
+                text: '«',
+                to: 0,
+                disabled: current === 0,
+              },
+              {
+                name: 'Página anterior',
+                text: '‹',
+                to: current - 1,
+                disabled: current === 0,
+              },
+              {
+                name: 'Siguiente página',
+                text: '›',
+                to: current + 1,
+                disabled: current === last,
+              },
+              {
+                name: 'Última página',
+                text: '»',
+                to: last,
+                disabled: current === last,
+              },
+            ].map((p) => (
+              <button
+                key={p.name}
+                type="button"
+                aria-label={p.name}
+                disabled={p.disabled}
+                onClick={() => setPage(p.to)}
+              >
+                {p.text}
+              </button>
+            ))}
+          </div>
+        </nav>
+      )}
     </>
   );
 }

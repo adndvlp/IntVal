@@ -1,6 +1,5 @@
-import { useState, type SubmitEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import CompanyPicker from './CompanyPicker';
-import { configurationFields } from './model';
 import type { useAnalysis } from './use-analysis';
 
 export type AnalysisState = ReturnType<typeof useAnalysis>;
@@ -8,21 +7,19 @@ const formTitle = 'Construye tu análisis.';
 
 export default function AnalysisForm({
   analysis,
-  onSubmitted,
+  onAnalyze,
 }: {
   analysis: AnalysisState;
-  onSubmitted?: () => void;
+  onAnalyze?: () => void;
 }) {
   const { draft, meta } = analysis;
-  const [invalid, setInvalid] = useState<string[]>([]);
   if (!draft || !meta) return null;
   const marketEnabled = meta.sources.some(
     (s) => s.id === 'market' && s.enabled,
   );
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    const ok = await analysis.submit();
-    if (ok) onSubmitted?.();
+    await analysis.submit(onAnalyze);
   }
   return (
     <form
@@ -87,115 +84,6 @@ export default function AnalysisForm({
             </p>
           </div>
         )}
-      </fieldset>
-      <fieldset>
-        <legend>Supuestos principales</legend>
-        <p className="field-help" id="discount-help">
-          Tasas manuales para diez años. La tasa de empresa no es un WACC
-          estimado automáticamente.
-        </p>
-        {configurationFields.slice(0, 2).map((f) => (
-          <div className="field" key={f.key}>
-            <label htmlFor={f.key}>{f.label}</label>
-            <input
-              id={f.key}
-              name={f.key}
-              type="number"
-              inputMode="decimal"
-              required
-              min={f.min}
-              max={f.max}
-              step={f.step}
-              value={
-                Number.isFinite(draft.configuration[f.key])
-                  ? Number(
-                      (draft.configuration[f.key] * f.scale).toPrecision(12),
-                    )
-                  : ''
-              }
-              aria-invalid={invalid.includes(f.key)}
-              aria-describedby={`discount-help${invalid.includes(f.key) ? ` ${f.key}-error` : ''}`}
-              onInvalid={() => setInvalid((v) => [...new Set([...v, f.key])])}
-              onBlur={(e) => {
-                const valid = e.currentTarget.validity.valid;
-                setInvalid((v) =>
-                  valid
-                    ? v.filter((k) => k !== f.key)
-                    : [...new Set([...v, f.key])],
-                );
-              }}
-              onChange={(e) => {
-                setInvalid((v) => v.filter((k) => k !== f.key));
-                analysis.changeConfiguration(
-                  f.key,
-                  e.target.value === ''
-                    ? NaN
-                    : Number(e.target.value) / f.scale,
-                );
-              }}
-            />
-            {invalid.includes(f.key) && (
-              <p className="field-error" id={`${f.key}-error`}>
-                Introduce un valor entre {f.min} y {f.max}.
-              </p>
-            )}
-          </div>
-        ))}
-        <details className="assumptions">
-          <summary>Más supuestos de valoración</summary>
-          <p className="field-help">
-            Factores de crecimiento y margen, y múltiplos terminales manuales.
-          </p>
-          {configurationFields.slice(2).map((f) => (
-            <div className="field" key={f.key}>
-              <label htmlFor={f.key}>{f.label}</label>
-              <input
-                id={f.key}
-                name={f.key}
-                type="number"
-                inputMode="decimal"
-                required
-                min={f.min}
-                max={f.max}
-                step={f.step}
-                value={
-                  Number.isFinite(draft.configuration[f.key])
-                    ? Number(
-                        (draft.configuration[f.key] * f.scale).toPrecision(12),
-                      )
-                    : ''
-                }
-                aria-invalid={invalid.includes(f.key)}
-                aria-describedby={
-                  invalid.includes(f.key) ? `${f.key}-error` : undefined
-                }
-                onInvalid={() => setInvalid((v) => [...new Set([...v, f.key])])}
-                onBlur={(e) => {
-                  const valid = e.currentTarget.validity.valid;
-                  setInvalid((v) =>
-                    valid
-                      ? v.filter((k) => k !== f.key)
-                      : [...new Set([...v, f.key])],
-                  );
-                }}
-                onChange={(e) => {
-                  setInvalid((v) => v.filter((k) => k !== f.key));
-                  analysis.changeConfiguration(
-                    f.key,
-                    e.target.value === ''
-                      ? NaN
-                      : Number(e.target.value) / f.scale,
-                  );
-                }}
-              />
-              {invalid.includes(f.key) && (
-                <p className="field-error" id={`${f.key}-error`}>
-                  Introduce un valor entre {f.min} y {f.max}.
-                </p>
-              )}
-            </div>
-          ))}
-        </details>
       </fieldset>
     </form>
   );

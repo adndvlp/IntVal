@@ -4,14 +4,14 @@
 
 | Campo                          | Valor                                                                                                                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Versión                        | 1.2                                                                                                                                                                         |
+| Versión                        | 1.3                                                                                                                                                                         |
 | Fecha                          | 2026-11-15                                                                                                                                                                  |
-| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1 y UI-2 en el frontend real: apariencia, entrada directa y selección escalable                       |
+| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1–3 en el frontend real: apariencia, selección, resultados, detalle, ajustes e historial                       |
 | Anexo normativo                | [prototipo-intval-liquid-glass.html](../prototipo-intval-liquid-glass.html)                                                                                                 |
-| Estado                         | UI-1 y UI-2 integrados en Astro/React y verificados localmente; UI-3–5 pendientes. Evidencia en TDD_UI1.md y TDD_UI2.md; navegador y capturas del frontend nuevo pendientes |
+| Estado                         | UI-1–3 integrados y verificados localmente; UI-4–5 pendientes. Evidencia en TDD_UI1.md, TDD_UI2.md y TDD_UI3.md; navegador y capturas nuevos pendientes |
 | Base de producto inspeccionada | `f04b8b8`, cierre F10, más los archivos locales del prototipo                                                                                                               |
 | Relación con otras SDD         | Revisa la presentación e interacción de [SDD_WEB.md](SDD_WEB.md); mantiene sus contratos financieros, API y condiciones operativas salvo cambios expresos de este documento |
-| Autorización de esta entrega   | El usuario solicitó UI-1 y posteriormente el siguiente incremento: UI-2. No autoriza desplegar ni hacer commit/push                                                         |
+| Autorización de esta entrega   | El usuario solicitó los incrementos UI-1, UI-2 y UI-3. No autoriza desplegar ni hacer commit/push                                                         |
 
 ## Índice
 
@@ -260,7 +260,7 @@ Los nueve campos se presentan siempre, agrupados en Tasas de descuento, Crecimie
 | Campo visible                 | Clave                             | Inicial visible | Intervalo visible | Paso | Valor de transporte |
 | ----------------------------- | --------------------------------- | --------------- | ----------------- | ---- | ------------------- |
 | Tasa de descuento (%)         | `tasa_descuento`                  | 10              | 5–20              | 0.5  | Valor / 100         |
-| Descuento de empresa (%)      | `tasa_descuento_empresa`          | 10              | 4–20              | 0.5  | Valor / 100         |
+| Descuento de empresa (%)      | `tasa_descuento_empresa`          | 10              | 5–20              | 0.5  | Valor / 100         |
 | Factor de margen (%)          | `factor_margen_conservador`       | 80              | 40–100            | 0.5  | Valor / 100         |
 | Crecimiento inicial (% CAGR)  | `factor_crecimiento_inicial`      | 25              | 10–100            | 0.5  | Valor / 100         |
 | Crecimiento final (% inicial) | `factor_crecimiento_final`        | 50              | 10–100            | 0.5  | Valor / 100         |
@@ -268,6 +268,8 @@ Los nueve campos se presentan siempre, agrupados en Tasas de descuento, Crecimie
 | Múltiplo NOPAT                | `multiplo_terminal_ebit`          | 12              | 4–30              | 1    | Valor               |
 | Múltiplo EBITDA               | `multiplo_terminal_ebitda`        | 12              | 4–30              | 1    | Valor               |
 | Múltiplo utilidad neta        | `multiplo_terminal_utilidad_neta` | 15              | 4–30              | 1    | Valor               |
+
+**Diferencia explícita del anexo:** el HTML permite 4 % en descuento de empresa; el producto conectado usa 5–20 %, conforme al contrato Python/API vigente. No se amplía el dominio financiero desde esta revisión visual. Los factores de crecimiento y el múltiplo de utilidad usan los intervalos de esta tabla; la API conserva sus rangos anteriores más amplios.
 
 **UI-CFG-01.** Usar etiquetas visibles, ayudas breves asociadas, campos numéricos requeridos y validación de rango/paso. Un error conserva lo introducido y lleva al campo correspondiente. La validación del servidor sigue siendo obligatoria.
 
@@ -452,6 +454,8 @@ En producción se mantienen referencias de sesión propias del transporte. No mi
 
 En UI-2, la selección de producción se guarda en `sessionStorage` bajo `intval.selection.v1:{api}:{source}:{dataset}` con versión 1, símbolos y entrada adicional. El sufijo `:views` guarda Catálogo/Seleccionadas y sus contextos independientes. Estas claves no sustituyen `intval.analysis.v1:{api}` ni los snapshots o referencias de transporte; no importan trabajos de la demostración HTML. La selección se valida contra el catálogo vigente, conserva un vacío explícito y tolera almacenamiento corrupto o bloqueado.
 
+UI-3 añade `intval.configuration.v1:{api}` y `intval.history.v1:{api}`, ambas en `sessionStorage` con versión 1. La primera conserva únicamente los nueve ajustes confirmados. La segunda conserva IDs reales, fuente/dataset, fecha, estado/revisión, cantidad, hasta tres nombres/símbolos y solicitud aceptada; no guarda filas financieras ni históricos. Se acota por `meta.limits.max_retained`, valida el contenido y tolera almacenamiento bloqueado. Las demás referencias siguen perteneciendo al transporte.
+
 ### 13.3 Estados y errores que deben quedar cubiertos
 
 | Situación                                               | Respuesta requerida                                                                        |
@@ -568,7 +572,7 @@ La verificación cubre DOM, interacciones, persistencia, contraste calculado, l�
 
 ### 16.3 Secuencia de implementación
 
-El usuario autorizó UI-1 y después UI-2 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
+El usuario autorizó sucesivamente UI-1, UI-2 y UI-3 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
 
 | Incremento | Entrega                                                                                | Criterio mínimo                                              |
 | ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -580,11 +584,15 @@ El usuario autorizó UI-1 y después UI-2 tras la redacción de la SDD. Avanzar 
 
 **Estado de UI-1 (2026-11-15):** integrado en el frontend real. Entrada directa `/` y `/app/`, sidebar/cabecera adaptable, tokens, seis paletas y color propio, modo de sistema/claro/oscuro, persistencia independiente y Cómo se calcula con cinco apartados visibles. Los 70 tests de componentes/estado y los 69 tests de shell/anexo pasan; estos últimos incluyen los 58 del prototipo. Build, tipos, lint, formato y presupuesto de assets pasan. Evidencia y límites en [TDD_UI1.md](TDD_UI1.md).
 
-La revisión visual del diseño conectado queda en UI-5: los resultados DOM y de contraste calculado no acreditan render, reflow real, óptica ni tiempos de interacción. Se han adaptado los escenarios E2E sin ejecutarlos en esta sesión, que bloquea los navegadores/puertos. No se han aprobado referencias visuales nuevas. UI-3–4 siguen pendientes: no confundir la aplicación de tokens al dashboard existente con la migración completa de sus vistas. Historial y las nuevas pantallas de resultados/detalle se incorporan en UI-3, sin enlaces a funciones todavía inexistentes.
+La revisión visual del diseño conectado queda en UI-5: los resultados DOM y de contraste calculado no acreditan render, reflow real, óptica ni tiempos de interacción. Se han adaptado los escenarios E2E sin ejecutarlos en esta sesión, que bloquea los navegadores/puertos. No se han aprobado referencias visuales nuevas. Esta limitación visual sigue vigente tras UI-3; las pantallas funcionales ya integradas se enumeran a continuación.
 
-**Estado de UI-2 (2026-11-15):** integrado y verificado localmente. Un único catálogo con vistas Catálogo/Seleccionadas, filtros y página independientes, búsquedas normalizadas antes de paginar y hasta 25 filas montadas. Selección de página con estado parcial, selección global explícita de coincidencias, limpieza sin perder resultados y Enter que selecciona sin analizar. Se recuperan selección, vacío intencional y contexto de cada vista dentro de la sesión. Se mantiene el límite comunicado por la API, sin truncar ni enviar un lote excesivo. Evidencia en [TDD_UI2.md](TDD_UI2.md). La siguiente integración funcional es UI-3.
+**Estado de UI-2 (2026-11-15):** integrado y verificado localmente. Un único catálogo con vistas Catálogo/Seleccionadas, filtros y página independientes, búsquedas normalizadas antes de paginar y hasta 25 filas montadas. Selección de página con estado parcial, selección global explícita de coincidencias, limpieza sin perder resultados y Enter que selecciona sin analizar. Se recuperan selección, vacío intencional y contexto de cada vista dentro de la sesión. Se mantiene el límite comunicado por la API, sin truncar ni enviar un lote excesivo. Evidencia en [TDD_UI2.md](TDD_UI2.md). La siguiente integración funcional, UI-3, se registra a continuación.
 
 El catálogo HTTP admite `name` y `currency` opcionales. La demo los obtiene de su archivo de identidad local; el catálogo de mercado mantiene símbolo/mercado cuando no dispone de ellos. No se infieren monedas ni nombres, ni se consulta al proveedor financiero para rellenarlos. El esquema OpenAPI y los tipos TypeScript se regeneran juntos. Los metadatos de mercado que todavía no existen no se presentan como incorporados.
+
+**Estado de UI-3 (2026-11-15):** integrado y verificado localmente. Resultados con cuatro columnas, orden y búsqueda globales antes de paginar a 25; detalle modal con cuatro pestañas, Métodos y Supuestos visibles; nueve ajustes transaccionales e historial de IDs reales. Navegar o editar la fuente del borrador no cancela el trabajo; la cancelación explícita antes de recibir su ID cancela la aceptación tardía. Los ajustes guardados se envían al siguiente POST, y resultados/Excel mantienen la configuración aceptada de su trabajo. Se conservan recuperación, cola, revisiones, cancelación y resultados parciales del transporte existente.
+
+La suite tiene 92 pruebas frontend aprobadas y mantiene el umbral del 85 % en sus cuatro métricas de cobertura. Tipos, lint, formato, build, shell/anexo y assets pasan. Se ejecutaron dos regresiones Python dirigidas de configuración y Excel; no se repitió la suite Python completa de UI-2. Los E2E actualizados sólo se recopilaron, sin ejecución; foco nativo, cierres reales, alineación óptica, reflow y capturas corresponden a UI-5. Evidencia y diferencias en [TDD_UI3.md](TDD_UI3.md). La siguiente entrega es UI-4: conciliación completa de datos y exportación con Python.
 
 F11 continúa como entrega separada de distribución/arranque, después de resolver el alcance que realmente se solicite. La aprobación de esta SDD no autoriza publicar la web.
 

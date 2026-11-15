@@ -13,7 +13,10 @@ import { server } from './test-server';
 import { catalog } from './test-fixtures';
 
 vi.mock('./Charts', () => ({ default: () => <p>Gráfica.</p> }));
-beforeEach(() => sessionStorage.clear());
+beforeEach(() => {
+  sessionStorage.clear();
+  history.replaceState({}, '', '/#analizar');
+});
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -217,11 +220,18 @@ it('envía todas las coincidencias elegidas, incluidas las páginas que no está
   expect(sent.tickers).toHaveLength(604);
   expect(sent.tickers).toContain('C0603');
   await userEvent.click(
+    screen.getByRole('button', { name: 'Editar selección' }),
+  );
+  await userEvent.click(
     screen.getByRole('button', { name: 'Limpiar selección' }),
   );
-  expect(
-    screen.getByRole('button', { name: 'Descargar Excel completo' }),
-  ).toBeTruthy();
+  fireEvent(
+    window,
+    new HashChangeEvent('hashchange', { newURL: '/#resultados' }),
+  );
+  history.replaceState({}, '', '/#resultados');
+  fireEvent(window, new HashChangeEvent('hashchange'));
+  expect(screen.getByRole('button', { name: 'Excel' })).toBeTruthy();
 });
 
 it('al retirar la única fila de la última página ajusta el rango y conserva el foco en una empresa disponible', async () => {

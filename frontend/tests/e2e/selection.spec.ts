@@ -26,14 +26,16 @@ test('catálogo real: encuentra por nombre, selecciona con Enter y analiza sólo
   await expect(page.getByRole('checkbox', { name: /DEMO-USA/ })).toBeChecked();
   await page.getByRole('button', { name: 'Analizar selección' }).click();
   await expect(
-    page.getByText('Análisis completado', { exact: true }),
+    page.getByRole('status').getByText('Análisis completado', { exact: true }),
   ).toBeVisible();
   expect(posts).toHaveLength(1);
   expect(JSON.parse(posts[0]!).tickers).toEqual(['DEMO-USA']);
+  await page.getByRole('button', { name: 'Editar selección' }).click();
   await page.getByRole('button', { name: 'Limpiar selección' }).click();
   await expect(search).toBeFocused();
+  await page.getByRole('link', { name: 'Resultados', exact: true }).click();
   await expect(
-    page.getByRole('button', { name: 'Descargar Excel completo' }),
+    page.getByRole('button', { name: 'Excel', exact: true }),
   ).toBeEnabled();
 });
 

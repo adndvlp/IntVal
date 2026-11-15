@@ -224,9 +224,10 @@ no la validez predictiva de una valoración.
 - [SDD de interfaz Liquid Glass](docs/SDD_UI.md), con el
   [HTML interactivo adjunto](prototipo-intval-liquid-glass.html): especificación
   vigente del analizador, selección escalable, paleta/color elegible y modo oscuro.
-  UI-1 y UI-2 integran apariencia y selección en la app real: catálogo único,
-  búsquedas por nombre disponible o símbolo, páginas de 25 y selección persistente.
-  UI-3–5 siguen pendientes. Evidencia de [UI-1](docs/TDD_UI1.md) y [UI-2](docs/TDD_UI2.md).
+  UI-1–3 integran apariencia, catálogo único, selección entre páginas, resultados
+  con búsqueda y orden, detalle modal, ajustes e historial de análisis reales.
+  UI-4–5 siguen pendientes. Evidencia de [UI-1](docs/TDD_UI1.md),
+  [UI-2](docs/TDD_UI2.md) y [UI-3](docs/TDD_UI3.md).
 - [Arquitectura web y entregas F6–F10](docs/SDD_WEB.md): Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el

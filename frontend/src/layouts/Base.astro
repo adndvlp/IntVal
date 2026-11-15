@@ -63,6 +63,7 @@ const canonical = site ? new URL(actual, site).href : undefined;
       <nav aria-label="Principal">
         <a
           href={application ? '#contenido' : '/'}
+          data-analysis-nav
           aria-current={application ? 'page' : undefined}
         >
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -79,6 +80,11 @@ const canonical = site ? new URL(actual, site).href : undefined;
               <path d="M4 4v16h16M8 15l4-5 4 2 4-6" />
             </svg>
             Resultados
+          </a>
+        )}
+        {application && (
+          <a href="#contenido" data-history-nav>
+            Historial
           </a>
         )}
         {!application && (

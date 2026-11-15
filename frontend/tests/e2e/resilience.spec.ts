@@ -46,10 +46,10 @@ test('recupera parciales tras desconexión, recarga el mismo ID y explica su exp
   await page.goto('/app/?fuente=demo');
   await startDemo(page);
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
+    page.getByRole('link', { name: 'Industrial Aurora', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-MX.MX' }),
+    page.getByRole('link', { name: 'Manufacturas Horizonte', exact: true }),
   ).toHaveCount(0);
   stage = 'offline';
   const reconnect = page.getByRole('button', {
@@ -57,7 +57,7 @@ test('recupera parciales tras desconexión, recarga el mismo ID y explica su exp
   });
   await expect(reconnect).toBeVisible({ timeout: 20000 });
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
+    page.getByRole('link', { name: 'Industrial Aurora', exact: true }),
   ).toBeVisible();
   stage = 'complete';
   await reconnect.click();
@@ -65,15 +65,18 @@ test('recupera parciales tras desconexión, recarga el mismo ID y explica su exp
     page.getByText('Análisis completado con observaciones', { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-MX.MX' }),
+    page.getByRole('link', { name: 'Manufacturas Horizonte', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-INCOMPLETA' }),
+    page.getByRole('link', {
+      name: 'Empresa con datos insuficientes',
+      exact: true,
+    }),
   ).toBeVisible();
   expect(posts).toBe(1);
   await page.reload();
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-MX.MX' }),
+    page.getByRole('link', { name: 'Manufacturas Horizonte', exact: true }),
   ).toBeVisible();
   expect(posts).toBe(1);
   stage = 'expired';
@@ -108,14 +111,18 @@ test('limpiar antes de recibir el POST ignora sus filas y cancela la aceptación
   await page.goto('/app/?fuente=demo');
   await startDemo(page);
   await expect.poll(() => accepted).toBe(true);
-  await page.getByRole('button', { name: 'Limpiar resultados' }).click();
+  await page.getByRole('button', { name: 'Cancelar solicitud' }).click();
   release();
   await expect.poll(() => cancels).toBe(1);
-  await expect(page.locator('#resultados')).not.toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
+    page.getByRole('checkbox', { name: 'Seleccionar página' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Industrial Aurora', exact: true }),
   ).toHaveCount(0);
   await page.reload();
-  await expect(page.locator('#resultados')).not.toBeVisible();
+  await expect(
+    page.getByRole('checkbox', { name: 'Seleccionar página' }),
+  ).toBeVisible();
   expect(posts).toBe(1);
 });

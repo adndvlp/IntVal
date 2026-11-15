@@ -1,7 +1,7 @@
-import { configurationFields } from './model';
 import type {
   Catalog,
   Company,
+  Configuration,
   CreateRequest,
   Financials,
   Job,
@@ -37,14 +37,37 @@ const finiteJson = (v: unknown): boolean =>
   (Array.isArray(v)
     ? v.every(finiteJson)
     : object(v) && Object.values(v).every(finiteJson));
+// Límites del contrato de lectura, independientes del formulario de UI.
+const configurationRanges = {
+  tasa_descuento: [0.05, 0.2],
+  tasa_descuento_empresa: [0.05, 0.2],
+  factor_margen_conservador: [0.4, 1],
+  factor_crecimiento_inicial: [0, 1],
+  factor_crecimiento_final: [0, 1],
+  multiplo_terminal_fcl: [4, 30],
+  multiplo_terminal_ebit: [4, 30],
+  multiplo_terminal_ebitda: [4, 30],
+  multiplo_terminal_utilidad_neta: [4, 35],
+} as const satisfies Record<keyof Configuration, readonly [number, number]>;
+const effectiveConstants = {
+  anos_proyeccion: 10,
+  crecimiento_minimo: -0.02,
+  crecimiento_maximo: 0.12,
+  crecimiento_fallback: 0.03,
+  max_anos_historicos: 5,
+  tasa_impuestos_fallback: 0.21,
+  tasa_impuestos_minima: 0,
+  tasa_impuestos_maxima: 0.35,
+} as const;
 const configuration = (v: unknown) =>
   object(v) &&
-  configurationFields.every(
-    (f) =>
-      number(v[f.key]) &&
-      (v[f.key] as number) * f.scale >= f.min &&
-      (v[f.key] as number) * f.scale <= f.max,
-  );
+  Object.entries(configurationRanges).every(
+    ([key, [min, max]]) => number(v[key]) && v[key] >= min && v[key] <= max,
+  ) &&
+  Object.entries(effectiveConstants).every(
+    ([key, value]) => v[key] === value,
+  ) &&
+  (v.pausa_entre_tickers === 0 || v.pausa_entre_tickers === 0.15);
 const proxyIds = ['fcl', 'nopat', 'ebitda_adjusted', 'net_income'];
 const statuses = ['OK', 'DATOS INCOMPLETOS', 'REVISAR', 'ERROR'];
 

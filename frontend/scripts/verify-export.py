@@ -1,9 +1,11 @@
 """Oráculo del XLSX descargado por Playwright; no ejecuta el motor."""
 
-import sys
+import argparse
+import json
 from contextlib import closing
 from pathlib import Path
 
+from export_contract import verificar_libro
 from openpyxl import load_workbook
 
 
@@ -43,4 +45,12 @@ def verificar(archivo: Path):
 
 
 if __name__ == "__main__":
-    verificar(Path(sys.argv[1]))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("archivo", type=Path)
+    parser.add_argument("--snapshot", type=Path)
+    args = parser.parse_args()
+    if args.snapshot:
+        verificar_libro(args.archivo, json.loads(args.snapshot.read_text(encoding="utf-8")))
+        print("Excel y snapshot conciliados: siete hojas y lote completo.")
+    else:
+        verificar(args.archivo)

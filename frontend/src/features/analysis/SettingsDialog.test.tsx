@@ -111,3 +111,14 @@ it('la preferencia confirmada valida versión y contenido y tolera almacenamient
   expect(readConfiguration(key)).toBeNull();
   expect(() => saveConfiguration(key, config())).not.toThrow();
 });
+
+it.each(['0.5', true, null])(
+  'no convierte %s en un ajuste numérico al recuperar la sesión',
+  (value) => {
+    const key = configurationKey('');
+    const altered = { ...config(), factor_crecimiento_final: value };
+    expect(validConfiguration(altered)).toBe(false);
+    sessionStorage.setItem(key, JSON.stringify({ version: 1, value: altered }));
+    expect(readConfiguration(key)).toBeNull();
+  },
+);

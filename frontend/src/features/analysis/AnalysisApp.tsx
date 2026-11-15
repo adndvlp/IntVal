@@ -359,12 +359,6 @@ function Workspace({
           snapshot={snapshot}
           selected={route.ticker!}
           api={analysis.api}
-          referenceDate={
-            snapshot.job.dataset_version === meta.demo.version
-              ? meta.demo.reference_date
-              : (snapshot.rows.find((c) => c.ticker === route.ticker)
-                  ?.traceability.price_date ?? '')
-          }
           exportControl={exportControl}
           onClose={closeDetail}
         />

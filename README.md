@@ -224,10 +224,10 @@ no la validez predictiva de una valoración.
 - [SDD de interfaz Liquid Glass](docs/SDD_UI.md), con el
   [HTML interactivo adjunto](prototipo-intval-liquid-glass.html): especificación
   vigente del analizador, selección escalable, paleta/color elegible y modo oscuro.
-  UI-1–3 integran apariencia, catálogo único, selección entre páginas, resultados
-  con búsqueda y orden, detalle modal, ajustes e historial de análisis reales.
-  UI-4–5 siguen pendientes. Evidencia de [UI-1](docs/TDD_UI1.md),
-  [UI-2](docs/TDD_UI2.md) y [UI-3](docs/TDD_UI3.md).
+  UI-1–4 integran apariencia, selección escalable, resultados, detalle, ajustes
+  e historial, con datos y Excel conciliados con Python. UI-5 conserva la revisión
+  del conjunto en navegador. Evidencia de [UI-1](docs/TDD_UI1.md),
+  [UI-2](docs/TDD_UI2.md), [UI-3](docs/TDD_UI3.md) y [UI-4](docs/TDD_UI4.md).
 - [Arquitectura web y entregas F6–F10](docs/SDD_WEB.md): Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el

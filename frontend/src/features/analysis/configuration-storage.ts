@@ -5,7 +5,9 @@ export const configurationKey = (baseUrl: string) =>
 export function validConfiguration(value: unknown): value is Configuration {
   if (!value || typeof value !== 'object') return false;
   return configurationFields.every((f) => {
-    const v = (value as Configuration)[f.key] * f.scale;
+    const raw = (value as Configuration)[f.key];
+    if (typeof raw !== 'number' || !Number.isFinite(raw)) return false;
+    const v = raw * f.scale;
     return (
       Number.isFinite(v) &&
       v >= f.min &&

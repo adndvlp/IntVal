@@ -1,4 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { AnalysisApi, ApiFault } from './transport';
 import {
   catalog,
@@ -21,6 +23,61 @@ const mock = (value: unknown) => {
   vi.stubGlobal('fetch', f);
   return f;
 };
+
+const contract = JSON.parse(
+  readFileSync(resolve(process.cwd(), '../contracts/openapi.v1.json'), 'utf8'),
+) as {
+  components: {
+    schemas: {
+      ConfiguracionWeb: {
+        properties: Record<string, { minimum: number; maximum: number }>;
+      };
+    };
+  };
+};
+
+it.each(
+  Object.entries(contract.components.schemas.ConfiguracionWeb.properties),
+)(
+  'acepta los límites de lectura de la API para %s aunque no sean opciones del formulario',
+  async (key, bounds) => {
+    for (const value of [bounds.minimum, bounds.maximum]) {
+      const accepted = job();
+      Object.assign(accepted.configuration, { [key]: value });
+      const f = mock(accepted);
+      expect(
+        (await new AnalysisApi('').status(accepted.id)).configuration,
+      ).toEqual(accepted.configuration);
+      f.mockResolvedValue(
+        answer({ ...metadata(), configuration: accepted.configuration }),
+      );
+      expect((await new AnalysisApi('').metadata()).configuration).toEqual(
+        accepted.configuration,
+      );
+    }
+  },
+);
+
+it.each([
+  'anos_proyeccion',
+  'crecimiento_minimo',
+  'crecimiento_maximo',
+  'crecimiento_fallback',
+  'max_anos_historicos',
+  'tasa_impuestos_fallback',
+  'tasa_impuestos_minima',
+  'tasa_impuestos_maxima',
+  'pausa_entre_tickers',
+])('rechaza un snapshot sin la constante efectiva %s', async (key) => {
+  const accepted = structuredClone(job()) as unknown as {
+    configuration: Record<string, unknown>;
+  };
+  delete accepted.configuration[key];
+  mock(accepted);
+  await expect(new AnalysisApi('').status('trabajo')).rejects.toMatchObject({
+    code: 'INVALID_RESPONSE',
+  });
+});
 
 it('obtiene contrato completo y usa las rutas generadas con señal y credenciales omitidas', async () => {
   const f = mock(metadata());

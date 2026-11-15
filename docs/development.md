@@ -550,6 +550,13 @@ npx --no-install playwright install chromium
 npm run test:e2e
 ```
 
+Desde UI-4, las pruebas unitarias incluyen un intercambio real de Python/API/XLSX.
+Necesitan también la `.venv` de la raíz con `requirements-dev.txt` instalado,
+como ya prepara CI. Generan cuatro casos con TestClient ASGI en un directorio
+temporal y eliminan esos archivos al terminar; no abren puertos, no llaman a
+Yahoo ni descargan paquetes. [TDD_UI4.md](TDD_UI4.md) describe qué acredita esa
+prueba y qué corresponde todavía a la revisión en navegador.
+
 El E2E inicia su API real en localhost:8766 y sirve el build en localhost:4321;
 los cierra al terminar. La configuración de prueba usa `VALORACION_DEMO=1`,
 `VALORACION_MARKET_ENABLED=0` y CORS para el origen de prueba. No reutiliza un

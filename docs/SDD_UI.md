@@ -4,14 +4,14 @@
 
 | Campo                          | Valor                                                                                                                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Versión                        | 1.3                                                                                                                                                                         |
+| Versión                        | 1.4                                                                                                                                                                         |
 | Fecha                          | 2026-11-15                                                                                                                                                                  |
-| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1–3 en el frontend real: apariencia, selección, resultados, detalle, ajustes e historial                       |
+| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1–4 en el frontend real y conciliar resultados, configuración y Excel con Python                       |
 | Anexo normativo                | [prototipo-intval-liquid-glass.html](../prototipo-intval-liquid-glass.html)                                                                                                 |
-| Estado                         | UI-1–3 integrados y verificados localmente; UI-4–5 pendientes. Evidencia en TDD_UI1.md, TDD_UI2.md y TDD_UI3.md; navegador y capturas nuevos pendientes |
+| Estado                         | UI-1–4 integrados y verificados localmente; UI-5 pendiente. Evidencia en TDD_UI1.md–TDD_UI4.md; navegador y capturas nuevos pendientes |
 | Base de producto inspeccionada | `f04b8b8`, cierre F10, más los archivos locales del prototipo                                                                                                               |
 | Relación con otras SDD         | Revisa la presentación e interacción de [SDD_WEB.md](SDD_WEB.md); mantiene sus contratos financieros, API y condiciones operativas salvo cambios expresos de este documento |
-| Autorización de esta entrega   | El usuario solicitó los incrementos UI-1, UI-2 y UI-3. No autoriza desplegar ni hacer commit/push                                                         |
+| Autorización de esta entrega   | El usuario solicitó los incrementos UI-1, UI-2, UI-3 y UI-4. No autoriza desplegar ni hacer commit/push                                                         |
 
 ## Índice
 
@@ -510,6 +510,22 @@ Los resultados del API actual llegan por cursor, sin búsqueda/ordenación globa
 | GAP-08 | Rutas por fragmento y entrada actual Astro con landing                                     | Adaptar las rutas preservando enlaces existentes; entrada final directa al analizador                                                                                                      |
 | GAP-09 | Estilos calculados y pruebas DOM disponibles, sin revisión del render actual               | Revisar navegador, capturas, tamaño de texto y coste real antes de declarar cerrada la migración visual                                                                                    |
 
+**Resolución local tras UI-4 (2026-11-15):**
+
+| Diferencia | Estado y evidencia |
+| --- | --- |
+| GAP-01 | UI-3 conserva trabajos reales; UI-4 consume respuestas ASGI y XLSX recién generados por Python, sin fórmulas ni temporizadores de valoración en JS |
+| GAP-02 | Nueve ajustes confirmados conciliados con POST, configuración efectiva, resultados recalculados y Supuestos; el análisis anterior se conserva |
+| GAP-03 | Resuelto en UI-3: Restablecer sólo modifica el borrador del modal hasta Guardar |
+| GAP-04 | Resuelto en UI-2: identidad opcional y compatible; no se fabrican nombres/monedas ni se consulta al proveedor al abrir catálogo |
+| GAP-05 | Resuelto en UI-2: 1,203 registros acreditan UI, no capacidad de análisis; se conserva el límite API por lote |
+| GAP-06 | Resuelto con las siete hojas Python; se cotejan las 24 columnas de resumen y las 73 de auditoría, particiones, Supuestos, Universo y Fuentes |
+| GAP-07 | Pertenencia, recuperación y errores de ID conservados; histórico exige fuente, símbolo, dataset y moneda del snapshot; no se rellena una fecha ausente con metadatos actuales |
+| GAP-08 | Entrada directa y enlaces compatibles de UI-1; navegación e historial conectados de UI-3 |
+| GAP-09 | Pendiente de UI-5: render real, capturas y coste visual; las comprobaciones ASGI/JSDOM no lo sustituyen |
+
+La validación de respuestas usa los límites publicados por OpenAPI, separados de los límites editables del formulario. Un snapshot legítimo con crecimiento de 0 o múltiplo de utilidad de 35 se puede leer sin ofrecer esos valores como nuevas opciones de edición. Las nueve constantes efectivas de sólo lectura deben estar presentes; no se inventan al recuperar un trabajo. Detalle conserva la fecha del snapshot, con formato UTC estable y ausencia explícita.
+
 El backend permanece agnóstico del alojamiento. Se conservan método financiero, proveedores, CLI y compatibilidad Streamlit hasta la entrega de migración correspondiente. Esta SDD no modifica `PORT`, número de procesos, retención o configuración del PaaS.
 
 ## 15. Rendimiento y compatibilidad
@@ -572,7 +588,7 @@ La verificación cubre DOM, interacciones, persistencia, contraste calculado, l�
 
 ### 16.3 Secuencia de implementación
 
-El usuario autorizó sucesivamente UI-1, UI-2 y UI-3 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
+El usuario autorizó sucesivamente UI-1, UI-2, UI-3 y UI-4 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
 
 | Incremento | Entrega                                                                                | Criterio mínimo                                              |
 | ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -593,6 +609,10 @@ El catálogo HTTP admite `name` y `currency` opcionales. La demo los obtiene de 
 **Estado de UI-3 (2026-11-15):** integrado y verificado localmente. Resultados con cuatro columnas, orden y búsqueda globales antes de paginar a 25; detalle modal con cuatro pestañas, Métodos y Supuestos visibles; nueve ajustes transaccionales e historial de IDs reales. Navegar o editar la fuente del borrador no cancela el trabajo; la cancelación explícita antes de recibir su ID cancela la aceptación tardía. Los ajustes guardados se envían al siguiente POST, y resultados/Excel mantienen la configuración aceptada de su trabajo. Se conservan recuperación, cola, revisiones, cancelación y resultados parciales del transporte existente.
 
 La suite tiene 92 pruebas frontend aprobadas y mantiene el umbral del 85 % en sus cuatro métricas de cobertura. Tipos, lint, formato, build, shell/anexo y assets pasan. Se ejecutaron dos regresiones Python dirigidas de configuración y Excel; no se repitió la suite Python completa de UI-2. Los E2E actualizados sólo se recopilaron, sin ejecución; foco nativo, cierres reales, alineación óptica, reflow y capturas corresponden a UI-5. Evidencia y diferencias en [TDD_UI3.md](TDD_UI3.md). La siguiente entrega es UI-4: conciliación completa de datos y exportación con Python.
+
+**Estado de UI-4 (2026-11-15):** integrado y verificado localmente. Se separa validación del contrato recibido y validación del formulario; se corrige la procedencia de fecha, dataset y moneda del detalle. Un oráculo independiente de las fórmulas compara el snapshot API con el XLSX completo. Los componentes consumen intercambios reales generados por TestClient ASGI en cada ejecución y comprueban los nueve ajustes, búsqueda/orden, ambos controles Excel e historial sin otro POST. Pasan 476 pruebas Python y 120 frontend, más tipos, lint, formato, build, shell/anexo y presupuestos. No cambia el contrato HTTP ni el financiero, y no se modifica el exportador Python. Evidencia en [TDD_UI4.md](TDD_UI4.md).
+
+UI-5 es la siguiente entrega: revisión del conjunto en navegador, apariencia, responsive y rendimiento. Los E2E se han actualizado y recopilado, sin ejecutarlos en esta sesión. No hay nuevas capturas ni referencias visuales aprobadas.
 
 F11 continúa como entrega separada de distribución/arranque, después de resolver el alcance que realmente se solicite. La aprobación de esta SDD no autoriza publicar la web.
 

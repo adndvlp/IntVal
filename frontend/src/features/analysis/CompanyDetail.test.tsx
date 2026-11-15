@@ -7,6 +7,7 @@ import { AnalysisApi } from './transport';
 import { company, job } from './test-fixtures';
 import { server } from './test-server';
 import { mockDialogs } from '../../../tests/support/dialog';
+import { formatDate } from './model';
 beforeEach(mockDialogs);
 afterEach(() => {
   cleanup();
@@ -21,6 +22,7 @@ function show(
     emptyMargins?: boolean;
   } = {},
   selected = 'DEMO-USA',
+  data = snapshot,
 ) {
   const api = server(options),
     close = vi.fn();
@@ -30,10 +32,9 @@ function show(
   render(
     <QueryClientProvider client={client}>
       <CompanyDetail
-        snapshot={snapshot}
+        snapshot={data}
         selected={selected}
         api={new AnalysisApi('')}
-        referenceDate="2025-01-03"
         onClose={close}
       />
     </QueryClientProvider>,
@@ -50,6 +51,48 @@ it('Resumen visible sin consultas: una comparación, cuatro métodos y supuestos
   expect(screen.getAllByText('116.19 USD')).toHaveLength(1);
   expect(screen.getByText('10.00 % / 10.00 %')).toBeTruthy();
   expect(api.paths).toEqual([]);
+});
+
+it('la referencia procede del snapshot y una fecha ausente no se rellena desde metadatos actuales', () => {
+  const saved = structuredClone(snapshot);
+  saved.rows[0]!.traceability.price_date = '2024-12-31';
+  show({}, 'DEMO-USA', saved);
+  expect(
+    screen.getByText('Fecha de referencia').nextElementSibling?.textContent,
+  ).toBe(formatDate('2024-12-31'));
+  cleanup();
+  saved.rows[0]!.traceability.price_date = null;
+  show({}, 'DEMO-USA', saved);
+  expect(
+    screen.getByText('Fecha de referencia').nextElementSibling?.textContent,
+  ).toBe('No disponible');
+});
+
+it.each([
+  ['Precio histórico', 'dataset_version', 'otra-version'],
+  ['Finanzas', 'dataset_version', 'otra-version'],
+  ['Precio histórico', 'currency', 'MXN'],
+  ['Finanzas', 'currency', 'MXN'],
+])('rechaza %s con %s ajeno al snapshot', async (tab, key, value) => {
+  show();
+  const fetchResource = globalThis.fetch;
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (...args: Parameters<typeof fetch>) => {
+      const response = await fetchResource(...args);
+      const data = await response.json();
+      return new Response(JSON.stringify({ ...data, [key]: value }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }),
+  );
+  await userEvent.click(screen.getByRole('tab', { name: tab }));
+  await screen.findByText(
+    'La respuesta del servicio no es compatible. Reintenta la conexión.',
+  );
+  expect(screen.queryByRole('figure')).toBeNull();
+  await userEvent.click(screen.getByRole('tab', { name: 'Resumen' }));
+  expect(screen.getByText('116.19 USD')).toBeTruthy();
 });
 it('teclado recorre pestañas sin adquirir al enfocarlas; activa y comparte estados/márgenes', async () => {
   const { api } = show();

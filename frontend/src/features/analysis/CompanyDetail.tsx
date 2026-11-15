@@ -28,14 +28,12 @@ export default function CompanyDetail({
   snapshot,
   selected,
   api,
-  referenceDate,
   onClose,
   exportControl,
 }: {
   snapshot: Snapshot;
   selected: string | null;
   api: AnalysisApi;
-  referenceDate: string;
   onClose: () => void;
   exportControl?: ReactNode;
 }) {
@@ -66,7 +64,9 @@ export default function CompanyDetail({
       );
       if (
         data.source !== snapshot.job.source ||
-        data.ticker !== company!.ticker
+        data.ticker !== company!.ticker ||
+        data.dataset_version !== snapshot.job.dataset_version ||
+        data.currency !== company!.currency
       )
         throw new ApiFault('INVALID_RESPONSE');
       return data;
@@ -88,7 +88,9 @@ export default function CompanyDetail({
       );
       if (
         data.source !== snapshot.job.source ||
-        data.ticker !== company!.ticker
+        data.ticker !== company!.ticker ||
+        data.dataset_version !== snapshot.job.dataset_version ||
+        data.currency !== company!.currency
       )
         throw new ApiFault('INVALID_RESPONSE');
       return data;
@@ -265,13 +267,7 @@ export default function CompanyDetail({
                 </div>
                 <div>
                   <dt>Fecha de referencia</dt>
-                  <dd>
-                    {formatDate(
-                      snapshot.job.source === 'demo'
-                        ? referenceDate
-                        : company.traceability.price_date,
-                    )}
-                  </dd>
+                  <dd>{formatDate(company.traceability.price_date)}</dd>
                 </div>
                 <div>
                   <dt>Moneda</dt>

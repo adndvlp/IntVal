@@ -3,6 +3,7 @@ import { auditPage } from './audit-helpers';
 import { startDemo } from './analysis-helpers';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { writeFileSync } from 'node:fs';
 async function noOverflow(page: Page) {
   expect(
     await page.evaluate(
@@ -22,6 +23,9 @@ test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot
       posts.push(r.postData() ?? '');
   });
   await page.goto('/?fuente=demo');
+  const acceptedResponse = page.waitForResponse(
+    (r) => r.request().method() === 'POST' && r.url().endsWith('/analyses'),
+  );
   await startDemo(page);
   await expect(
     page.getByText('Análisis completado con observaciones', { exact: true }),
@@ -75,9 +79,21 @@ test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot
   const verify = fileURLToPath(
     new URL('../../scripts/verify-export.py', import.meta.url),
   );
-  expect(execFileSync(python, [verify, file], { encoding: 'utf8' })).toContain(
-    'conciliados',
-  );
+  const accepted = await acceptedResponse;
+  const id = (await accepted.json()).id as string;
+  const endpoint = `${accepted.url()}/${encodeURIComponent(id)}`;
+  const job = await (await page.request.get(endpoint)).json();
+  const results = await (
+    await page.request.get(`${endpoint}/results?after=0&limit=100`)
+  ).json();
+  expect(results.next_cursor).toBe(job.processed);
+  const snapshotFile = info.outputPath('snapshot-demo.json');
+  writeFileSync(snapshotFile, JSON.stringify({ job, rows: results.items }));
+  expect(
+    execFileSync(python, [verify, file, '--snapshot', snapshotFile], {
+      encoding: 'utf8',
+    }),
+  ).toContain('conciliados');
   await table
     .getByRole('link', { name: 'Manufacturas Horizonte', exact: true })
     .click();
@@ -90,6 +106,15 @@ test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot
     detail.getByRole('heading', { name: 'Supuestos' }),
   ).toBeVisible();
   await expect(detail).toContainText('10.00 % / 10.00 %');
+  const detailDownload = page.waitForEvent('download');
+  await detail.getByRole('button', { name: 'Excel', exact: true }).click();
+  const detailFile = info.outputPath('analisis-detalle.xlsx');
+  await (await detailDownload).saveAs(detailFile);
+  expect(
+    execFileSync(python, [verify, detailFile, '--snapshot', snapshotFile], {
+      encoding: 'utf8',
+    }),
+  ).toContain('conciliados');
   await detail.getByRole('tab', { name: 'Precio histórico' }).click();
   await expect(
     detail.locator('[data-chart=prices]').getByRole('application'),

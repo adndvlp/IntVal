@@ -1,3 +1,4 @@
+import { startDemo } from './analysis-helpers';
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -70,7 +71,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
     await page.evaluate(() => document.fonts.ready);
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => window.__f10.lcp !== null);
-    const landing = await page.evaluate(() => {
+    const entry = await page.evaluate(() => {
       // Ventanas CLS de hasta cinco segundos y sin huecos mayores de un segundo.
       let maximum = 0,
         sum = 0,
@@ -87,8 +88,8 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
       }
       return { lcpMs: window.__f10.lcp, cls: maximum };
     });
-    expect(landing.lcpMs).toBeLessThanOrEqual(2500);
-    expect(landing.cls).toBeLessThanOrEqual(0.1);
+    expect(entry.lcpMs).toBeLessThanOrEqual(2500);
+    expect(entry.cls).toBeLessThanOrEqual(0.1);
     await page.goto('/app/?fuente=market');
     await expect(
       page.getByText('Servicio conectado', { exact: true }),
@@ -101,6 +102,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
     );
     expect(initialJs.some((p) => /Charts[.]/.test(p))).toBe(false);
     await page.goto('/app/?fuente=demo');
+    await startDemo(page);
     await expect(
       page.getByText('Análisis completado con observaciones', { exact: true }),
     ).toBeVisible();
@@ -128,7 +130,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de filtro
     const events = await page.evaluate(() => window.__f10.events);
     samples.push({
       run: run + 1,
-      landing,
+      entry,
       filterActionToTwoFramesMs: paint,
       eventTimingSamples: events,
       initialJs,

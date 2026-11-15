@@ -1,11 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { navigationTab } from './audit-helpers';
 
-test('navega con teclado y comprueba la API real desde el build estático', async ({
+test('navega con teclado y conecta la API desde la entrada directa', async ({
   page,
 }, testInfo) => {
   const errores: string[] = [];
+  const posts: string[] = [];
   page.on('pageerror', (error) => errores.push(error.message));
+  page.on('request', (r) => {
+    if (r.method() === 'POST') posts.push(r.url());
+  });
+  const meta = page.waitForResponse('http://127.0.0.1:8766/api/v1/meta');
   await page.goto('/');
   await page.keyboard.press(navigationTab(testInfo));
   await expect(
@@ -13,21 +18,21 @@ test('navega con teclado y comprueba la API real desde el build estático', asyn
   ).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
-  const meta = page.waitForResponse('http://127.0.0.1:8766/api/v1/meta');
-  await page.getByRole('link', { name: 'Aplicación', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Tu espacio de análisis.',
+    'Elige las empresas',
   );
   await expect(page.locator('nav [aria-current="page"]')).toHaveText(
-    'Aplicación',
+    'Analizar',
   );
   expect((await meta).status()).toBe(200);
   await expect(
     page.getByText('Servicio conectado', { exact: true }),
   ).toBeVisible();
+  await expect(page.locator('.selection-count strong')).toHaveText('0');
+  expect(posts).toEqual([]);
   expect(
     await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
+      () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
   expect(errores).toEqual([]);
@@ -43,15 +48,21 @@ test('conserva contenido y enlaces con JavaScript desactivado', async ({
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:4321');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('precio');
-  await page.getByRole('link', { name: 'Aplicación', exact: true }).click();
-  // El selector de texto de Playwright omite NOSCRIPT. Un <p> real dentro
-  // de ese elemento sólo existe cuando el navegador lo interpreta sin JS.
-  const aviso = page.locator('noscript p');
-  await expect(aviso).toBeVisible();
-  await expect(aviso).toContainText(
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Elige las empresas',
+  );
+  await expect(page.locator('noscript p')).toContainText(
     'Activa JavaScript para analizar empresas',
     { useInnerText: true },
   );
+  await page
+    .locator('noscript')
+    .getByRole('link', { name: 'Cómo se calcula' })
+    .click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Cómo se calcula.',
+  );
+  await expect(page.getByRole('heading', { level: 2 })).toHaveCount(5);
+  await expect(page.locator('main details')).toHaveCount(0);
   await context.close();
 });

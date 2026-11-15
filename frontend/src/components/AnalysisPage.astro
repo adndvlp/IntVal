@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import AnalysisApp from '../features/analysis/AnalysisApp';
+import '../styles/dashboard.css';
+const baseUrl = (import.meta.env.PUBLIC_API_BASE_URL ?? '').replace(/\/+$/, '');
+---
+
+<Base
+  title="Analizar empresas"
+  description="Compara el precio por acción con cuatro estimaciones de valoración, consulta sus datos y descarga el análisis completo."
+>
+  <div class="workbench-wrap">
+    <header class="workbench-heading">
+      <h1 id="contenido" tabindex="-1">
+        Elige las empresas
+      </h1>
+    </header>
+    <AnalysisApp client:load baseUrl={baseUrl} />
+    <noscript>
+      <p>
+        Activa JavaScript para analizar empresas, consultar gráficas y descargar
+        Excel. Puedes seguir leyendo <a href="/metodologia/">Cómo se calcula</a>{' '}
+        y consultar los{' '}
+        <a href="https://github.com/adndvlp/IntVal/tree/main/examples/demo">
+          ejemplos descargables
+        </a>
+        .
+      </p>
+    </noscript>
+  </div>
+</Base>

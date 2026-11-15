@@ -113,7 +113,6 @@ export function useAnalysis({
   const [submitting, setSubmitting] = useState(false);
   const generation = useRef(0);
   const initialized = useRef(false);
-  const autoStarted = useRef(false);
   const creating = useRef<number | null>(null);
   const mounted = useRef(false);
   const pendingRequest = useRef<CreateRequest | null>(null);
@@ -154,7 +153,6 @@ export function useAnalysis({
       const current = ++generation.current;
       creating.current = current;
       pendingRequest.current = structuredClone(request);
-      autoStarted.current = true;
       setSubmitting(true);
       setFormError(null);
       setCancelError(null);
@@ -223,15 +221,12 @@ export function useAnalysis({
     if (saved?.analysis && saved.source !== source)
       void api.cancel(saved.analysis.id).catch(() => undefined);
     if (matching?.analysis && !matching.suppressed) {
-      autoStarted.current = true;
       const current = ++generation.current;
       dispatch({ type: 'begin', generation: current });
       setReference({ ...matching.analysis, source, generation: current });
     } else if (matching?.request && !matching.suppressed) {
-      autoStarted.current = true;
       void create(matching.request);
     } else {
-      autoStarted.current = matching?.suppressed ?? false;
       saveSession(key, { source, suppressed: matching?.suppressed ?? false });
     }
   }, [api, create, initialSource, key, meta]);
@@ -248,25 +243,6 @@ export function useAnalysis({
     refetchOnWindowFocus: false,
   });
   const catalog = catalogQuery.data;
-  useEffect(() => {
-    if (
-      !draft ||
-      draft.source !== 'demo' ||
-      catalog?.source !== 'demo' ||
-      autoStarted.current
-    )
-      return;
-    autoStarted.current = true;
-    const tickers = catalog.items.map((c) => c.ticker);
-    setDraft((old) => (old ? { ...old, selected: tickers } : old));
-    void create({
-      client_request_id: crypto.randomUUID(),
-      source: 'demo',
-      tickers,
-      configuration: { ...draft.configuration },
-    });
-  }, [catalog, create, draft]);
-
   const statusQuery = useQuery({
     queryKey: [
       'intval',
@@ -338,7 +314,6 @@ export function useAnalysis({
     (nextSource: Source, suppressed: boolean) => {
       const previous = reference?.id ?? view.current?.job.id;
       generation.current += 1;
-      autoStarted.current = suppressed;
       pendingRequest.current = null;
       setReference(null);
       setSubmitting(false);

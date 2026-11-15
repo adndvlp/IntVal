@@ -11,6 +11,7 @@ const config: ViteUserConfig = {
         'src/lib/*.ts',
         'src/components/**/*.tsx',
         'src/features/analysis/**/*.{ts,tsx}',
+        'src/features/appearance/*.ts',
       ],
       exclude: [
         '**/*.test.*',

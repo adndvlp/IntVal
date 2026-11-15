@@ -1,26 +1,37 @@
 ---
 import '../styles/global.css';
-import Arrow from '../components/ui/Arrow.astro';
+import '../styles/appearance.css';
+import Appearance from '../components/Appearance.astro';
+import LiquidScene from '../components/LiquidScene.astro';
 interface Props {
   title: string;
   description: string;
 }
 const { title, description } = Astro.props;
 const actual = Astro.url.pathname;
+const application = actual === '/' || actual === '/app/';
 const site = import.meta.env.PUBLIC_SITE_URL;
 const canonical = site ? new URL(actual, site).href : undefined;
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="liquid-glass">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#142824" />
-    {actual.startsWith('/app') && (
-      <meta name="robots" content="noindex, follow" />
-    )}
+    <meta name="theme-color" content="#d7eaf2" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      try {
+        const scheme = localStorage.getItem('intval-liquid-glass-scheme-v1');
+        if (scheme === 'light' || scheme === 'dark')
+          document.querySelector('meta[name="color-scheme"]').content = scheme;
+      } catch {
+        // La visita sigue funcionando si el almacenamiento está bloqueado.
+      }
+    </script>
+    {application && <meta name="robots" content="noindex, follow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
@@ -28,98 +39,74 @@ const canonical = site ? new URL(actual, site).href : undefined;
     <meta property="og:site_name" content="IntVal" />
     <meta property="og:title" content={title + ' | IntVal'} />
     <meta property="og:description" content={description} />
-    {site && (
-      <meta
-        property="og:image"
-        content={new URL('/images/social.png', site).href}
-      />
-    )}
     {canonical && <meta property="og:url" content={canonical} />}
     <title>{title} | IntVal</title>
   </head>
   <body>
+    <LiquidScene />
     <a class="skip-link" href="#contenido">
       Saltar al contenido
     </a>
-    <header class="site-header wrap">
-      <a class="brand" href="/" aria-label="IntVal — Inicio">
-        IntVal<span aria-hidden="true">.</span>
+    <header class="app-sidebar">
+      <a
+        class="brand"
+        href={application ? '#contenido' : '/'}
+        aria-label="IntVal — Analizador"
+      >
+        <span class="glass-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 18V6m0 12h14M9 14l4-5 5 2" />
+          </svg>
+        </span>
+        IntVal
       </a>
       <nav aria-label="Principal">
-        <ul>
-          <li>
-            <a href="/" aria-current={actual === '/' ? 'page' : undefined}>
-              Inicio
-            </a>
-          </li>
-          <li>
-            <a href="/#como-funciona">Cómo funciona</a>
-          </li>
-          <li>
-            <a
-              href="/metodologia/"
-              aria-current={actual === '/metodologia/' ? 'page' : undefined}
-            >
-              Metodología
-            </a>
-          </li>
-          <li>
-            <a
-              href="/app/"
-              aria-current={actual === '/app/' ? 'page' : undefined}
-            >
-              Aplicación
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/adndvlp/IntVal">
-              GitHub <span aria-hidden="true">↗</span>
-            </a>
-          </li>
-          <li>
-            <a class="header-demo" href="/app/?fuente=demo">
-              Explorar la demo
-            </a>
-          </li>
-        </ul>
+        <a
+          href={application ? '#contenido' : '/'}
+          aria-current={application ? 'page' : undefined}
+        >
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="4" width="6" height="6" rx="1.5" />
+            <rect x="14" y="4" width="6" height="6" rx="1.5" />
+            <rect x="4" y="14" width="6" height="6" rx="1.5" />
+            <rect x="14" y="14" width="6" height="6" rx="1.5" />
+          </svg>
+          Analizar
+        </a>
+        {application && (
+          <a href="#resultados" data-results-nav hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 4v16h16M8 15l4-5 4 2 4-6" />
+            </svg>
+            Resultados
+          </a>
+        )}
+        {!application && (
+          <a
+            href="/metodologia/"
+            aria-current={actual === '/metodologia/' ? 'page' : undefined}
+          >
+            Cómo se calcula
+          </a>
+        )}
       </nav>
+      <span class="environment" data-active-source>
+        USA · México
+      </span>
+      <a class="sidebar-code" href="https://github.com/adndvlp/IntVal">
+        Código ↗
+      </a>
     </header>
     <main>
       <slot />
     </main>
     <footer class="site-footer">
-      <div class="wrap footer-grid">
-        <div>
-          <a class="brand footer-brand" href="/" aria-label="IntVal — Inicio">
-            IntVal<span aria-hidden="true">.</span>
-          </a>
-          <p>
-            Más contexto para tus preguntas
-            <br /> sobre el valor de una empresa.
-          </p>
-        </div>
-        <div class="footer-links">
-          <a href="/metodologia/">
-            Metodología <Arrow />
-          </a>
-          <a href="https://github.com/adndvlp/IntVal">
-            Código en GitHub <Arrow />
-          </a>
-          <a href="https://github.com/adndvlp/IntVal/blob/main/LICENSE">
-            Licencia MIT <Arrow />
-          </a>
-        </div>
-        <div class="footer-bottom">
-          <span>
-            © 2026 <a href="https://github.com/adndvlp">adndvlp</a>
-          </span>
-          <p>
-            Proyecto educativo. No constituye asesoría financiera ni una
-            recomendación de inversión.
-          </p>
-          <span>Hecho para entender.</span>
-        </div>
-      </div>
+      <a href="/metodologia/">Cómo se calcula</a>
     </footer>
+    <Appearance />
+    <script>
+      import { initAppearance } from '../features/appearance/appearance';
+      initAppearance();
+    </script>
   </body>
 </html>

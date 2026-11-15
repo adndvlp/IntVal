@@ -9,7 +9,6 @@ import { ApiFault, retryDelay, retryQuery } from './transport';
 import type { Filters, Job, Snapshot } from './types';
 import { useAnalysis } from './use-analysis';
 
-const controlsTitle = 'Configurar análisis';
 const resultsTitle = 'Pon las cifras en perspectiva.';
 const initialFilters: Filters = {
   market: 'all',
@@ -26,48 +25,7 @@ const stateLabels: Record<Job['state'], string> = {
 };
 
 function Controls({ analysis }: { analysis: AnalysisState }) {
-  const [compact, setCompact] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    const media = window.matchMedia('(width < 70rem)');
-    const update = () => setCompact(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
-  return compact ? (
-    <div className="mobile-controls">
-      <button
-        type="button"
-        className="secondary-button"
-        onClick={() => dialog.current?.showModal()}
-      >
-        Configurar análisis <span aria-hidden="true">＋</span>
-      </button>
-      <dialog
-        ref={dialog}
-        className="controls-dialog"
-        aria-label={controlsTitle}
-      >
-        <div className="dialog-heading">
-          <h2 id="mobile-controls-title">{controlsTitle}</h2>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => dialog.current?.close()}
-            aria-label="Cerrar configuración"
-          >
-            Cerrar <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        <AnalysisForm
-          analysis={analysis}
-          onSubmitted={() => dialog.current?.close()}
-        />
-      </dialog>
-    </div>
-  ) : (
+  return (
     <aside
       className="analysis-controls"
       aria-label="Configuración del análisis"
@@ -158,6 +116,18 @@ function Workspace({
   const { draft, meta, snapshot, view } = analysis;
   const [filters, setFilters] = useState<Filters>(initialFilters);
   useEffect(() => {
+    const source = document.querySelector('[data-active-source]');
+    if (source)
+      source.textContent =
+        draft?.source === 'demo'
+          ? 'Datos ficticios'
+          : draft?.source === 'market'
+            ? 'Mercado'
+            : 'USA · México';
+    const link = document.querySelector<HTMLElement>('[data-results-nav]');
+    if (link) link.hidden = !snapshot?.rows.length;
+  }, [draft?.source, snapshot]);
+  useEffect(() => {
     setFilters(initialFilters);
   }, [draft?.source]);
   const rows = useMemo(
@@ -171,7 +141,7 @@ function Workspace({
   );
   if (!meta || !draft)
     return (
-      <div className="workspace-loading">
+      <div className="workspace-loading" id="resultados">
         <span className="workspace-mark" aria-hidden="true">
           i.
         </span>
@@ -220,7 +190,18 @@ function Workspace({
       <div className="workspace-layout">
         <Controls analysis={analysis} />
         <div className="analysis-content">
-          <section className="results-section" aria-label={resultsTitle}>
+          <section
+            className="results-section"
+            id="resultados"
+            aria-label={resultsTitle}
+            hidden={
+              !snapshot &&
+              !active &&
+              !view.pending &&
+              !analysis.transportError &&
+              !view.message
+            }
+          >
             <header className="results-heading">
               <div>
                 <p className="eyebrow">02 / Comparación</p>
@@ -542,7 +523,7 @@ function Workspace({
               referenceDate={meta.demo.reference_date}
             />
           )}
-          <p className="workspace-disclaimer">
+          <p className="workspace-disclaimer" hidden={!snapshot?.rows.length}>
             La mediana es una referencia heurística, no una predicción de
             precio. Revisa la procedencia, las exclusiones y los supuestos.{' '}
             <a href="/metodologia/">Entender la metodología ↗</a>

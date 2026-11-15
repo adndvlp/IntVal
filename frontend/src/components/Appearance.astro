@@ -1,0 +1,120 @@
+<aside id="palette-controls" aria-label="Apariencia">
+  <button
+    id="scheme-toggle"
+    type="button"
+    aria-label="Modo oscuro"
+    aria-pressed="false"
+    title="Modo oscuro"
+  >
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.5 13.5A9 9 0 0 1 10.5 3.5a9 9 0 1 0 10 10Z" />
+    </svg>
+    <span>Oscuro</span>
+  </button>
+  <details id="palette-switcher">
+    <summary>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.4-3.4 1.8 1.8 0 0 1 1.3-3.1H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3Z" />
+        <circle cx="7.5" cy="10" r=".8" />
+        <circle cx="10.5" cy="7" r=".8" />
+        <circle cx="15" cy="7.5" r=".8" />
+      </svg>
+      <span class="palette-label">Paleta</span>
+      <strong id="palette-current">Océano</strong>
+    </summary>
+    <div class="palette-panel">
+      <fieldset>
+        <legend>Paletas de color</legend>
+        <div class="palette-grid">
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="ocean" />
+            <span
+              class="palette-swatch"
+              style="background: #0878d4"
+              aria-hidden="true"
+            ></span>
+            <span>Océano</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="forest" />
+            <span
+              class="palette-swatch"
+              style="background: #138565"
+              aria-hidden="true"
+            ></span>
+            <span>Bosque</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="lavender" />
+            <span
+              class="palette-swatch"
+              style="background: #8056d9"
+              aria-hidden="true"
+            ></span>
+            <span>Lavanda</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="amber" />
+            <span
+              class="palette-swatch"
+              style="background: #c06d1a"
+              aria-hidden="true"
+            ></span>
+            <span>Ámbar</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="rose" />
+            <span
+              class="palette-swatch"
+              style="background: #c34d7b"
+              aria-hidden="true"
+            ></span>
+            <span>Rosa</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="graphite" />
+            <span
+              class="palette-swatch"
+              style="background: #536171"
+              aria-hidden="true"
+            ></span>
+            <span>Grafito</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+        </div>
+        <div class="palette-custom-row">
+          <label class="palette-choice">
+            <input type="radio" name="palette" value="custom" />
+            <span>Personalizada</span>
+            <span class="palette-check" aria-hidden="true">
+              ✓
+            </span>
+          </label>
+          <input
+            id="palette-custom"
+            type="color"
+            value="#0878d4"
+            aria-label="Color personalizado"
+          />
+        </div>
+      </fieldset>
+    </div>
+  </details>
+</aside>

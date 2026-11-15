@@ -1,7 +1,8 @@
+import { startDemo } from './analysis-helpers';
 import { test, expect } from '@playwright/test';
 import { auditPage, navigationTab } from './audit-helpers';
 
-test('estructura, contraste automático, errores descritos y diálogo operable por teclado', async ({
+test('estructura, contraste automático, errores descritos y formulario directo con teclado', async ({
   page,
 }, testInfo) => {
   test.setTimeout(45000);
@@ -21,14 +22,6 @@ test('estructura, contraste automático, errores descritos y diálogo operable p
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   }
   const compact = testInfo.project.name.endsWith('mobile');
-  const open = page.getByRole('button', {
-    name: 'Configurar análisis',
-    exact: false,
-  });
-  if (compact) {
-    await open.focus();
-    await page.keyboard.press('Enter');
-  }
   // Los nombres deben seguir coincidiendo con el título visible tras el ajuste
   // de interoperabilidad de referencias ARIA observado en Firefox 159/macOS.
   const form = page.getByRole('form', { name: 'Construye tu análisis.' });
@@ -47,24 +40,8 @@ test('estructura, contraste automático, errores descritos y diálogo operable p
   await input.fill('10');
   await input.press('Tab');
   await expect(reason).toHaveCount(0);
-  if (compact) {
-    const dialog = page.getByRole('dialog', { name: 'Configurar análisis' });
-    await dialog.getByRole('button', { name: 'Cerrar configuración' }).focus();
-    for (let i = 0; i < 10; i++) {
-      await page.keyboard.press(navigationTab(testInfo));
-      // El navegador puede pasar por su chrome al cerrar un ciclo de tabulación.
-      // Se permite ese paso nativo, pero nunca foco en un control del fondo.
-      if (await page.evaluate(() => document.activeElement === document.body))
-        await page.keyboard.press(navigationTab(testInfo));
-      expect(
-        await dialog.evaluate((el) => el.contains(document.activeElement)),
-      ).toBe(true);
-    }
-    await page.keyboard.press('Escape');
-    await expect(dialog).not.toBeVisible();
-    await expect(open).toBeFocused();
-  }
   await page.goto('/app/?fuente=demo');
+  await startDemo(page);
   await expect(
     page.getByText('Análisis completado con observaciones', { exact: true }),
   ).toBeVisible();

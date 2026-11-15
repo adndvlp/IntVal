@@ -20,12 +20,26 @@ afterEach(() => {
   HTMLDialogElement.prototype.close = nativeClose;
 });
 
+async function startDemo() {
+  const select = await screen.findByRole('button', {
+    name: 'Seleccionar todo el mercado',
+  });
+  await waitFor(() =>
+    expect((select as HTMLButtonElement).disabled).toBe(false),
+  );
+  await userEvent.click(select);
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Analizar empresas' }),
+  );
+}
+
 it('presenta el formulario, elige demo y permite filtrar sin perder el Excel ni los supuestos aceptados', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
   await screen.findByRole('radio', { name: 'Demostración' });
   expect(api.created).toHaveLength(0);
   await userEvent.click(screen.getByRole('radio', { name: 'Demostración' }));
+  await startDemo();
   await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
   await userEvent.selectOptions(
     screen.getByLabelText('Estado del resultado'),
@@ -56,7 +70,9 @@ it('presenta el formulario, elige demo y permite filtrar sin perder el Excel ni 
   expect(
     screen.queryByRole('button', { name: 'Descargar Excel completo' }),
   ).toBeNull();
-  expect(screen.getByText('Prepara tu próximo análisis.')).toBeTruthy();
+  expect(
+    screen.queryByRole('region', { name: 'Pon las cifras en perspectiva.' }),
+  ).toBeNull();
   await waitFor(() => expect(api.created).toHaveLength(1));
 });
 
@@ -91,6 +107,7 @@ it('un lote con todas sus filas ERROR termina con observaciones y conserva diagn
     return new Response(JSON.stringify(data));
   });
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  await startDemo();
   expect(
     await screen.findByText('Análisis completado con observaciones'),
   ).toBeTruthy();
@@ -108,13 +125,19 @@ it('un lote con todas sus filas ERROR termina con observaciones y conserva diagn
   expect(screen.getByText('Datos no disponibles en este caso.')).toBeTruthy();
 });
 
-it('la entrada a la demo usa la misma acción clara que la landing', async () => {
+it('cambiar a demo conserva la decisión de analizar en manos del usuario', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="market" />);
-  const explore = await screen.findByRole('button', {
-    name: 'Explorar la demo',
-  });
-  await userEvent.click(explore);
+  await userEvent.click(
+    await screen.findByRole('radio', { name: 'Demostración' }),
+  );
+  await screen.findByRole('checkbox', { name: /DEMO-USA/ });
+  expect(api.created).toHaveLength(0);
+  expect(
+    (screen.getByRole('checkbox', { name: /DEMO-USA/ }) as HTMLInputElement)
+      .checked,
+  ).toBe(false);
+  await startDemo();
   await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
   expect(JSON.parse(api.created[0]!).source).toBe('demo');
 });
@@ -174,6 +197,7 @@ it('permite buscar, elegir todo un mercado, normalizar extras y editar los nueve
 it('una descarga fallida conserva resultados y permite reintentar el mismo snapshot', async () => {
   const api = server();
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  await startDemo();
   const button = await screen.findByRole('button', {
     name: 'Descargar Excel completo',
   });
@@ -256,6 +280,7 @@ it('permite reconectar metadatos y comunica un mercado deshabilitado sin analiza
 it('cancela un lote desde la vista de progreso conservando las filas parciales', async () => {
   const api = server({ state: 'running' });
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  await startDemo();
   await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
   await userEvent.click(
     screen.getByRole('button', { name: 'Cancelar análisis' }),
@@ -276,37 +301,22 @@ it('cancela un lote desde la vista de progreso conservando las filas parciales',
   expect(api.created).toHaveLength(1);
 });
 
-it('el panel móvil abre y cierra un diálogo nativo con el formulario conservado', async () => {
-  server();
-  // jsdom no implementa estas APIs; contención de foco/Esc se comprueban en Chrome.
-  HTMLDialogElement.prototype.showModal = function () {
-    this.open = true;
-  };
-  HTMLDialogElement.prototype.close = function () {
-    this.open = false;
-  };
-  const media = {
-    matches: true,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  };
+it('el formulario se puede usar en móvil sin abrir una pantalla o diálogo previo', async () => {
+  const api = server();
   vi.stubGlobal(
     'matchMedia',
-    vi.fn(() => media),
+    vi.fn(() => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
   );
   render(<AnalysisApp baseUrl="" initialSource="market" />);
-  const open = await screen.findByRole('button', {
-    name: /Configurar análisis/,
-  });
-  await userEvent.click(open);
-  const dialog = screen.getByRole('dialog', { name: 'Configurar análisis' });
-  expect((dialog as HTMLDialogElement).open).toBe(true);
-  await userEvent.click(
-    screen.getByRole('button', { name: 'Cerrar configuración' }),
-  );
   expect(
-    screen.queryByRole('dialog', { name: 'Configurar análisis' }),
-  ).toBeNull();
+    await screen.findByRole('form', { name: 'Construye tu análisis.' }),
+  ).toBeTruthy();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(api.created).toHaveLength(0);
 });
 
 it('pagina un catálogo de 604 empresas y la selección masiva incluye las páginas no visibles', async () => {
@@ -397,6 +407,7 @@ it('aplica filtros locales y descarga el snapshot completo liberando la URL temp
     .spyOn(HTMLAnchorElement.prototype, 'click')
     .mockImplementation(() => {});
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  await startDemo();
   await screen.findByRole('button', { name: 'Ver detalle de DEMO-USA' });
   await userEvent.selectOptions(
     screen.getByLabelText('Mercado del resultado'),

@@ -1,0 +1,51 @@
+<svg
+  class="liquid-scene"
+  aria-hidden="true"
+  viewBox="0 0 1600 1000"
+  preserveAspectRatio="xMidYMid slice"
+>
+  <defs>
+    <linearGradient id="liquid-sky" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#c5e6ee" />
+      <stop offset=".52" stop-color="#eef5f8" />
+      <stop offset="1" stop-color="#cbddec" />
+    </linearGradient>
+    <linearGradient id="liquid-tide" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#246e97" />
+      <stop offset=".46" stop-color="#58aeca" />
+      <stop offset="1" stop-color="#d3f1f3" />
+    </linearGradient>
+    <linearGradient id="liquid-swell" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#b1d2e6" />
+      <stop offset=".6" stop-color="#e5f6f7" />
+      <stop offset="1" stop-color="#ffffff" />
+    </linearGradient>
+    <radialGradient id="liquid-sun">
+      <stop stop-color="#ffe7cf" stop-opacity=".85" />
+      <stop offset="1" stop-color="#f8f4ee" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <path fill="url(#liquid-sky)" d="M0 0h1600v1000H0z" />
+  <ellipse cx="1450" cy="90" rx="800" ry="650" fill="url(#liquid-sun)" />
+  <path
+    d="M-200 1120V560C220 760 300 250 830 470s620 70 970-230v880Z"
+    fill="url(#liquid-tide)"
+  />
+  <path
+    d="M-200 1140V730C210 990 430 415 890 590s630-55 910-260v810Z"
+    fill="url(#liquid-swell)"
+  />
+  <path
+    d="M-200 730C210 990 430 415 890 590s630-55 910-260"
+    fill="none"
+    stroke="#ffffff"
+    stroke-opacity=".55"
+    stroke-width="2"
+  />
+  <path
+    d="M-180 1000C300 1190 720 660 1170 760s490-140 650-230v560Z"
+    class="palette-wave"
+    fill="#d4e7f4"
+    fill-opacity=".7"
+  />
+</svg>

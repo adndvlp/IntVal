@@ -1,13 +1,15 @@
+import { startDemo } from './analysis-helpers';
 // Referencia deliberadamente separada por OS/proyecto: no mezclar fuentes de Linux/macOS.
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import os from 'node:os';
 
-test('baseline visual revisado del dashboard', async ({
+test('referencia UI-1 del dashboard pendiente de revisión visual', async ({
   page,
   browser,
 }, info) => {
   await page.goto('/app/?fuente=demo');
+  await startDemo(page);
   await expect(
     page.getByText('Análisis completado con observaciones', { exact: true }),
   ).toBeVisible();
@@ -27,29 +29,29 @@ test('baseline visual revisado del dashboard', async ({
       2,
     ),
   );
-  await expect(page).toHaveScreenshot('dashboard-top.png', {
+  await expect(page).toHaveScreenshot('ui1-dashboard-top.png', {
     animations: 'disabled',
     maxDiffPixelRatio: 0.005,
   });
 });
 
-test('baseline visual revisado del panel móvil', async ({
+test('referencia UI-1 del formulario móvil pendiente de revisión visual', async ({
   page,
   browser,
 }, info) => {
   test.skip(
     info.project.name !== 'mobile',
-    'El panel modal sólo se muestra en viewport móvil.',
+    'La referencia de formulario se toma una vez en móvil.',
   );
   await page.goto('/app/?fuente=demo');
+  await startDemo(page);
   await expect(
     page.getByText('Análisis completado con observaciones', { exact: true }),
   ).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   await page
-    .getByRole('button', { name: 'Configurar análisis', exact: false })
-    .click();
-  await expect(page.getByRole('dialog')).toBeVisible();
+    .getByRole('form', { name: 'Construye tu análisis.' })
+    .scrollIntoViewIfNeeded();
   await writeFile(
     info.outputPath('environment.json'),
     JSON.stringify(
@@ -64,7 +66,7 @@ test('baseline visual revisado del panel móvil', async ({
       2,
     ),
   );
-  await expect(page).toHaveScreenshot('controls.png', {
+  await expect(page).toHaveScreenshot('ui1-controls.png', {
     animations: 'disabled',
     maxDiffPixelRatio: 0.005,
   });

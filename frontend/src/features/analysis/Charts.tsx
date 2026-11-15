@@ -15,10 +15,18 @@ import type { Company, Financials, Prices } from './types';
 
 export type ChartKind = 'comparison' | 'prices' | 'financials' | 'margins';
 export const series = [
-  { id: 'fcl', label: 'Proxy FCL', color: '#086a4d' },
-  { id: 'nopat', label: 'Proxy NOPAT', color: '#385a9c' },
-  { id: 'ebitda_adjusted', label: 'Proxy EBITDA ajustado', color: '#926515' },
-  { id: 'net_income', label: 'Proxy utilidad neta', color: '#9e3b4e' },
+  { id: 'fcl', label: 'Proxy FCL', color: 'var(--chart-blue)' },
+  { id: 'nopat', label: 'Proxy NOPAT', color: 'var(--chart-teal)' },
+  {
+    id: 'ebitda_adjusted',
+    label: 'Proxy EBITDA ajustado',
+    color: 'var(--chart-amber)',
+  },
+  {
+    id: 'net_income',
+    label: 'Proxy utilidad neta',
+    color: 'var(--chart-purple)',
+  },
 ] as const;
 const common = {
   margin: { top: 12, right: 20, bottom: 12, left: 12 },
@@ -48,7 +56,7 @@ export default function Charts({
     {
       label: 'Precio de mercado',
       value: company.market_price,
-      fill: '#66776a',
+      fill: 'var(--chart-label)',
     },
     ...series.map((s) => ({
       label: s.label,
@@ -59,12 +67,12 @@ export default function Charts({
     {
       label: 'Mediana de proxies',
       value: company.median.value_per_share,
-      fill: '#142824',
+      fill: 'var(--chart-revenue)',
     },
     {
       label: 'Objetivo de analistas',
       value: company.analyst_target.value,
-      fill: '#74508d',
+      fill: 'var(--chart-purple)',
     },
   ];
   const titles = {
@@ -74,7 +82,7 @@ export default function Charts({
     margins: 'Márgenes históricos',
   };
   const financialLines = [
-    { key: 'revenue', label: 'Ingresos', color: '#142824' },
+    { key: 'revenue', label: 'Ingresos', color: 'var(--chart-revenue)' },
     { key: 'fcl', label: 'FCL', color: series[0].color },
     { key: 'ebit', label: 'EBIT', color: series[1].color },
     { key: 'ebitda', label: 'EBITDA', color: series[2].color },

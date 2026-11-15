@@ -1,37 +1,5 @@
 ---
-import Base from '../../layouts/Base.astro';
-import AnalysisApp from '../../features/analysis/AnalysisApp';
-import '../../styles/dashboard.css';
-
-const baseUrl = (import.meta.env.PUBLIC_API_BASE_URL ?? '').replace(/\/+$/, '');
+import AnalysisPage from '../../components/AnalysisPage.astro';
 ---
 
-<Base
-  title="Aplicación"
-  description="Compara empresas de USA y México, revisa cuatro aproximaciones de valoración y exporta tus análisis."
->
-  <div class="workbench-wrap">
-    <header class="workbench-heading">
-      <p class="eyebrow">IntVal / Mesa de análisis</p>
-      <h1 id="contenido" tabindex="-1">
-        Tu espacio de análisis.
-      </h1>
-      <p class="intro">
-        Empresas de USA y México. Precio, cuatro aproximaciones de valoración y
-        los supuestos detrás de cada cifra.
-      </p>
-    </header>
-    <AnalysisApp client:load baseUrl={baseUrl} />
-    <noscript>
-      <p>
-        Activa JavaScript para analizar empresas, consultar gráficas y descargar
-        Excel. Puedes seguir leyendo la <a href="/metodologia/">metodología</a>{' '}
-        y explorar los
-        <a href="https://github.com/adndvlp/IntVal/tree/main/examples/demo">
-          ejemplos descargables
-        </a>
-        .
-      </p>
-    </noscript>
-  </div>
-</Base>
+<AnalysisPage />

@@ -47,11 +47,9 @@ export default function AnalysisForm({
       aria-label={formTitle}
       onSubmit={submit}
     >
-      <header className="controls-heading">
-        <span className="eyebrow">01 / Configuración</span>
-        <h2 id="form-heading">{formTitle}</h2>
-        <p>Elige empresas y revisa los supuestos antes de comparar.</p>
-      </header>
+      <h2 className="sr-only" id="form-heading">
+        {formTitle}
+      </h2>
       <fieldset className="source-options">
         <legend>Fuente de datos</legend>
         {(['market', 'demo'] as const).map((s) => (

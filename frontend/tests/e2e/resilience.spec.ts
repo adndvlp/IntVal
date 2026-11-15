@@ -1,3 +1,4 @@
+import { startDemo } from './analysis-helpers';
 import { test, expect } from '@playwright/test';
 
 test('recupera parciales tras desconexión, recarga el mismo ID y explica su expiración', async ({
@@ -43,6 +44,7 @@ test('recupera parciales tras desconexión, recarga el mismo ID y explica su exp
     return route.fulfill({ response, json: data });
   });
   await page.goto('/app/?fuente=demo');
+  await startDemo(page);
   await expect(
     page.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
   ).toBeVisible();
@@ -104,15 +106,16 @@ test('limpiar antes de recibir el POST ignora sus filas y cancela la aceptación
     if (r.url().endsWith('/cancel')) cancels++;
   });
   await page.goto('/app/?fuente=demo');
+  await startDemo(page);
   await expect.poll(() => accepted).toBe(true);
   await page.getByRole('button', { name: 'Limpiar resultados' }).click();
   release();
   await expect.poll(() => cancels).toBe(1);
-  await expect(page.getByText('Prepara tu próximo análisis.')).toBeVisible();
+  await expect(page.locator('#resultados')).not.toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Ver detalle de DEMO-USA' }),
   ).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText('Prepara tu próximo análisis.')).toBeVisible();
+  await expect(page.locator('#resultados')).not.toBeVisible();
   expect(posts).toBe(1);
 });

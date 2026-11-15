@@ -21,6 +21,13 @@ function view() {
     ),
   });
 }
+async function startDemo(app: ReturnType<typeof view>) {
+  await waitFor(() => expect(app.result.current.catalog?.source).toBe('demo'));
+  act(() => app.result.current.selectAll());
+  await act(async () => {
+    void app.result.current.submit();
+  });
+}
 it('reconecta páginas después de un fallo y no crea otro trabajo ni duplica filas', async () => {
   const api = server();
   const original = api.fetcher.getMockImplementation()!;
@@ -40,6 +47,7 @@ it('reconecta páginas después de un fallo y no crea otro trabajo ni duplica fi
       : original(input, init),
   );
   const app = view();
+  await startDemo(app);
   await waitFor(() => expect(app.result.current.transportError).toBeTruthy());
   expect(api.created).toHaveLength(1);
   failing = false;
@@ -59,6 +67,7 @@ it('reconecta páginas después de un fallo y no crea otro trabajo ni duplica fi
 it('un 410 durante un lote conserva las filas, bloquea exportar y no crea un UUID nuevo', async () => {
   const api = server({ state: 'running' });
   const app = view();
+  await startDemo(app);
   await waitFor(() =>
     expect(app.result.current.snapshot?.rows).toHaveLength(1),
   );
@@ -84,6 +93,7 @@ it('un 410 durante un lote conserva las filas, bloquea exportar y no crea un UUI
 it('un segundo análisis conserva el anterior hasta sus primeras filas y cambia la selección al lote nuevo', async () => {
   const api = server();
   const app = view();
+  await startDemo(app);
   await waitFor(() =>
     expect(app.result.current.snapshot?.rows).toHaveLength(1),
   );

@@ -144,7 +144,7 @@ if (
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
   const report = await auditAssets('dist', [
-    { path: 'index.html', jsKiB: 50, cssKiB: 50, noCharts: true },
+    { path: 'index.html', jsKiB: 300, cssKiB: 50, noCharts: true },
     { path: 'metodologia/index.html', jsKiB: 50, cssKiB: 50, noCharts: true },
     { path: 'app/index.html', jsKiB: 300, cssKiB: 50, noCharts: true },
   ]);

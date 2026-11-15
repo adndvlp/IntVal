@@ -11,10 +11,9 @@ const result = spawnSync(
 if (result.status !== 0) process.exit(result.status ?? 1);
 const files = await readdir('test-results', { recursive: true });
 const destinos = {
-  'landing-1440.png': '../docs/images/landing-desktop.png',
-  'landing-390.png': '../docs/images/landing-mobile.png',
-  'metodologia.png': '../docs/images/landing-metodologia.png',
-  'social.png': 'public/images/social.png',
+  'entry-1440.png': '../docs/images/ui1-entry-desktop.png',
+  'entry-390.png': '../docs/images/ui1-entry-mobile.png',
+  'calculation-1440.png': '../docs/images/ui1-calculation.png',
 };
 for (const [nombre, destino] of Object.entries(destinos)) {
   const origen = files.find(
@@ -24,4 +23,4 @@ for (const [nombre, destino] of Object.entries(destinos)) {
   await mkdir(dirname(destino), { recursive: true });
   await copyFile('test-results/' + origen, destino);
 }
-console.log('Capturas reales guardadas en docs/images y public/images.');
+console.log('Capturas reales de UI-1 guardadas en docs/images.');

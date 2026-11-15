@@ -1,0 +1,293 @@
+body {
+  padding-block-end: 88px;
+}
+#palette-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  align-items: end;
+  gap: 8px;
+  position: fixed;
+  inset: auto 20px 20px auto;
+  z-index: 70;
+  max-inline-size: calc(100% - 32px);
+  font-size: 1rem;
+}
+#palette-switcher {
+  position: relative;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+#palette-switcher > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 52px;
+  padding: 12px 20px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 999px;
+  background: var(--dialog-surface);
+  box-shadow: var(--glass-shadow);
+  list-style: none;
+  color: var(--ink);
+  font-size: 1rem;
+}
+#palette-switcher > summary::-webkit-details-marker {
+  display: none;
+}
+#palette-current {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  color: var(--accent-ink, var(--blue));
+}
+.palette-panel {
+  position: absolute;
+  inset: auto 0 calc(100% + 12px) auto;
+  inline-size: min(340px, calc(100dvw - 32px));
+  max-block-size: min(30rem, calc(100dvh - 110px));
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 24px;
+  background: var(--dialog-surface);
+  box-shadow:
+    0 20px 50px #123b6633,
+    inset 0 1px 0 var(--glass-highlight);
+}
+.palette-panel fieldset {
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.palette-panel legend {
+  padding: 0;
+  margin-block-end: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: 8px;
+}
+.palette-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 48px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.palette-choice input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.palette-choice > span:not(.palette-swatch):not(.palette-check) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.palette-swatch {
+  display: block;
+  inline-size: 22px;
+  block-size: 22px;
+  border: 1px solid #6b7a86;
+  border-radius: 50%;
+  flex: none;
+}
+.palette-choice:has(input:checked) {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+}
+.palette-check {
+  margin-inline-start: auto;
+  opacity: 0;
+  color: var(--blue);
+  font-weight: 700;
+}
+.palette-choice input:checked ~ .palette-check {
+  opacity: 1;
+}
+.palette-choice input:focus-visible + span {
+  outline: 3px solid var(--blue);
+  outline-offset: 4px;
+}
+.palette-custom-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-block-start: 12px;
+}
+.palette-custom-row > label {
+  flex: 1 1 10rem;
+}
+#palette-custom {
+  inline-size: 48px;
+  block-size: 48px;
+  padding: 4px;
+  border: 1px solid #6b7a86;
+  border-radius: 14px;
+  background: var(--control-solid);
+  cursor: pointer;
+}
+#palette-custom::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+#palette-custom::-webkit-color-swatch {
+  border: 0;
+  border-radius: 8px;
+}
+#palette-custom::-moz-color-swatch {
+  border: 0;
+  border-radius: 8px;
+}
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  #palette-switcher > summary {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+}
+#scheme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-block-size: 52px;
+  padding: 12px 16px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 999px;
+  background: var(--dialog-surface);
+  color: var(--ink);
+  box-shadow: var(--glass-shadow);
+}
+#scheme-toggle[aria-pressed='true'] {
+  color: var(--accent-ink);
+  background: var(--palette-tint);
+  border-color: var(--control-border);
+}
+@media (max-width: 560px) {
+  body,
+  .detail-dialog {
+    padding-block-end: calc(6.5rem + 36px);
+  }
+  #settings-dialog .dialog-foot {
+    padding-block-end: calc(6.5rem + 36px);
+  }
+  .toast {
+    inset-block-end: calc(6.5rem + 48px);
+  }
+  #palette-switcher > summary {
+    padding-inline: 12px;
+  }
+  .palette-label {
+    display: none;
+  }
+  #scheme-toggle {
+    padding-inline: 12px;
+  }
+}
+@media (forced-colors: active) {
+  #scheme-toggle {
+    background: Canvas;
+    color: ButtonText;
+    border-color: ButtonText;
+    box-shadow: none;
+  }
+  #scheme-toggle[aria-pressed='true'] {
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+}
+#liquid-sky stop:nth-child(1) {
+  stop-color: var(--scene-sky-1, #c5e6ee);
+}
+#liquid-sky stop:nth-child(2) {
+  stop-color: var(--scene-sky-2, #eef5f8);
+}
+#liquid-sky stop:nth-child(3) {
+  stop-color: var(--scene-sky-3, #cbddec);
+}
+#liquid-tide stop:nth-child(1) {
+  stop-color: var(--scene-tide-1, #246e97);
+}
+#liquid-tide stop:nth-child(2) {
+  stop-color: var(--scene-tide-2, #58aeca);
+}
+#liquid-tide stop:nth-child(3) {
+  stop-color: var(--scene-tide-3, #d3f1f3);
+}
+#liquid-swell stop:nth-child(1) {
+  stop-color: var(--scene-swell-1, #b1d2e6);
+}
+#liquid-swell stop:nth-child(2) {
+  stop-color: var(--scene-swell-2, #e5f6f7);
+}
+#liquid-sun stop:first-child {
+  stop-color: var(--scene-sun, #ffe7cf);
+}
+.palette-wave {
+  fill: var(--scene-wash, #d4e7f4);
+}
+
+.liquid-scene {
+  position: fixed;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+.palette-panel label {
+  font-size: 1rem;
+}
+#scheme-toggle {
+  gap: 8px;
+}
+#palette-switcher > summary {
+  cursor: pointer;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  #palette-switcher > summary,
+  #scheme-toggle,
+  .palette-panel {
+    background: var(--paper);
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .liquid-scene {
+    display: none;
+  }
+  #palette-switcher > summary,
+  .palette-panel {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .palette-choice:has(input:checked) {
+    border-color: Highlight;
+  }
+  .palette-swatch {
+    forced-color-adjust: none;
+  }
+  .palette-check,
+  #palette-current {
+    color: CanvasText;
+  }
+}

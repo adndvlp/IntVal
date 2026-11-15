@@ -1,38 +1,319 @@
 :root {
+  color-scheme: light dark;
+  --font:
+    'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --glass-shadow:
+    0 24px 60px -20px #214c7140, 0 6px 18px -8px #16395524,
+    inset 0 1px 0 #ffffffed, inset 0 -1px 0 #ffffff80;
+  --ink: #162f43;
+  --muted: #435a6c;
+  --paper: #fbfdff;
+  --surface: #f9fcff;
+  --subtle: #edf5fa;
+  --line: #d8e5ed;
+  --green: #087257;
+  --red: #ad3645;
+  --night: #19364c;
+  --panel: #fbfdfff2;
+  --control-bg: #ffffffc7;
+  --control-solid: #ffffff;
+  --glass-top: #ffffffdb;
+  --glass-bottom: #f5fcff9e;
+  --glass-edge: #ffffffeb;
+  --glass-rim: #ffffffb3;
+  --glass-rim-end: #ffffff99;
+  --glass-highlight: #ffffff;
+  --nav-hover: #ffffff40;
+  --nav-top: #ffffffb8;
+  --nav-bottom: #ffffff57;
+  --control-hover: #ffffff70;
+  --placeholder: #50677a;
+  --dialog-surface: #fafdff;
+  --backdrop: #14375438;
+  --track: #b6d7eb;
+  --chart-grid: #e8edf4;
+  --chart-label: #66768a;
+  --chart-revenue: #17263d;
+  --chart-blue: #3157ec;
+  --chart-teal: #098577;
+  --chart-amber: #b97c12;
+  --chart-purple: #8a60c9;
+  --shine: rgb(255 255 255 / 0.92);
+  --glass: rgb(245 253 255 / 0.78);
+  --palette-pale: #f3fbff;
+  --palette-tint: #e8f4fd;
+  --palette-line: #d8e6f0;
+  --blue-soft: #e5f3ff;
+  --accent: #0878d4;
+  --blue: #0878d4;
+  --accent-ink: #064c86;
+  --control-border: #7494ad;
+  --check-ink: #ffffff;
+  --scene-base: #d7eaf2;
+  --scene-sky-1: #c5e6ee;
+  --scene-sky-2: #eef5f8;
+  --scene-sky-3: #cbddec;
+  --scene-tide-1: #246e97;
+  --scene-tide-2: #58aeca;
+  --scene-tide-3: #d3f1f3;
+  --scene-swell-1: #b1d2e6;
+  --scene-swell-2: #e5f6f7;
+  --scene-swell-3: #ffffff;
+  --scene-sun: #ffe7cf;
+  --scene-wash: #d4e7f4;
+  --scene-rim: #ffffff;
+}
+:root:has(> head > meta[name='color-scheme'][content='dark']) {
+  color-scheme: dark;
+}
+:root:has(> head > meta[name='color-scheme'][content='light']) {
   color-scheme: light;
-  --canvas: #f6f5f1;
-  --surface: #ffffff;
-  --ink: #142824;
-  --muted: #4b635c;
-  --primary: #086a4d;
-  --primary-hover: #045039;
-  --accent: #c8edb1;
+}
+@supports (color: light-dark(white, black)) {
+  :root {
+    --ink: light-dark(#162f43, #e9f0f7);
+    --muted: light-dark(#435a6c, #b0bfce);
+    --paper: light-dark(#fbfdff, #151f2b);
+    --surface: light-dark(#f9fcff, #1c2938);
+    --subtle: light-dark(#edf5fa, #213043);
+    --line: light-dark(#d8e5ed, #40566c);
+    --green: light-dark(#087257, #65d6a5);
+    --red: light-dark(#ad3645, #ff98a3);
+    --night: light-dark(#19364c, #d9e9f8);
+    --panel: light-dark(#fbfdfff2, #151f2bf5);
+    --control-bg: light-dark(#ffffffc7, #172333f2);
+    --control-solid: light-dark(#ffffff, #1c2a3a);
+    --glass-top: light-dark(#ffffffdb, #283c50ed);
+    --glass-bottom: light-dark(#f5fcff9e, #152131f2);
+    --glass-edge: light-dark(#ffffffeb, #a6c7e54d);
+    --glass-rim: light-dark(#ffffffb3, #b4d6ff29);
+    --glass-rim-end: light-dark(#ffffff99, #b4d6ff1f);
+    --glass-highlight: light-dark(#ffffff, #b4d6ff1f);
+    --nav-hover: light-dark(#ffffff40, #b4d6ff14);
+    --nav-top: light-dark(#ffffffb8, #29435de6);
+    --nav-bottom: light-dark(#ffffff57, #172a3dc7);
+    --control-hover: light-dark(#ffffff70, #a7c8e51a);
+    --placeholder: light-dark(#50677a, #aebfd0);
+    --dialog-surface: light-dark(#fafdff, #151f2b);
+    --backdrop: light-dark(#14375438, #02060db3);
+    --track: light-dark(#b6d7eb, #2b4054);
+    --chart-grid: light-dark(#e8edf4, #36485c);
+    --chart-label: light-dark(#66768a, #b3c4d4);
+    --chart-revenue: light-dark(#17263d, #c8d9eb);
+    --chart-blue: light-dark(#3157ec, #8aa3ff);
+    --chart-teal: light-dark(#098577, #5bd0bd);
+    --chart-amber: light-dark(#b97c12, #eac46e);
+    --chart-purple: light-dark(#8a60c9, #c4a0ff);
+    --shine: light-dark(rgb(255 255 255 / 0.92), #ffffff2e);
+    --glass: light-dark(rgb(245 253 255 / 0.78), #101c2ae0);
+    --palette-pale: light-dark(#f3fbff, #182635);
+    --palette-tint: light-dark(#e8f4fd, #21374d);
+    --palette-line: light-dark(#d8e6f0, #40566c);
+    --blue-soft: light-dark(#e5f3ff, #21374d);
+    --accent: light-dark(#0878d4, #0878d4);
+    --blue: light-dark(#0878d4, #80bfff);
+    --accent-ink: light-dark(#064c86, #c7e5ff);
+    --control-border: light-dark(#7494ad, #8ca9c2);
+    --check-ink: light-dark(#ffffff, #08131f);
+    --scene-base: light-dark(#d7eaf2, #0a121c);
+    --scene-sky-1: light-dark(#c5e6ee, #0d1d2b);
+    --scene-sky-2: light-dark(#eef5f8, #142130);
+    --scene-sky-3: light-dark(#cbddec, #101e2b);
+    --scene-tide-1: light-dark(#246e97, #0b263a);
+    --scene-tide-2: light-dark(#58aeca, #183b50);
+    --scene-tide-3: light-dark(#d3f1f3, #122532);
+    --scene-swell-1: light-dark(#b1d2e6, #1c3449);
+    --scene-swell-2: light-dark(#e5f6f7, #152737);
+    --scene-swell-3: light-dark(#ffffff, #111e2b);
+    --scene-sun: light-dark(#ffe7cf, #222b35);
+    --scene-wash: light-dark(#d4e7f4, #142b3c);
+    --scene-rim: light-dark(#ffffff, #60859e);
+  }
+}
+@supports not (color: light-dark(white, black)) {
+  @media (prefers-color-scheme: dark) {
+    :root:not(:has(> head > meta[name='color-scheme'][content='light'])) {
+      --ink: #e9f0f7;
+      --muted: #b0bfce;
+      --paper: #151f2b;
+      --surface: #1c2938;
+      --subtle: #213043;
+      --line: #40566c;
+      --green: #65d6a5;
+      --red: #ff98a3;
+      --night: #d9e9f8;
+      --panel: #151f2bf5;
+      --control-bg: #172333f2;
+      --control-solid: #1c2a3a;
+      --glass-top: #283c50ed;
+      --glass-bottom: #152131f2;
+      --glass-edge: #a6c7e54d;
+      --glass-rim: #b4d6ff29;
+      --glass-rim-end: #b4d6ff1f;
+      --glass-highlight: #b4d6ff1f;
+      --nav-hover: #b4d6ff14;
+      --nav-top: #29435de6;
+      --nav-bottom: #172a3dc7;
+      --control-hover: #a7c8e51a;
+      --placeholder: #aebfd0;
+      --dialog-surface: #151f2b;
+      --backdrop: #02060db3;
+      --track: #2b4054;
+      --chart-grid: #36485c;
+      --chart-label: #b3c4d4;
+      --chart-revenue: #c8d9eb;
+      --chart-blue: #8aa3ff;
+      --chart-teal: #5bd0bd;
+      --chart-amber: #eac46e;
+      --chart-purple: #c4a0ff;
+      --shine: #ffffff2e;
+      --glass: #101c2ae0;
+      --palette-pale: #182635;
+      --palette-tint: #21374d;
+      --palette-line: #40566c;
+      --blue-soft: #21374d;
+      --accent: #0878d4;
+      --blue: #80bfff;
+      --accent-ink: #c7e5ff;
+      --control-border: #8ca9c2;
+      --check-ink: #08131f;
+      --scene-base: #0a121c;
+      --scene-sky-1: #0d1d2b;
+      --scene-sky-2: #142130;
+      --scene-sky-3: #101e2b;
+      --scene-tide-1: #0b263a;
+      --scene-tide-2: #183b50;
+      --scene-tide-3: #122532;
+      --scene-swell-1: #1c3449;
+      --scene-swell-2: #152737;
+      --scene-swell-3: #111e2b;
+      --scene-sun: #222b35;
+      --scene-wash: #142b3c;
+      --scene-rim: #60859e;
+    }
+  }
+  :root:has(> head > meta[name='color-scheme'][content='dark']) {
+    --ink: #e9f0f7;
+    --muted: #b0bfce;
+    --paper: #151f2b;
+    --surface: #1c2938;
+    --subtle: #213043;
+    --line: #40566c;
+    --green: #65d6a5;
+    --red: #ff98a3;
+    --night: #d9e9f8;
+    --panel: #151f2bf5;
+    --control-bg: #172333f2;
+    --control-solid: #1c2a3a;
+    --glass-top: #283c50ed;
+    --glass-bottom: #152131f2;
+    --glass-edge: #a6c7e54d;
+    --glass-rim: #b4d6ff29;
+    --glass-rim-end: #b4d6ff1f;
+    --glass-highlight: #b4d6ff1f;
+    --nav-hover: #b4d6ff14;
+    --nav-top: #29435de6;
+    --nav-bottom: #172a3dc7;
+    --control-hover: #a7c8e51a;
+    --placeholder: #aebfd0;
+    --dialog-surface: #151f2b;
+    --backdrop: #02060db3;
+    --track: #2b4054;
+    --chart-grid: #36485c;
+    --chart-label: #b3c4d4;
+    --chart-revenue: #c8d9eb;
+    --chart-blue: #8aa3ff;
+    --chart-teal: #5bd0bd;
+    --chart-amber: #eac46e;
+    --chart-purple: #c4a0ff;
+    --shine: #ffffff2e;
+    --glass: #101c2ae0;
+    --palette-pale: #182635;
+    --palette-tint: #21374d;
+    --palette-line: #40566c;
+    --blue-soft: #21374d;
+    --accent: #0878d4;
+    --blue: #80bfff;
+    --accent-ink: #c7e5ff;
+    --control-border: #8ca9c2;
+    --check-ink: #08131f;
+    --scene-base: #0a121c;
+    --scene-sky-1: #0d1d2b;
+    --scene-sky-2: #142130;
+    --scene-sky-3: #101e2b;
+    --scene-tide-1: #0b263a;
+    --scene-tide-2: #183b50;
+    --scene-tide-3: #122532;
+    --scene-swell-1: #1c3449;
+    --scene-swell-2: #152737;
+    --scene-swell-3: #111e2b;
+    --scene-sun: #222b35;
+    --scene-wash: #142b3c;
+    --scene-rim: #60859e;
+  }
+}
+
+:root {
+  --canvas: var(--scene-base);
+  --body: var(--font);
+  --display: var(--font);
+  --primary: var(--accent-ink);
+  --primary-hover: var(--accent-bottom, #0764bd);
+  --positive: var(--green);
+  --negative: var(--red);
+  --warning: #76500c;
+  --warning-surface: #fff5df;
   --on-dark: #f6f8f3;
   --muted-on-dark: #b8ccc0;
-  --line: #cbd1c7;
-  --line-dark: #40594d;
-  --negative: #9e3b4e;
-  --warning: #76500c;
+  --line-dark: var(--line);
   --radius: 1rem;
-  --body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --display: Georgia, 'Times New Roman', serif;
-  --mono: 'SFMono-Regular', Consolas, monospace;
   --duration: 160ms;
+  accent-color: var(--blue);
+}
+@supports (color: light-dark(white, black)) {
+  :root {
+    --warning: light-dark(#76500c, #edc779);
+    --warning-surface: light-dark(#fff5df, #30291b);
+  }
+}
+@supports not (color: light-dark(white, black)) {
+  @media (prefers-color-scheme: dark) {
+    :root:not(:has(> head > meta[name='color-scheme'][content='light'])) {
+      --warning: #edc779;
+      --warning-surface: #30291b;
+    }
+  }
+  :root:has(> head > meta[name='color-scheme'][content='dark']) {
+    --warning: #edc779;
+    --warning-surface: #30291b;
+  }
 }
 @media (forced-colors: active) {
   :root {
     --canvas: Canvas;
+    --paper: Canvas;
     --surface: Canvas;
     --ink: CanvasText;
     --muted: CanvasText;
     --primary: LinkText;
-    --primary-hover: LinkText;
-    --accent: CanvasText;
-    --on-dark: CanvasText;
-    --muted-on-dark: CanvasText;
+    --accent-ink: LinkText;
+    --blue: LinkText;
+    --accent: ButtonText;
+    --palette-pale: Canvas;
+    --palette-tint: Canvas;
+    --panel: Canvas;
+    --control-solid: Canvas;
+    --control-bg: Canvas;
+    --dialog-surface: Canvas;
     --line: CanvasText;
-    --line-dark: CanvasText;
+    --control-border: ButtonText;
+    --glass-edge: ButtonText;
+    --positive: CanvasText;
     --negative: CanvasText;
     --warning: CanvasText;
+    --warning-surface: Canvas;
+    --subtle: Canvas;
   }
 }

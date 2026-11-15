@@ -12,7 +12,7 @@ no representa un DCF completo ni acredita capacidad para predecir precios.
 
 ![Demo de IntVal: tres empresas ficticias, filtros y exportación Excel; datos sintéticos con referencia 2025-01-03](docs/images/demo-resumen.jpg)
 
-Captura real del resumen con `demo-1.0`. La
+Captura real de la interfaz Streamlit con `demo-1.0`, anterior al rediseño web de UI-1. La
 [procedencia y revisión visual](docs/images/README.md) identifican los datos y
 el entorno de captura.
 
@@ -28,7 +28,7 @@ el entorno de captura.
 En la aplicación, selecciona **Fuente de datos → Demostración**. Se cargan tres
 casos: una empresa industrial en USD, otra en MXN y una con información
 insuficiente. El aviso de datos sintéticos y su fecha de referencia, **2025-01-03**,
-permanecen visibles. Puedes cambiar supuestos, volver a analizar, filtrar,
+permanecen visibles. En el analizador web, elige las empresas y pulsa **Analizar empresas**; abrir la demo no selecciona ni calcula automáticamente. Puedes cambiar supuestos, volver a analizar, filtrar,
 consultar gráficas y descargar el Excel.
 
 Para que un servicio publicado abra directamente esa vista, configura
@@ -59,6 +59,8 @@ operaciones sobre datos inventados, no oportunidades de inversión.
 
 ## Funciones
 
+- Analizador web directo, apariencia Liquid Glass, seis paletas o color propio y
+  modo claro/oscuro con preferencias persistentes.
 - Selección de empresas por mercado, símbolos adicionales y análisis por lotes.
 - Proxies de FCL, NOPAT, EBITDA ajustado y utilidad neta; mediana y cantidad de
   proxies aplicables, con precio objetivo de analistas cuando existe.
@@ -71,12 +73,17 @@ operaciones sobre datos inventados, no oportunidades de inversión.
 
 ## Diseño técnico
 
-Python 3.12, Streamlit, pandas, NumPy, Plotly, yfinance y openpyxl.
-Pruebas con pytest, AppTest y pytest-cov; estilo con Ruff; CI con GitHub Actions.
+El frontend web usa Astro estático, React, TypeScript y Recharts; se conecta al
+servicio FastAPI. La interfaz Streamlit se conserva como compatibilidad. Ambas
+comparten el motor Python, pandas, NumPy, yfinance y openpyxl.
+Pruebas con Vitest, Playwright, pytest, AppTest y pytest-cov; estilo con ESLint y
+Ruff; CI con GitHub Actions.
 
 ```mermaid
 flowchart LR
-    UI[Streamlit] --> S[Servicio]
+    WEB[Astro / React] --> API[FastAPI]
+    API --> S[Servicio]
+    UI[Streamlit: compatibilidad] --> S
     CLI[CLI y ejemplos] --> S
     S --> P[ProveedorDatos]
     P --> Y[Yahoo Finance]
@@ -95,6 +102,10 @@ el producto no importa fixtures de pruebas. La
 [arquitectura](docs/architecture.md) explica responsabilidades y compatibilidad.
 
 ## Publicar el servicio
+
+Los comandos siguientes corresponden al servicio Streamlit de compatibilidad.
+La distribución de la web y API conserva su alcance separado en F11; UI-1 no
+modifica esos lanzadores ni publica el rediseño.
 
 El servicio es **agnóstico del proveedor de alojamiento**: requiere Linux,
 Bash, CPython 3.12, HTTP/WebSockets y un puerto proporcionado mediante `PORT`.
@@ -207,7 +218,12 @@ no la validez predictiva de una valoración.
 ## Documentación y estado
 
 - [SDD y continuidad](docs/SDD.md): requisitos, decisiones, fases y trabajo pendiente.
-- [SDD de la nueva web](docs/SDD_WEB.md): landing Astro, dashboard React y API
+- [SDD de interfaz Liquid Glass](docs/SDD_UI.md), con el
+  [HTML interactivo adjunto](prototipo-intval-liquid-glass.html): especificación
+  vigente del analizador, selección escalable, paleta/color elegible y modo oscuro.
+  UI-1 ya integra la entrada directa, composición y apariencia en la app real;
+  UI-2–5 siguen pendientes. [Evidencia de UI-1](docs/TDD_UI1.md).
+- [Arquitectura web y entregas F6–F10](docs/SDD_WEB.md): Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el
   transporte de análisis y F9 lo integra en el dashboard. F10 está implementada y verificada localmente, con pruebas integradas, capacidad y referencias visuales. F11 no está implementada.

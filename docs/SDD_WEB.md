@@ -1,21 +1,30 @@
-# SDD web — Landing y nueva interfaz de IntVal
+# SDD web — Arquitectura y evolución de la interfaz de IntVal
 
 **Extensión de la [SDD general](SDD.md) para diseñar y ejecutar la siguiente etapa del producto.**
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.6 |
-| Fecha | 2026-11-13 |
+| Versión de esta extensión | 1.8 |
+| Fecha | 2026-11-15 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
 | Estado de F6–F11 | F6–F10 implementadas y verificadas localmente; F11 pendiente |
-| Encargo de esta edición | Implementar sólo F10 con TDD; conservar el servicio Streamlit y no publicar |
+| Encargo de esta edición | UI-1 de SDD_UI integrado y verificado localmente; UI-2–5 y publicación pendientes |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
 | Método obligatorio | TDD en cada incremento de software |
 | Licencia y titular | MIT; Copyright (c) 2026 adndvlp |
-| Continuidad | Leer primero las secciones 1, 3, 14, 18 y 21 de este documento |
+| Continuidad | Leer primero SDD_UI.md y 21.10; conservar arquitectura, contratos y evidencia histórica de este documento |
+
+**Revisión vigente de interfaz:** [SDD_UI.md](SDD_UI.md), con el
+[HTML completo adjunto](../prototipo-intval-liquid-glass.html). Sustituye las
+propuestas anteriores de presentación e interacción: entrada directa al
+analizador, sin landing, con selección y tabla escalables, Liquid Glass,
+color elegido por el usuario y modo claro/oscuro. Las secciones históricas de
+landing y capturas se conservan como registro de F7–F10. Los contratos financieros,
+API, transporte, calidad y despliegue de este documento siguen vigentes. UI-1 ya está integrado en el frontend; la migración completa sigue pendiente
+(UI-2–5). Evidencia en [TDD_UI1.md](TDD_UI1.md).
 
 El estado actual no se deduce del diseño futuro. Un archivo, ruta o comando de los
 apartados «propuestos» sólo existe cuando una fase lo crea y registra su evidencia.
@@ -56,6 +65,9 @@ aislamiento de adquisiciones, cachés, históricos y Excel; evidencia en
 ## 1. Encargo, acuerdos y alcance
 
 ### 1.1 Problema que se quiere resolver
+
+El texto siguiente registra el encargo original. La revisión de interfaz vigente
+está en SDD_UI.md y reemplaza la landing como entrada de la herramienta.
 
 IntVal ya analiza empresas de USA y México, presenta cuatro proxies y produce
 Excel trazable. Su interfaz actual de Streamlit tiene una presentación genérica
@@ -1835,7 +1847,7 @@ no volver a proponer Next.js por defecto al retomar.
 
 ### 21.1 Qué leer primero
 
-1. Esta sección y 1–3 para alcance, línea base e invariantes.
+1. SDD_UI.md y su anexo HTML para la presentación e interacción vigentes; esta sección y 1–3 para arquitectura e invariantes.
 2. Sección 18 para la fase que realmente se haya solicitado.
 3. Secciones de diseño/contratos/pruebas afectadas por esa fase.
 4. SDD general, methodology.md y registros TDD previos para la lógica existente.
@@ -1846,9 +1858,11 @@ existen `frontend/`, `valoracion/web/`, `contracts/openapi.v1.json` y `web.yml`.
 La carpeta temp es una referencia del usuario, ajena al producto y a las
 resoluciones; conservar sus archivos y no añadirla en bloque.
 
-No instalar ni ejecutar fases sólo porque esta SDD ya las describa. Si el usuario
-pide el siguiente punto después del cierre de F10, corresponde **F11**. Leer
-primero 21.9; no rehacer F7–F10 ni solicitar de nuevo sus capturas o instalaciones.
+No instalar ni ejecutar fases sólo porque esta SDD ya las describa. La revisión
+vigente está en 21.10 y SDD_UI.md. Si se solicita integrar el diseño adjunto,
+seguir sus incrementos UI-1 a UI-5; F11 conserva su alcance de distribución y
+requiere su encargo correspondiente. No rehacer F7–F10 ni reutilizar sus capturas
+como evidencia visual del nuevo diseño.
 
 ### 21.2 Encargo histórico de F6 (ya implementado)
 
@@ -2064,6 +2078,8 @@ No hubo commit/push, CI remoto de esta entrega ni publicación de URL.
 
 ### 21.9 Cierre local de F10 y continuidad hacia F11
 
+Registro histórico; la continuidad vigente de interfaz está en 21.10.
+
 Base 6c7ffbf; F10 está implementada y verificada localmente. Automatización,
 mediciones y capturas revisadas están completas. No se cambian fórmulas, contratos/datos financieros,
 proveedores, resoluciones, CLI, Streamlit o arranque; no adelantar F11.
@@ -2103,6 +2119,23 @@ CI remoto, dispositivo físico y publicación son evidencias distintas.
 **Siguiente fase: F11**, únicamente cuando se solicite: distribución agnóstica,
 arranque y cierre de migración de 18.6. Mantener TDD, el dominio financiero y los
 contratos; no interpretar esta continuidad como permiso para desplegar.
+
+### 21.10 SDD de interfaz Liquid Glass y anexo
+
+El usuario pidió convertir todo el HTML en una especificación y mantenerlo como
+anexo. También confirmó la elección de paleta/color como función del producto.
+[SDD_UI.md](SDD_UI.md) contiene el alcance completo, requisitos identificados,
+referencia visual, estados, persistencia, capacidades, límites y matriz de cierre.
+El [HTML](../prototipo-intval-liquid-glass.html) es el anexo normativo único y
+lleva una huella SHA-256 en esa SDD.
+
+El prototipo demuestra 58 pruebas locales aprobadas de interacción, estilos
+calculados, datos sintéticos y carga; su revisión visual en navegador está
+pendiente. Tras la solicitud de implementar el primer punto, UI-1 integra en
+Astro/React entrada directa, composición, tokens, paletas y claro/oscuro. La
+regresión local del transporte pasa; [TDD_UI1.md](TDD_UI1.md) separa la evidencia
+automatizada de la validación de navegador todavía pendiente. UI-2–5 continúan
+según la SDD de interfaz. F11 no se considera iniciada.
 
 ## 22. Fuentes y mantenimiento
 

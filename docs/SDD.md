@@ -2,18 +2,21 @@
 
 **Especificación y diseño de software de IntVal: formalización del repositorio y evolución de su interfaz web.**
 
-La nueva etapa de landing y dashboard está detallada en la
-[SDD web: Astro, React y FastAPI](SDD_WEB.md). Leerla junto con 21.17 para
-continuar el trabajo. F1–F10 están implementadas y verificadas localmente; F11 sigue pendiente.
+La arquitectura web está detallada en la [SDD web: Astro, React y FastAPI](SDD_WEB.md).
+La presentación e interacción vigentes están en la [SDD de interfaz Liquid Glass](SDD_UI.md),
+con el [HTML completo como anexo normativo](../prototipo-intval-liquid-glass.html).
+Leer primero 21.18 para continuar. F1–F10 están implementadas y verificadas localmente;
+UI-1 del diseño está integrado; UI-2–5 y F11 siguen pendientes.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.6 |
+| Versión del documento | 2.8 |
 | Fecha de elaboración | 2026-11-12 |
+| Última revisión de interfaz | 2026-11-15; UI-1 y TDD_UI1.md |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.17; CI remoto y publicación se verifican por commit/entorno |
+| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.18; interfaz Liquid Glass con UI-1 integrado y verificado localmente; UI-2–5 pendientes. CI remoto y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -22,11 +25,11 @@ continuar el trabajo. F1–F10 están implementadas y verificadas localmente; F1
 | Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
 | Entorno implementado | F4: servicio web agnóstico, Python 3.12, resoluciones pip-tools, arranque mediante PORT, configuración central y Ruff |
 | Presentación implementada | F5: demo sintética, ejemplo público, documentación, capturas reales revisadas y licencia MIT elegida por el usuario |
-| Último encargo implementado | F8 con TDD: API de trabajos, cachés, históricos, Excel y contratos; conservar entrada Streamlit |
+| Último encargo documentado | Implementar UI-1 de SDD_UI.md; composición, tokens, apariencia y entrada directa integrados en la app. Evidencia en TDD_UI1.md |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
-**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). El cierre de F5 está en 21.11 y [TDD de F5](TDD_F5.md). **La continuidad vigente es 21.16 y [SDD_WEB.md](SDD_WEB.md)**: no rehacer F1–F5 ni confundir diseño futuro, implementación, CI remoto y publicación.
+**El estado de cada fase se acredita con su registro de ejecución.** Los apartados de línea base describen el commit original, no sustituyen la evidencia posterior. En particular, los contratos originales de 19/45 campos se amplían en F3 a 24/73; las reglas vigentes están en 21.8 y `methodology.md`. La matriz de F1 está en [trazabilidad de F1](F1_TEST_MATRIX.md); sus ciclos y cierre, en [TDD de F1](TDD_F1.md) y la sección 21.6. F2 se documenta en [arquitectura](architecture.md), [TDD de F2](TDD_F2.md) y la sección 21.7. F3 se documenta en [metodología](methodology.md), [TDD de F3](TDD_F3.md) y la sección 21.8. La corrección de CI posterior se registra en 21.9 y [TDD de AppTest](TDD_CI_APPTEST.md). F4 se cierra en 21.10 con [guía de desarrollo](development.md) y [TDD de F4](TDD_F4.md). El cierre de F5 está en 21.11 y [TDD de F5](TDD_F5.md). **La continuidad vigente es 21.18, [SDD_UI.md](SDD_UI.md) y [SDD_WEB.md](SDD_WEB.md)**: no rehacer F1–F5 ni confundir diseño futuro, implementación, CI remoto y publicación.
 
 ## Índice
 
@@ -2171,6 +2174,8 @@ agnóstica se abordan en F11; no desplegar por inferencia.
 
 ### 21.17 Cierre local de F10 y siguiente fase
 
+Registro histórico; la continuidad vigente de interfaz está en 21.18.
+
 F10 está implementada y verificada localmente con TDD sobre `6c7ffbf`.
 Leer SDD_WEB.md 18.5/21.9, TDD_F10.md y QA_F10.md. Pasan 460 Python, 65 unitarias
 frontend, 55 de navegador y tres comparaciones visuales; sus omisiones previstas
@@ -2180,6 +2185,28 @@ se elimina la revisión manual externa como requisito y como pendiente de F10.
 La evidencia de accesibilidad corresponde a las comprobaciones automatizadas y
 visuales realizadas. La siguiente fase es F11, sólo cuando el usuario la solicite;
 no implica autorización para desplegar ni atribuye un resultado al CI remoto.
+
+### 21.18 Interfaz Liquid Glass y SDD vigente
+
+La [SDD_UI.md](SDD_UI.md) formaliza todo el [prototipo HTML adjunto](../prototipo-intval-liquid-glass.html):
+entrada directa sin landing, navegación lateral, catálogo único y paginado,
+selección entre páginas, trabajos automáticos, tabla con ordenación desde los
+encabezados, detalle, gráficas, ajustes, historial, Cómo se calcula, Excel,
+modales con cierre exterior y apariencia elegida por el usuario.
+
+Las seis paletas y el color personalizado pasan a ser funciones del producto,
+independientes del modo claro/oscuro y del análisis. El anexo y sus 58 pruebas
+locales acreditan la demostración, las interacciones y el contraste calculado;
+no acreditan la integración en Astro/React ni una revisión visual del nuevo
+render en navegador. La SDD registra las diferencias de API, ajustes, capacidad
+y exportación que deben resolverse al integrar.
+
+El usuario solicitó posteriormente implementar UI-1. Ya están integrados en
+Astro/React los tokens, composición, apariencia persistente, entrada directa y
+Cómo se calcula. [TDD_UI1.md](TDD_UI1.md) registra los 70 tests unitarios y los
+69 de shell/anexo aprobados, los checks locales y la revisión visual pendiente.
+UI-2–5 siguen pendientes; la siguiente integración es UI-2. Se mantienen motor,
+contratos y transporte. No rehacer F1–F10, iniciar F11 ni desplegar por inferencia.
 
 ## 22. Fuentes y mantenimiento
 
@@ -2210,9 +2237,10 @@ Las fuentes técnicas externas están enlazadas junto a las decisiones que apoya
 
 ## 23. Extensión web y plan F6–F11
 
-La [SDD web completa](SDD_WEB.md) es la especificación de la nueva etapa y forma
-parte de esta SDD. Mantiene el detalle de F1–F5 en este documento y evita mezclar
-requisitos futuros con software ya implementado.
+La [SDD web completa](SDD_WEB.md) y la [SDD de interfaz](SDD_UI.md), con su HTML adjunto,
+forman parte de esta SDD. La segunda actualiza la presentación e interacción.
+El detalle de F1–F5 se mantiene en este documento; los requisitos futuros y el
+software ya implementado se identifican por separado.
 
 | Fase | Entrega prevista | Estado |
 | --- | --- | --- |
@@ -2224,7 +2252,8 @@ requisitos futuros con software ya implementado.
 | F11 | Distribución agnóstica, arranque y cierre de la migración | Especificada, pendiente |
 
 Cada fase tiene requisitos, primeros casos RED, criterios de cierre y una matriz
-de verificación en la extensión. F10 está cerrada con el alcance actualizado;
-implementar F11 sólo cuando el usuario la solicite. La publicación de una URL sigue siendo una acción
+de verificación en la extensión. F10 está cerrada con el alcance de aquella entrega.
+La integración del diseño Liquid Glass sigue el plan de SDD_UI.md; F11 sólo se
+implementa cuando se solicite. La publicación de una URL sigue siendo una acción
 externa separada del diseño y de la preparación del artefacto.
 

@@ -1,24 +1,14 @@
+import { startDemo } from './analysis-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { auditPage } from './audit-helpers';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 async function openControls(page: Page) {
-  const button = page.getByRole('button', {
-    name: 'Configurar análisis',
-    exact: false,
-  });
-  if ((page.viewportSize()?.width ?? 1280) < 1120) {
-    await expect(button).toBeVisible();
-    await button.click();
-  }
+  await expect(
+    page.getByRole('form', { name: 'Construye tu análisis.' }),
+  ).toBeVisible();
 }
-async function closeControls(page: Page) {
-  const dialog = page.getByRole('dialog', { name: 'Configurar análisis' });
-  if (await dialog.isVisible())
-    await dialog.getByRole('button', { name: 'Cerrar configuración' }).click();
-}
-
 async function expectNoOverflow(page: Page) {
   const layout = await page.evaluate(() => ({
     width: document.documentElement.scrollWidth,
@@ -46,8 +36,8 @@ test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapsh
     if (r.method() === 'POST' && r.url().endsWith('/api/v1/analyses'))
       creations.push(r.postData() ?? '');
   });
-  await page.goto('/');
-  await page.getByRole('link', { name: 'Explorar la demo' }).first().click();
+  await page.goto('/?fuente=demo');
+  await startDemo(page);
   await expect(
     page.getByText('Análisis completado con observaciones', { exact: true }),
   ).toBeVisible({ timeout: 20000 });
@@ -81,7 +71,6 @@ test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapsh
   ).toBeEnabled();
   await openControls(page);
   await page.getByLabel('Tasa de descuento accionista (%)').fill('15');
-  await closeControls(page);
   await expect(page.getByText(/Hay cambios sin aplicar/)).toBeVisible();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Descargar Excel completo' }).click();
@@ -130,7 +119,6 @@ test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapsh
   await page.getByLabel('Mercado del resultado').selectOption('all');
   await openControls(page);
   await page.getByLabel('Tasa de descuento accionista (%)').fill('10');
-  await closeControls(page);
   const audit = await auditPage(page);
   expect(audit.violations).toEqual([]);
   await expectNoOverflow(page);
@@ -138,23 +126,9 @@ test('demo real: compara, filtra, consulta cuatro gráficas y descarga el snapsh
     path: testInfo.outputPath('dashboard.png'),
     fullPage: true,
   });
-  if (testInfo.project.name === 'mobile') {
-    await openControls(page);
-    await expect(
-      page.getByRole('dialog', { name: 'Configurar análisis' }),
-    ).toBeVisible();
-    await page.screenshot({
-      path: testInfo.outputPath('dashboard-controls.png'),
-      fullPage: true,
-    });
-    await page.keyboard.press('Escape');
-    await expect(
-      page.getByRole('button', { name: 'Configurar análisis', exact: false }),
-    ).toBeFocused();
-  }
   expect(errors).toEqual([]);
   await page.getByRole('button', { name: 'Limpiar resultados' }).click();
-  await expect(page.getByText('Prepara tu próximo análisis.')).toBeVisible();
+  await expect(page.locator('#resultados')).not.toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Descargar Excel completo' }),
   ).toHaveCount(0);
@@ -183,30 +157,15 @@ test('Mercado no analiza al abrir; reflow a 320 px y texto al 200 por ciento', a
     fullPage: true,
   });
   await expectNoOverflow(page);
-  // No basta con evitar overflow si una palabra se parte letra por letra.
-  for (const selector of ['.workbench-heading h1', '.analysis-empty h3']) {
-    expect(
-      await page.locator(selector).evaluate((element) => {
-        const node = element.firstChild!;
-        const word = 'análisis.';
-        const start = node.textContent!.indexOf(word);
-        const range = document.createRange();
-        range.setStart(node, start);
-        range.setEnd(node, start + word.length);
-        return range.getClientRects().length;
-      }),
-    ).toBe(1);
-  }
   await openControls(page);
   await expect(
     page.getByLabel('Tasa de descuento accionista (%)'),
   ).toBeVisible();
   expect(
     await page
-      .getByRole('dialog')
+      .getByRole('form', { name: 'Construye tu análisis.' })
       .evaluate((el) => el.scrollWidth <= el.clientWidth),
   ).toBe(true);
-  await page.getByRole('button', { name: 'Cerrar configuración' }).click();
   await page.screenshot({
     path: testInfo.outputPath('dashboard-zoom.png'),
     fullPage: true,

@@ -27,7 +27,15 @@ function render(source = 'market') {
   });
 }
 
-it('Mercado carga catálogo pero no crea análisis al abrir; demo se activa una sola vez en StrictMode', async () => {
+async function startDemo(view: ReturnType<typeof render>) {
+  await waitFor(() => expect(view.result.current.catalog?.source).toBe('demo'));
+  act(() => view.result.current.selectAll());
+  await act(async () => {
+    void view.result.current.submit();
+  });
+}
+
+it('abrir Mercado o demo no selecciona empresas ni crea análisis; el usuario inicia el lote en StrictMode', async () => {
   const api = server();
   const view = render();
   await waitFor(() =>
@@ -35,6 +43,13 @@ it('Mercado carga catálogo pero no crea análisis al abrir; demo se activa una 
   );
   expect(api.created).toHaveLength(0);
   act(() => view.result.current.changeSource('demo'));
+  await waitFor(() => expect(view.result.current.catalog?.source).toBe('demo'));
+  expect(view.result.current.draft?.selected).toEqual([]);
+  expect(api.created).toHaveLength(0);
+  act(() => view.result.current.selectAll());
+  await act(async () => {
+    await view.result.current.submit();
+  });
   await waitFor(() =>
     expect(view.result.current.view.current?.rows).toHaveLength(1),
   );
@@ -48,6 +63,7 @@ it('Mercado carga catálogo pero no crea análisis al abrir; demo se activa una 
 it('limpiar durante POST cancela la aceptación tardía y no recarga automáticamente la demo', async () => {
   const api = server({ deferCreate: true });
   const view = render('demo');
+  await startDemo(view);
   await waitFor(() => expect(api.created).toHaveLength(1));
   act(() => view.result.current.clear());
   await act(async () => {
@@ -69,6 +85,7 @@ it('limpiar durante POST cancela la aceptación tardía y no recarga automática
 it('cambiar fuente descarta páginas tardías y preserva sólo la selección de la fuente nueva', async () => {
   const api = server({ deferPage: true });
   const view = render('demo');
+  await startDemo(view);
   await waitFor(() =>
     expect(api.paths.some((p) => p.includes('/results'))).toBe(true),
   );
@@ -84,6 +101,7 @@ it('cambiar fuente descarta páginas tardías y preserva sólo la selección de 
 it('editar supuestos no cambia el snapshot; un fallo de envío se reintenta con el mismo UUID', async () => {
   const api = server({ createFails: true });
   const view = render('demo');
+  await startDemo(view);
   await waitFor(() =>
     expect(view.result.current.view.message).toContain('conectar'),
   );
@@ -107,6 +125,7 @@ it('editar supuestos no cambia el snapshot; un fallo de envío se reintenta con 
 it('recupera un ID al remontar sin crear otro lote ni guardar resultados financieros', async () => {
   const api = server();
   const view = render('demo');
+  await startDemo(view);
   await waitFor(() =>
     expect(view.result.current.view.current?.rows).toHaveLength(1),
   );
@@ -124,6 +143,7 @@ it('recupera un ID al remontar sin crear otro lote ni guardar resultados financi
 it('cancelar conserva los parciales y permite reintentar una cancelación no confirmada', async () => {
   const api = server({ state: 'running' });
   const view = render('demo');
+  await startDemo(view);
   await waitFor(() =>
     expect(view.result.current.view.current?.rows).toHaveLength(1),
   );
@@ -183,6 +203,7 @@ it('drena varias páginas antes de considerar disponibles todos los resultados',
     return original(input, init);
   });
   const view = render('demo');
+  await startDemo(view);
   await waitFor(
     () => expect(view.result.current.view.current?.rows).toHaveLength(201),
     { timeout: 5000 },
@@ -224,6 +245,7 @@ it('sigue funcionando con almacenamiento bloqueado y recupera una configuración
     throw new DOMException('denegado', 'SecurityError');
   });
   const view = render('demo');
+  await startDemo(view);
   await waitFor(() =>
     expect(view.result.current.view.current?.rows).toHaveLength(1),
   );

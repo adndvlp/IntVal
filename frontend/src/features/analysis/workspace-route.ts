@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 export type WorkspaceRoute = {
   screen: 'selection' | 'results' | 'history';
   ticker?: string;
@@ -18,11 +18,23 @@ export function parseWorkspaceRoute(hash: string): WorkspaceRoute {
   return { screen: 'selection' };
 }
 export function useWorkspaceRoute() {
+  const detailTrigger = useRef<HTMLElement | null>(null);
   const [route, setRoute] = useState<WorkspaceRoute>(() =>
     typeof window === 'undefined'
       ? { screen: 'selection' }
       : parseWorkspaceRoute(location.hash),
   );
+  useEffect(() => {
+    if (!route.ticker && detailTrigger.current) {
+      const trigger = detailTrigger.current;
+      // La navegación por fragmentos puede mover el foco después de popstate.
+      const frame = window.requestAnimationFrame(() => {
+        detailTrigger.current = null;
+        if (trigger.isConnected) trigger.focus({ preventScroll: true });
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [route]);
   useEffect(() => {
     const changed = () => setRoute(parseWorkspaceRoute(location.hash));
     const skip = document.querySelector<HTMLAnchorElement>(
@@ -42,6 +54,11 @@ export function useWorkspaceRoute() {
     };
   }, []);
   function navigate(hash: string, replace = false) {
+    if (
+      hash.startsWith('#empresa/') &&
+      document.activeElement instanceof HTMLElement
+    )
+      detailTrigger.current = document.activeElement;
     history[replace ? 'replaceState' : 'pushState'](
       { intvalDetail: hash.startsWith('#empresa/') },
       '',
@@ -52,7 +69,6 @@ export function useWorkspaceRoute() {
   function closeDetail() {
     if (history.state?.intvalDetail) {
       history.back();
-      setRoute({ screen: 'results' });
     } else navigate('#resultados', true);
   }
   return { route, navigate, closeDetail };

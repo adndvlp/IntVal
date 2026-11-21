@@ -883,6 +883,13 @@
       .difference-column {
         inline-size: 21%;
       }
+      @container (max-width: 43rem) {
+        .valuation-table .company-column { inline-size: 50cqw; }
+        .valuation-table :is(.price-column, .estimate-column, .difference-column) {
+          inline-size: calc((100% - 50cqw) / 3);
+        }
+        .valuation-table :is(th, td):first-child { overflow-wrap: anywhere; }
+      }
       .valuation-table th,
       .valuation-table td {
         padding: 14px 20px;
@@ -1928,10 +1935,10 @@
         padding-block-end: 88px;
       }
       .detail-dialog {
-        padding-block-end: 112px;
+        padding-block-end: calc(6.5rem + 36px);
       }
       #settings-dialog .dialog-foot {
-        padding-block-end: 100px;
+        padding-block-end: calc(6.5rem + 36px);
       }
       .toast {
         inset-block-end: 100px;
@@ -5611,6 +5618,10 @@
           );
           $("settings-label").hidden = !customized;
           $("settings-label").textContent = customized ? "Modificados" : "";
+          $("open-settings").setAttribute(
+            "aria-label",
+            "Ajustes de valoración" + (customized ? " · Modificados" : ""),
+          );
         }
         function renderSettings() {
           const field = ([key, label, min, max, scale, hint]) =>

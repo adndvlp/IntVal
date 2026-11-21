@@ -1,5 +1,33 @@
 # Capturas reales del producto
 
+## Interfaz vigente — UI-5
+
+Ocho capturas de Chromium inspeccionadas y copiadas sin modificar desde la ronda
+`20261121T231111-940717Z`, que aprobó 91 escenarios y omitió 11 previstos en
+Chromium, Firefox y WebKit, escritorio y viewport móvil. Los modos, tamaño de
+texto, dimensiones, SHA-256 de cada archivo, build, runtime y mediciones constan
+en [revision.json](ui5/revision.json). La referencia de los datos ficticios es
+2025-01-03; no representan cotizaciones actuales.
+
+| Vista | Captura revisada |
+| --- | --- |
+| Resultados, escritorio claro | [1440 px, texto 100 %](ui5/resultados-escritorio-claro.png) |
+| Resultados, móvil oscuro | [375 px, texto 100 %](ui5/resultados-movil-oscuro.png) |
+| Detalle, escritorio oscuro | [1440 px, texto 100 %](ui5/detalle-escritorio-oscuro.png) |
+| Ajustes, texto ampliado | [768 px, texto 200 %; Guardar libre](ui5/ajustes-200.png) |
+| Precio histórico, texto ampliado | [375 px, texto 200 %; eje completo](ui5/precio-200.png) |
+| Finanzas, texto ampliado | [375 px, texto 200 %; años separados](ui5/finanzas-200.png) |
+| Márgenes, escritorio claro | [1440 px; porcentajes](ui5/margenes-escritorio.png) |
+| Selección, escritorio claro | [1440 px](ui5/seleccion-escritorio.png) |
+
+El resto de las 43 capturas de la ronda se conserva en su directorio de evidencia.
+Estas imágenes documentan el producto actual; las referencias de las entregas
+anteriores conservan su contexto histórico. Reproducción: desde la raíz,
+`.venv/bin/python qa_ui5.py`; el comando genera candidatos, cuya inspección visual
+se registra por separado. Evidencia de cierre en [TDD_UI5.md](../TDD_UI5.md).
+
+## Archivo histórico — F5 / Streamlit
+
 Estado: **resumen y detalle capturados, revisados e incorporados al README**.
 Ambas imágenes proceden de la aplicación real y de los datos sintéticos
 versionados. No son reconstrucciones de la interfaz.

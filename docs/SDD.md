@@ -6,17 +6,17 @@ La arquitectura web está detallada en la [SDD web: Astro, React y FastAPI](SDD_
 La presentación e interacción vigentes están en la [SDD de interfaz Liquid Glass](SDD_UI.md),
 con el [HTML completo como anexo normativo](../prototipo-intval-liquid-glass.html).
 Leer primero 21.18 para continuar. F1–F10 están implementadas y verificadas localmente;
-UI-1–4 del diseño están integrados; UI-5 y F11 siguen pendientes.
+UI-1–5 del diseño están integrados y verificados; F11 sigue pendiente.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.11 |
+| Versión del documento | 2.12 |
 | Fecha de elaboración | 2026-11-12 |
-| Última revisión de interfaz | 2026-11-15; UI-1–4 y TDD_UI4.md |
+| Última revisión de interfaz | 2026-11-21; cierre UI-5 y TDD_UI5.md |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.18; interfaz Liquid Glass con UI-1–4 integrados y verificados localmente; UI-5 pendiente. CI remoto y publicación se verifican por commit/entorno |
+| Estado | F1–F10 implementadas y verificadas localmente; evidencia de F10 en TDD_F10.md. Continuidad en 21.18; interfaz Liquid Glass con UI-1–5 integrados, matriz de navegador y capturas verificadas. CI remoto y publicación se verifican por commit/entorno |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -25,7 +25,7 @@ UI-1–4 del diseño están integrados; UI-5 y F11 siguen pendientes.
 | Metodología implementada | F3: proxies-1.0, contrato 2.0, trazabilidad y conciliación independiente |
 | Entorno implementado | F4: servicio web agnóstico, Python 3.12, resoluciones pip-tools, arranque mediante PORT, configuración central y Ruff |
 | Presentación implementada | F5: demo sintética, ejemplo público, documentación, capturas reales revisadas y licencia MIT elegida por el usuario |
-| Último encargo documentado | UI-1–4 de SDD_UI.md integrados: interfaz y paridad de datos/configuración/Excel con Python; evidencia en TDD_UI1.md–TDD_UI4.md |
+| Último encargo documentado | UI-5 de SDD_UI.md cerrada: revisión de interfaz, apariencia, responsive, gráficas y rendimiento; evidencia en TDD_UI5.md |
 
 Este documento debe permitir que una persona o un agente continúe el trabajo en un chat sin historial. Contiene el contexto, las decisiones acordadas, los hallazgos, los contratos de datos, los cambios esperados, la matriz de pruebas y los criterios de cierre. No sustituye al código como evidencia del estado actual: al retomar, se debe comparar esta línea base con el repositorio disponible.
 
@@ -2212,7 +2212,7 @@ detalle modal, ajustes transaccionales e historial de trabajos reales;
 [TDD_UI3.md](TDD_UI3.md) registra pruebas y diferencias explícitas del prototipo.
 UI-4 concilia después datos, configuración y Excel con Python, corrige la
 validación del contrato recibido y la procedencia de históricos/fecha; evidencia
-en [TDD_UI4.md](TDD_UI4.md). UI-5 sigue pendiente y es la siguiente entrega.
+en [TDD_UI4.md](TDD_UI4.md). UI-5 está cerrada: 91 escenarios aprobados y 11 omisiones previstas en seis proyectos de navegador, con capturas finales inspeccionadas e incorporadas a la documentación. Evidencia, build y mediciones de laboratorio en [TDD_UI5.md](TDD_UI5.md). F11 conserva su alcance separado.
 Se mantienen motor,
 contratos y transporte. No rehacer F1–F10, iniciar F11 ni desplegar por inferencia.
 

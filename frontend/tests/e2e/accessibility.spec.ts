@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { auditPage, navigationTab } from './audit-helpers';
-import { startDemo } from './analysis-helpers';
+import { startDemo, readyForAnalysis, backdropPoint } from './analysis-helpers';
 
 test('estructura, contraste automático, validación y modales nativos con teclado', async ({
   page,
@@ -8,10 +8,7 @@ test('estructura, contraste automático, validación y modales nativos con tecla
   test.setTimeout(45000);
   for (const path of ['/', '/metodologia/', '/app/?fuente=market']) {
     await page.goto(path);
-    if (path !== '/metodologia/')
-      await expect(
-        page.getByText('Servicio conectado', { exact: true }),
-      ).toBeVisible();
+    if (path !== '/metodologia/') await readyForAnalysis(page);
     expect((await auditPage(page)).violations).toEqual([]);
     await page.keyboard.press(navigationTab(info));
     await expect(
@@ -61,7 +58,8 @@ test('estructura, contraste automático, validación y modales nativos con tecla
   await expect(summary).toBeFocused();
   await page.keyboard.press('Enter');
   expect((await auditPage(page)).violations).toEqual([]);
-  await page.mouse.click(1, 1);
+  const outside = await backdropPoint(page, detail);
+  await page.mouse.click(outside.x, outside.y);
   await expect(detail).not.toBeVisible();
   await expect(
     table.getByRole('link', { name: 'Industrial Aurora', exact: true }),

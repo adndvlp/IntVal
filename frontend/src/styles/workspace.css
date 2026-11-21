@@ -52,6 +52,7 @@
   background: var(--control-solid);
 }
 .workspace .result-scroll {
+  container: comparison / inline-size;
   overflow: auto;
   max-block-size: min(68dvh, 48rem);
   border: 1px solid var(--glass-edge);
@@ -66,6 +67,27 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: 1rem;
+}
+.workspace .comparison-table col:first-child {
+  width: 37%;
+}
+.workspace .comparison-table col:not(:first-child) {
+  width: 21%;
+}
+@container comparison (max-width: 50rem) {
+  .workspace .comparison-table col:first-child {
+    width: 50cqw;
+  }
+  .workspace .comparison-table col:not(:first-child) {
+    width: calc((100% - 50cqw) / 3);
+  }
+  .workspace .comparison-table tbody th {
+    overflow-wrap: anywhere;
+    padding-inline: 12px;
+  }
+  .workspace .comparison-table thead th:first-child button {
+    padding-inline: 12px;
+  }
 }
 .workspace .comparison-table th,
 .workspace .comparison-table td {
@@ -178,7 +200,7 @@
 }
 .ui-dialog.detail-dialog {
   inline-size: min(70rem, calc(100% - 32px));
-  padding-block-end: 100px;
+  padding-block-end: calc(6.5rem + 36px);
 }
 .company-dialog-heading {
   display: flex;
@@ -330,7 +352,7 @@
 }
 .settings-dialog {
   inline-size: min(52rem, calc(100% - 32px));
-  padding-block-end: 110px;
+  padding-block-end: calc(6.5rem + 36px);
 }
 .settings-dialog h2 {
   font-size: 1.5rem;
@@ -416,7 +438,8 @@
 }
 @media (max-width: 800px) {
   .ui-dialog {
-    padding: 24px;
+    padding-block-start: 24px;
+    padding-inline: 24px;
   }
   .ui-dialog.detail-dialog {
     inline-size: calc(100% - 16px);
@@ -425,10 +448,6 @@
   }
 }
 @media (max-width: 560px) {
-  .ui-dialog.detail-dialog,
-  .settings-dialog {
-    padding-block-end: calc(6.5rem + 36px);
-  }
   .valuation-comparison {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;

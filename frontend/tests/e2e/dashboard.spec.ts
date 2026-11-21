@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { auditPage } from './audit-helpers';
-import { startDemo } from './analysis-helpers';
+import { startDemo, readyForAnalysis } from './analysis-helpers';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { writeFileSync } from 'node:fs';
@@ -158,9 +158,7 @@ test('Mercado no analiza al abrir; selector y ajustes a 320 px y texto al 200 po
     if (r.method() === 'POST') posts.push(r.url());
   });
   await page.goto('/app/?fuente=market');
-  await expect(
-    page.getByText('Servicio conectado', { exact: true }),
-  ).toBeVisible();
+  await readyForAnalysis(page);
   await page.setViewportSize({ width: 320, height: 900 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addStyleTag({ content: 'html { font-size: 200%; }' });

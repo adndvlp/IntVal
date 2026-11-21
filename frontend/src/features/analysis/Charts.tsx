@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -29,11 +30,61 @@ export const series = [
   },
 ] as const;
 const common = {
-  margin: { top: 12, right: 20, bottom: 12, left: 12 },
+  margin: { top: 24, right: 32, bottom: 12, left: 12 },
   accessibilityLayer: true,
 };
 const axis = (value: number) =>
   formatNumber(value, Math.abs(value) < 0.01 ? 6 : 2);
+const shortDate = new Intl.DateTimeFormat('es-MX', {
+  day: '2-digit',
+  month: '2-digit',
+  year: '2-digit',
+  timeZone: 'UTC',
+});
+const dateAxis = (value: string) => shortDate.format(new Date(value));
+function HorizontalTick({
+  x = 0,
+  y = 0,
+  payload,
+  tickFormatter = String,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value: string | number };
+  tickFormatter?: (value: string | number) => string;
+}) {
+  const ref = useRef<SVGTextElement>(null);
+  const [offset, setOffset] = useState(0);
+  useLayoutEffect(() => {
+    const text = ref.current;
+    const svg = text?.ownerSVGElement;
+    if (!text || !svg) return;
+    const bounds = svg.getBoundingClientRect();
+    if (!bounds.width) return;
+    const ratio = svg.viewBox.baseVal.width / bounds.width;
+    const glyphs = text.getBoundingClientRect();
+    const left = glyphs.left - offset / ratio;
+    const right = glyphs.right - offset / ratio;
+    // Recharts mide un span HTML; el glifo SVG puede resultar más ancho.
+    const next =
+      (Math.max(0, bounds.left + 2 - left) +
+        Math.min(0, bounds.right - 2 - right)) *
+      ratio;
+    if (Math.abs(next - offset) > 0.5) setOffset(next);
+  });
+  return (
+    <text
+      ref={ref}
+      className="recharts-cartesian-axis-tick-value"
+      x={x + offset}
+      y={y}
+      dy="0.71em"
+      textAnchor="middle"
+    >
+      {payload ? tickFormatter(payload.value) : ''}
+    </text>
+  );
+}
 type YearRow = { year: number } & Partial<
   Record<
     'revenue' | 'fcl' | 'ebit' | 'ebitda' | 'net_income' | 'nopat',
@@ -127,7 +178,12 @@ export default function Charts({
               margin={{ ...common.margin, left: 8 }}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" tickFormatter={axis} />
+              <XAxis
+                type="number"
+                tickFormatter={axis}
+                tick={<HorizontalTick />}
+                height="auto"
+              />
               <YAxis
                 type="category"
                 dataKey="label"
@@ -135,6 +191,8 @@ export default function Charts({
                 tick={{ fontSize: 16 }}
               />
               <Tooltip
+                position={{ x: 0 }}
+                wrapperStyle={{ maxWidth: '100%' }}
                 formatter={(v) =>
                   formatMoney(
                     typeof v === 'number' ? v : null,
@@ -152,9 +210,17 @@ export default function Charts({
           ) : kind === 'prices' ? (
             <LineChart {...common} data={prices?.items}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" minTickGap={45} tick={{ fontSize: 16 }} />
-              <YAxis tickFormatter={axis} width={65} />
+              <XAxis
+                dataKey="date"
+                tickFormatter={dateAxis}
+                tick={<HorizontalTick />}
+                minTickGap={45}
+                height="auto"
+              />
+              <YAxis tickFormatter={axis} width="auto" />
               <Tooltip
+                position={{ x: 0 }}
+                wrapperStyle={{ maxWidth: '100%' }}
                 formatter={(v) =>
                   formatMoney(
                     typeof v === 'number' ? v : null,
@@ -179,12 +245,19 @@ export default function Charts({
           ) : (
             <LineChart {...common} data={rows}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" tick={{ fontSize: 16 }} />
+              <XAxis
+                dataKey="year"
+                tick={<HorizontalTick />}
+                height="auto"
+                minTickGap={24}
+              />
               <YAxis
                 tickFormatter={kind === 'margins' ? formatPercent : axis}
-                width={75}
+                width="auto"
               />
               <Tooltip
+                position={{ x: 0 }}
+                wrapperStyle={{ maxWidth: '100%' }}
                 formatter={(v) =>
                   kind === 'margins'
                     ? formatPercent(typeof v === 'number' ? v : null)

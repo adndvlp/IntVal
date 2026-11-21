@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { navigationTab } from './audit-helpers';
+import { readyForAnalysis } from './analysis-helpers';
 
 test('navega con teclado y conecta la API desde la entrada directa', async ({
   page,
@@ -25,9 +26,7 @@ test('navega con teclado y conecta la API desde la entrada directa', async ({
     'Analizar',
   );
   expect((await meta).status()).toBe(200);
-  await expect(
-    page.getByText('Servicio conectado', { exact: true }),
-  ).toBeVisible();
+  await readyForAnalysis(page);
   await expect(page.locator('.selection-count strong')).toHaveText('0');
   expect(posts).toEqual([]);
   expect(

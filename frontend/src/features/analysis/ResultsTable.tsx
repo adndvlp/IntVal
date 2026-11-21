@@ -144,10 +144,10 @@ export default function ResultsTable({
         <table ref={table} id={id} className="comparison-table">
           <caption className="sr-only">Resultados por empresa</caption>
           <colgroup>
-            <col style={{ width: '37%' }} />
-            <col style={{ width: '21%' }} />
-            <col style={{ width: '21%' }} />
-            <col style={{ width: '21%' }} />
+            <col className="company-column" />
+            <col />
+            <col />
+            <col />
           </colgroup>
           <thead>
             <tr>
@@ -191,6 +191,7 @@ export default function ResultsTable({
                     href={`#empresa/${encodeURIComponent(c.ticker)}`}
                     onClick={(e) => {
                       e.preventDefault();
+                      e.currentTarget.focus({ preventScroll: true });
                       onSelect(c.ticker);
                     }}
                   >

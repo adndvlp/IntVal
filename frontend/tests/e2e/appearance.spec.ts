@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { startDemo } from './analysis-helpers';
+import { startDemo, readyForAnalysis, choosePalette } from './analysis-helpers';
 
 test('personaliza paleta y modo, conserva la preferencia y no vuelve a analizar', async ({
   page,
@@ -24,7 +24,7 @@ test('personaliza paleta y modo, conserva la preferencia y no vuelve a analizar'
   );
   const palette = page.locator('#palette-switcher');
   await palette.locator('summary').click();
-  await page.getByRole('radio', { name: 'Bosque', exact: true }).check();
+  await choosePalette(page, 'Bosque');
   await expect(page.locator('html')).toHaveAttribute('data-palette', 'forest');
   await page.getByRole('heading', { level: 1 }).click();
   await expect(palette).not.toHaveAttribute('open');
@@ -65,10 +65,7 @@ test('shell y explicación legibles en cuatro anchos, dos modos y texto al 200 p
     await page.emulateMedia({ colorScheme });
     for (const path of ['/', '/metodologia/']) {
       await page.goto(path);
-      if (path === '/')
-        await expect(
-          page.getByText('Servicio conectado', { exact: true }),
-        ).toBeVisible();
+      if (path === '/') await readyForAnalysis(page);
       for (const width of [320, 390, 768, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

@@ -10,16 +10,16 @@ sintéticos que funciona sin consultar Yahoo Finance.
 La finalidad es educativa. La mediana de los proxies es una referencia heurística;
 no representa un DCF completo ni acredita capacidad para predecir precios.
 
-![Demo de IntVal: tres empresas ficticias, filtros y exportación Excel; datos sintéticos con referencia 2025-01-03](docs/images/demo-resumen.jpg)
+![IntVal Liquid Glass: resultados de tres empresas ficticias, precio y estimación por acción, con exportación Excel](docs/images/ui5/resultados-escritorio-claro.png)
 
-Captura real de la interfaz Streamlit con `demo-1.0`, anterior al rediseño web de UI-1. La
+Captura real de la interfaz web Liquid Glass con `demo-1.0`, revisada en UI-5. La
 [procedencia y revisión visual](docs/images/README.md) identifican los datos y
 el entorno de captura.
 
 <details>
-<summary>Ver el detalle de empresa y sus cuatro gráficas</summary>
+<summary>Ver el detalle de una empresa</summary>
 
-![Detalle real de DEMO-MX.MX: proxies, precio histórico, estados y márgenes; datos sintéticos](docs/images/demo-detalle.jpg)
+![Detalle de Industrial Aurora: precio, estimación, diferencia y cuatro métodos; modo oscuro y datos sintéticos](docs/images/ui5/detalle-escritorio-oscuro.png)
 
 </details>
 
@@ -225,8 +225,8 @@ no la validez predictiva de una valoración.
   [HTML interactivo adjunto](prototipo-intval-liquid-glass.html): especificación
   vigente del analizador, selección escalable, paleta/color elegible y modo oscuro.
   UI-1–4 integran apariencia, selección escalable, resultados, detalle, ajustes
-  e historial, con datos y Excel conciliados con Python. UI-5 conserva la revisión
-  del conjunto en navegador. Evidencia de [UI-1](docs/TDD_UI1.md),
+  e historial, con datos y Excel conciliados con Python. UI-5 completa la revisión
+  en tres motores, apariencia, texto ampliado y rendimiento, con evidencia en [TDD_UI5](docs/TDD_UI5.md). Evidencia de [UI-1](docs/TDD_UI1.md),
   [UI-2](docs/TDD_UI2.md), [UI-3](docs/TDD_UI3.md) y [UI-4](docs/TDD_UI4.md).
 - [Arquitectura web y entregas F6–F10](docs/SDD_WEB.md): Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
@@ -250,11 +250,15 @@ Excel con snapshots y recuperación de adquisiciones bloqueadas. F9 incorpora
 el dashboard, sus pruebas y capturas reales revisadas. F10 completa la calidad integrada, las mediciones y las referencias visuales.
 F11, el despliegue público y la validación de su URL quedan pendientes.
 
-Capturas de la nueva web: [escritorio](docs/images/landing-desktop.png),
+Interfaz vigente (UI-5): [escritorio](docs/images/ui5/resultados-escritorio-claro.png),
+[móvil oscuro](docs/images/ui5/resultados-movil-oscuro.png) y
+[registro de revisión](docs/images/ui5/revision.json).
+
+Capturas históricas de F7: [escritorio](docs/images/landing-desktop.png),
 [móvil](docs/images/landing-mobile.png) y
 [metodología](docs/images/landing-metodologia.png).
 
-Dashboard: [escritorio](docs/images/dashboard-f10-desktop.png) y
+Dashboard histórico de F10: [escritorio](docs/images/dashboard-f10-desktop.png) y
 [móvil](docs/images/dashboard-f10-mobile.png). Procedencia y reproducción en
 [el registro de capturas](docs/images/README.md).
 

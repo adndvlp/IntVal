@@ -65,7 +65,9 @@ it('el flujo abre resultados, detalle modal y ajustes transaccionales sin modifi
   );
   expect(api.created).toHaveLength(1);
   await userEvent.click(
-    screen.getByRole('button', { name: 'Ajustes de valoración' }),
+    screen.getByRole('button', {
+      name: 'Ajustes Modificados de valoración',
+    }),
   );
   expect(
     (screen.getByLabelText('Tasa de descuento (%)') as HTMLInputElement).value,
@@ -73,7 +75,9 @@ it('el flujo abre resultados, detalle modal y ajustes transaccionales sin modifi
   await userEvent.click(screen.getByRole('button', { name: 'Restablecer' }));
   await userEvent.click(screen.getByRole('button', { name: 'Cerrar ajustes' }));
   await userEvent.click(
-    screen.getByRole('button', { name: 'Ajustes de valoración' }),
+    screen.getByRole('button', {
+      name: 'Ajustes Modificados de valoración',
+    }),
   );
   expect(
     (screen.getByLabelText('Tasa de descuento (%)') as HTMLInputElement).value,

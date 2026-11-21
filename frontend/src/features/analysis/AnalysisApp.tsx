@@ -116,6 +116,10 @@ function Workspace({
     : 0;
   const completed = active?.state === 'completed' && !analysis.loadingRows;
   const defaults = editableConfiguration(meta.configuration);
+  const modified = configurationChanged(
+    draft.configuration,
+    meta.configuration,
+  );
   const exportControl = snapshot ? (
     <ExportButton
       snapshot={snapshot}
@@ -137,13 +141,18 @@ function Workspace({
         </span>
         <button
           type="button"
-          aria-label="Ajustes de valoración"
-          onClick={() => setSettings(true)}
+          aria-label={
+            modified
+              ? 'Ajustes Modificados de valoración'
+              : 'Ajustes de valoración'
+          }
+          onClick={(event) => {
+            event.currentTarget.focus({ preventScroll: true });
+            setSettings(true);
+          }}
         >
-          Ajustes
-          {configurationChanged(draft.configuration, meta.configuration) && (
-            <span className="modified-indicator">Modificados</span>
-          )}
+          Ajustes{' '}
+          {modified && <span className="modified-indicator">Modificados</span>}
         </button>
       </div>
       <section

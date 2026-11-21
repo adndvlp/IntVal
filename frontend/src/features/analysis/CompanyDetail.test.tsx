@@ -121,6 +121,10 @@ it('teclado recorre pestañas sin adquirir al enfocarlas; activa y comparte esta
   await screen.findByRole('figure', {
     name: 'Márgenes históricos de DEMO-USA',
   });
+  expect(screen.getByText(/Consulta/).textContent).toContain(
+    'Porcentaje de los ingresos',
+  );
+  expect(screen.getByText(/Consulta/).textContent).not.toContain('Millones');
   expect(api.paths.filter((p) => p.endsWith('/financials'))).toHaveLength(
     calls,
   );

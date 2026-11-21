@@ -112,6 +112,10 @@ it('envía los nueve ajustes guardados y normaliza los símbolos adicionales', a
   await userEvent.click(
     within(dialog).getByRole('button', { name: 'Guardar' }),
   );
+  const modifiedSettings = screen.getByRole('button', {
+    name: 'Ajustes Modificados de valoración',
+  });
+  expect(modifiedSettings.textContent).toBe('Ajustes Modificados');
   await userEvent.click(
     screen.getByRole('button', { name: 'Analizar selección' }),
   );

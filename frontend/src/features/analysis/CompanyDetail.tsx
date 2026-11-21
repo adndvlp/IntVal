@@ -348,9 +348,11 @@ export default function CompanyDetail({
                     ? prices.data?.price_kind === 'synthetic'
                       ? 'Precio sintético'
                       : 'Cierre ajustado'
-                    : financials.data?.unit === 'millions'
-                      ? `Millones de ${resource.currency ?? 'moneda no disponible'}`
-                      : resource.currency}
+                    : panel === 'margins'
+                      ? 'Porcentaje de los ingresos'
+                      : financials.data?.unit === 'millions'
+                        ? `Millones de ${resource.currency ?? 'moneda no disponible'}`
+                        : resource.currency}
                 </p>
                 <Suspense fallback={<p role="status">Preparando gráfica…</p>}>
                   <Charts

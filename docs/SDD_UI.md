@@ -4,14 +4,14 @@
 
 | Campo                          | Valor                                                                                                                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Versión                        | 1.4                                                                                                                                                                         |
-| Fecha                          | 2026-11-15                                                                                                                                                                  |
-| Encargo                        | Conservar la especificación completa y su HTML normativo; integrar UI-1–4 en el frontend real y conciliar resultados, configuración y Excel con Python                       |
+| Versión                        | 1.5                                                                                                                                                                         |
+| Fecha                          | 2026-11-21                                                                                                                                                                  |
+| Encargo                        | Integrar UI-1–5: interfaz Liquid Glass, paridad con Python y revisión del conjunto en navegador; conservar el HTML normativo |
 | Anexo normativo                | [prototipo-intval-liquid-glass.html](../prototipo-intval-liquid-glass.html)                                                                                                 |
-| Estado                         | UI-1–4 integrados y verificados localmente; UI-5 pendiente. Evidencia en TDD_UI1.md–TDD_UI4.md; navegador y capturas nuevos pendientes |
+| Estado                         | UI-1–5 integrados y verificados. UI-5: 91 escenarios aprobados, 11 omisiones previstas y capturas revisadas. Evidencia en TDD_UI1.md–TDD_UI5.md |
 | Base de producto inspeccionada | `f04b8b8`, cierre F10, más los archivos locales del prototipo                                                                                                               |
 | Relación con otras SDD         | Revisa la presentación e interacción de [SDD_WEB.md](SDD_WEB.md); mantiene sus contratos financieros, API y condiciones operativas salvo cambios expresos de este documento |
-| Autorización de esta entrega   | El usuario solicitó los incrementos UI-1, UI-2, UI-3 y UI-4. No autoriza desplegar ni hacer commit/push                                                         |
+| Autorización de esta entrega   | El usuario solicitó sucesivamente los incrementos UI-1–5. No autoriza desplegar ni hacer commit/push                                                         |
 
 ## Índice
 
@@ -202,6 +202,8 @@ Cabecera: Resultados, conteo del lote o de coincidencias, Editar selección y Ex
 **UI-RES-01.** Encabezados y cifras comparten el mismo eje. Las tres columnas numéricas tienen anchos iguales; los iconos de ordenación no desplazan el centro del texto. No reintroducir las desalineaciones de capturas anteriores.
 
 **UI-RES-02.** La cabecera se mantiene visible en la región de desplazamiento. En anchuras insuficientes la tabla permite desplazamiento horizontal y conserva la identificación de empresa. No reducir el texto para forzar todas las columnas dentro del viewport.
+
+Cuando el contenedor no supera el ancho mínimo de la tabla (50rem en la app; 43rem en el anexo), la identificación fija se limita a 50cqw; las tres columnas numéricas conservan anchos iguales dentro de la tabla desplazable. El umbral relativo responde también al texto ampliado. El ancho de empresa no puede tapar el área disponible para las cifras.
 
 **UI-RES-03.** Cada encabezado ordenable contiene un botón nativo. Orden inicial: Diferencia descendente. Al activar una columna nueva, empezar ascendente; al repetir, alternar. Las ausencias quedan al final en ambos sentidos. Comparar valores numéricos originales y nombres con comparación textual adecuada, no cadenas monetarias ya formateadas.
 
@@ -530,7 +532,7 @@ El backend permanece agnóstico del alojamiento. Se conservan método financiero
 
 ## 15. Rendimiento y compatibilidad
 
-**UI-PERF-01.** El anexo completo ocupa 242,161 bytes y 40,338 bytes gzip con Node, por debajo de su presupuesto de 40 KiB gzip. Incluye los datos ficticios; no confundirlo con el presupuesto del bundle React ni con bytes descargados de las fuentes o del Excel diferido.
+**UI-PERF-01.** El anexo completo ocupa 242,681 bytes y 40,451 bytes gzip con Node, por debajo de su presupuesto de 40 KiB gzip. Incluye los datos ficticios; no confundirlo con el presupuesto del bundle React ni con bytes descargados de las fuentes o del Excel diferido.
 
 **UI-PERF-02.** La presentación inicial no depende de JavaScript de un CDN. La tipografía externa no bloquea la funcionalidad y tiene fallback. SheetJS sólo se carga al exportar la demo. El frontend conectado usa su exportador del servidor.
 
@@ -588,7 +590,7 @@ La verificación cubre DOM, interacciones, persistencia, contraste calculado, l�
 
 ### 16.3 Secuencia de implementación
 
-El usuario autorizó sucesivamente UI-1, UI-2, UI-3 y UI-4 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
+El usuario autorizó sucesivamente UI-1–5 tras la redacción de la SDD. Avanzar por incrementos con TDD y sin rehacer F1–F10:
 
 | Incremento | Entrega                                                                                | Criterio mínimo                                              |
 | ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -612,7 +614,9 @@ La suite tiene 92 pruebas frontend aprobadas y mantiene el umbral del 85 % en su
 
 **Estado de UI-4 (2026-11-15):** integrado y verificado localmente. Se separa validación del contrato recibido y validación del formulario; se corrige la procedencia de fecha, dataset y moneda del detalle. Un oráculo independiente de las fórmulas compara el snapshot API con el XLSX completo. Los componentes consumen intercambios reales generados por TestClient ASGI en cada ejecución y comprueban los nueve ajustes, búsqueda/orden, ambos controles Excel e historial sin otro POST. Pasan 476 pruebas Python y 120 frontend, más tipos, lint, formato, build, shell/anexo y presupuestos. No cambia el contrato HTTP ni el financiero, y no se modifica el exportador Python. Evidencia en [TDD_UI4.md](TDD_UI4.md).
 
-UI-5 es la siguiente entrega: revisión del conjunto en navegador, apariencia, responsive y rendimiento. Los E2E se han actualizado y recopilado, sin ejecutarlos en esta sesión. No hay nuevas capturas ni referencias visuales aprobadas.
+Al cerrar UI-4, UI-5 quedó como siguiente entrega: revisión del conjunto en navegador, apariencia, responsive y rendimiento. Los E2E estaban actualizados y recopilados, todavía sin ejecutar y sin referencias visuales nuevas aprobadas.
+
+**Estado de UI-5 (2026-11-21):** cerrada. La ronda final aprueba 91 escenarios y omite 11 previstos en los seis proyectos, sin fallos ni inestables. Se revisaron las capturas del build `082e7ef2…` y se incorporaron ocho referencias documentales con su [registro de procedencia](images/ui5/revision.json). Pasan 122 pruebas frontend, nueve del lanzador, tipos, estilo, build y presupuestos. La revisión cubre cinco anchos, ambos modos, texto al 200 %, paletas, cierre/foco y gráficas sin recortes, con años separados y unidades correctas. Las mediciones son de laboratorio; publicación y CI remoto conservan su alcance separado. Evidencia en [TDD_UI5.md](TDD_UI5.md).
 
 F11 continúa como entrega separada de distribución/arranque, después de resolver el alcance que realmente se solicite. La aprobación de esta SDD no autoriza publicar la web.
 
@@ -629,7 +633,7 @@ Es el mismo archivo que se edita y prueba en la raíz del repositorio; no se man
 SHA-256 del archivo de referencia de esta versión:
 
 ```text
-06694e7ba2628dbb0910243e72f80118f3caaa6c861e1ab505905fb16fafdb8f
+deb20a286f995284d74fa76bf4aca189f21b7500c32e78878c7c1a44198bd068
 ```
 
 El anexo conserva la definición literal de todos los tokens CSS, las seis paletas, colores de cada modo, tipografía, medidas, iconos SVG, contenido, datos, estructura, handlers y fallbacks. Esos detalles pertenecen a la referencia aunque aquí se hayan agrupado por comportamiento.

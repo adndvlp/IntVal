@@ -819,6 +819,8 @@
 .chart-canvas .recharts-default-tooltip {
   font-size: 1rem;
   max-inline-size: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
 }
 .chart-note {
   color: var(--muted);
@@ -1189,7 +1191,7 @@
   border-color: var(--line) !important;
   color: var(--ink);
 }
-.recharts-cartesian-axis-tick text,
+.recharts-cartesian-axis-tick-value,
 .recharts-legend-item-text {
   fill: var(--chart-label);
 }

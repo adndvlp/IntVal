@@ -618,3 +618,13 @@ ejecuta una campaña independiente con un proveedor sintético de pruebas y la
 pausa market conservada. No cambia el catálogo demo, no consulta Yahoo y no
 acredita el consumo de un PaaS. El resultado contextualizado está en
 [quality/f10-capacity.json](quality/f10-capacity.json).
+
+## Revisión Liquid Glass (UI-5)
+
+Desde la raíz, `.venv/bin/python qa_ui5.py` prepara el runtime fijado si falta,
+reutiliza los navegadores de QA y prueba primero Chromium. Sólo continúa con los
+otros cinco proyectos si esa etapa pasa. Los informes y capturas se conservan
+en `temp/ui5-qa/`; el reporte HTML no abre un servidor automáticamente.
+No se copian referencias visuales sin inspección. Estado y límites en
+[TDD_UI5.md](TDD_UI5.md). Este comando valida desarrollo; no cambia el arranque
+del producto ni despliega la aplicación.

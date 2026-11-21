@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.11 |
+| Versión de esta extensión | 1.12 |
 | Fecha | 2026-11-15 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
 | Estado de F6–F11 | F6–F10 implementadas y verificadas localmente; F11 pendiente |
-| Encargo de esta edición | UI-1–4 de SDD_UI integrados y verificados localmente; UI-5 y publicación pendientes |
+| Encargo de esta edición | UI-1–5 de SDD_UI integrados, matriz de navegador y capturas revisadas; publicación pendiente |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -23,8 +23,8 @@ propuestas anteriores de presentación e interacción: entrada directa al
 analizador, sin landing, con selección y tabla escalables, Liquid Glass,
 color elegido por el usuario y modo claro/oscuro. Las secciones históricas de
 landing y capturas se conservan como registro de F7–F10. Los contratos financieros,
-API, transporte, calidad y despliegue de este documento siguen vigentes. UI-1–4 ya están integrados en el frontend; la revisión del conjunto sigue pendiente
-(UI-5). Evidencia en [TDD_UI1.md](TDD_UI1.md), [TDD_UI2.md](TDD_UI2.md), [TDD_UI3.md](TDD_UI3.md) y [TDD_UI4.md](TDD_UI4.md).
+API, transporte, calidad y despliegue de este documento siguen vigentes. UI-1–5 ya están integrados y la revisión del conjunto está cerrada con matriz de navegador y capturas reales.
+Evidencia en [TDD_UI1.md](TDD_UI1.md), [TDD_UI2.md](TDD_UI2.md), [TDD_UI3.md](TDD_UI3.md), [TDD_UI4.md](TDD_UI4.md) y [TDD_UI5.md](TDD_UI5.md).
 
 El estado actual no se deduce del diseño futuro. Un archivo, ruta o comando de los
 apartados «propuestos» sólo existe cuando una fase lo crea y registra su evidencia.
@@ -2142,8 +2142,10 @@ en [TDD_UI3.md](TDD_UI3.md). A diferencia del flujo histórico de F9, navegar o
 cambiar la fuente del borrador conserva el trabajo aceptado; cancelar sigue siendo
 explícito. UI-4 concilia resultados, configuración y XLSX real con Python,
 separa los límites de lectura de los del formulario y valida la procedencia del
-detalle; [TDD_UI4.md](TDD_UI4.md) registra sus pruebas. UI-5 continúa según la
-SDD de interfaz. F11 no se considera iniciada.
+detalle; [TDD_UI4.md](TDD_UI4.md) registra sus pruebas. UI-5 está cerrada según la
+SDD de interfaz: [TDD_UI5.md](TDD_UI5.md) conserva la ronda final con 91 escenarios
+aprobados, 11 omisiones previstas, capturas revisadas y mediciones de laboratorio.
+F11 no se considera iniciada.
 
 ## 22. Fuentes y mantenimiento
 

@@ -1,14 +1,15 @@
-import { startDemo } from './analysis-helpers';
+import { startDemo, readyForAnalysis } from './analysis-helpers';
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import os from 'node:os';
 
 declare global {
   interface Window {
-    __f10: {
+    __ui5: {
       lcp: number | null;
       shifts: { time: number; value: number }[];
       events: { id: number; duration: number }[];
+      actionPaint?: Promise<number>;
     };
   }
 }
@@ -29,10 +30,10 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
       reducedMotion: 'reduce',
     });
     await context.addInitScript(() => {
-      window.__f10 = { lcp: null, shifts: [], events: [] };
+      window.__ui5 = { lcp: null, shifts: [], events: [] };
       new PerformanceObserver((list) => {
         const last = list.getEntries().at(-1);
-        if (last) window.__f10.lcp = last.startTime;
+        if (last) window.__ui5.lcp = last.startTime;
       }).observe({ type: 'largest-contentful-paint', buffered: true });
       new PerformanceObserver((list) => {
         for (const raw of list.getEntries()) {
@@ -41,7 +42,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
             value: number;
           };
           if (!entry.hadRecentInput)
-            window.__f10.shifts.push({
+            window.__ui5.shifts.push({
               time: entry.startTime,
               value: entry.value,
             });
@@ -51,7 +52,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
         for (const raw of list.getEntries()) {
           const entry = raw as PerformanceEntry & { interactionId: number };
           if (entry.interactionId)
-            window.__f10.events.push({
+            window.__ui5.events.push({
               id: entry.interactionId,
               duration: entry.duration,
             });
@@ -70,14 +71,14 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
     await page.waitForLoadState('networkidle');
-    await page.waitForFunction(() => window.__f10.lcp !== null);
+    await page.waitForFunction(() => window.__ui5.lcp !== null);
     const entry = await page.evaluate(() => {
       // Ventanas CLS de hasta cinco segundos y sin huecos mayores de un segundo.
       let maximum = 0,
         sum = 0,
         first = 0,
         last = 0;
-      for (const shift of window.__f10.shifts) {
+      for (const shift of window.__ui5.shifts) {
         if (shift.time - last > 1000 || shift.time - first > 5000) {
           sum = 0;
           first = shift.time;
@@ -86,14 +87,12 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
         maximum = Math.max(maximum, sum);
         last = shift.time;
       }
-      return { lcpMs: window.__f10.lcp, cls: maximum };
+      return { lcpMs: window.__ui5.lcp, cls: maximum };
     });
     expect(entry.lcpMs).toBeLessThanOrEqual(2500);
     expect(entry.cls).toBeLessThanOrEqual(0.1);
     await page.goto('/app/?fuente=market');
-    await expect(
-      page.getByText('Servicio conectado', { exact: true }),
-    ).toBeVisible();
+    await readyForAnalysis(page);
     const initialJs = await page.evaluate(() =>
       performance
         .getEntriesByType('resource')
@@ -110,23 +109,32 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
     await expect(table.getByRole('rowheader')).toHaveCount(3);
     await page.waitForLoadState('networkidle');
     const paint = [];
-    for (let i = 0; i < 4; i++)
-      paint.push(
-        await page
-          .getByRole('button', { name: 'Diferencia', exact: true })
-          .evaluate(async (el) => {
+    const sortButton = page.getByRole('button', {
+      name: 'Diferencia',
+      exact: true,
+    });
+    for (let i = 0; i < 4; i++) {
+      await sortButton.evaluate((el) => {
+        el.addEventListener(
+          'click',
+          () => {
             const before = performance.now();
-            (el as HTMLInputElement).click();
-            await new Promise<void>((resolve) =>
+            window.__ui5.actionPaint = new Promise<number>((resolve) =>
               requestAnimationFrame(() =>
-                requestAnimationFrame(() => resolve()),
+                requestAnimationFrame(() =>
+                  resolve(performance.now() - before),
+                ),
               ),
             );
-            return performance.now() - before;
-          }),
-      );
+          },
+          { once: true, capture: true },
+        );
+      });
+      await sortButton.click();
+      paint.push(await page.evaluate(() => window.__ui5.actionPaint!));
+    }
     await page.waitForLoadState('networkidle');
-    const events = await page.evaluate(() => window.__f10.events);
+    const events = await page.evaluate(() => window.__ui5.events);
     samples.push({
       run: run + 1,
       entry,
@@ -138,7 +146,7 @@ test('laboratorio móvil: tres visitas frías, estabilidad y respuesta de ordena
     await context.close();
   }
   const report = {
-    schema: 'intval-browser-performance-1',
+    schema: 'intval-browser-performance-2',
     environment: {
       browser: browser.version(),
       os: process.platform,

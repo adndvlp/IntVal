@@ -1,0 +1,430 @@
+{
+  "schema": "intval-ui5-visual-review-1",
+  "status": "reviewed",
+  "reviewed_at": "2026-11-21T23:16:32.750629+00:00",
+  "reviewer": "Codex",
+  "run": "temp/ui5-qa/20261121T231111-940717Z",
+  "build_sha256": "082e7ef2584a12543656f45ceb320b4548a277b107c51e1826dc1a9ffbef2fd3",
+  "source_commit": "629b3cd20931b982a6bdc829974b233115cdeafa",
+  "source_dirty": true,
+  "lock_sha256": "ce3f8f62a3671a3843b72fc73c6d569371cf7cf995488484d35a61603b90a37a",
+  "qa_manifest_sha256": "d0d1e4799170a70c5d237d71930bede1cd36309999e2b8442e541fcc55891058",
+  "automated_report_sha256": "2ebe892c7315a95327dd7820067158902fa2d29d5c605ee45cd01a1bbe73826f",
+  "runtime": {
+    "node": "v26.13.1",
+    "python": "3.12.2",
+    "playwright": "1.65.0"
+  },
+  "browsers": {
+    "desktop": "158.0.8127.18",
+    "firefox-desktop": "159.0",
+    "webkit-desktop": "27.2"
+  },
+  "stats": {
+    "expected": 91,
+    "unexpected": 0,
+    "flaky": 0,
+    "skipped": 11,
+    "duration": 243661.573
+  },
+  "data": {
+    "dataset": "demo-1.0",
+    "reference_date": "2025-01-03",
+    "synthetic": true
+  },
+  "scope": "Ocho capturas Chromium inspeccionadas y copiadas sin modificación; documentación de UI5, sin sustituir las baselines históricas de F10.",
+  "captures": [
+    {
+      "file": "resultados-escritorio-claro.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-diseño-integrado-c5cb2-s-y-texto-al-200-por-ciento-desktop/ui5-resultados-light-1440-100.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "image_size": {
+        "width": 1440,
+        "height": 1016
+      },
+      "scheme": "light",
+      "text_percent": 100,
+      "bytes": 409929,
+      "sha256": "1286510fe60b281acb9e89ea66f9b26aca0ff90e829b62411dc25b2a12b4f583"
+    },
+    {
+      "file": "resultados-movil-oscuro.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-diseño-integrado-c5cb2-s-y-texto-al-200-por-ciento-desktop/ui5-resultados-dark-375-100.png",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "image_size": {
+        "width": 375,
+        "height": 1516
+      },
+      "scheme": "dark",
+      "text_percent": 100,
+      "bytes": 154990,
+      "sha256": "dce229b2a4a30f978f1bb88c5d2bced93c04f7c96bcf2b68f5b544cce064b28f"
+    },
+    {
+      "file": "detalle-escritorio-oscuro.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-diseño-integrado-c5cb2-s-y-texto-al-200-por-ciento-desktop/ui5-detalle-dark-1440-100.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "text_percent": 100,
+      "bytes": 122197,
+      "sha256": "c9511f007c48d92462efcdabfa67d944905f7ddfbb6ff784dac52f58d655918c"
+    },
+    {
+      "file": "ajustes-200.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-diseño-integrado-c5cb2-s-y-texto-al-200-por-ciento-desktop/ui5-ajustes-light-768-200.png",
+      "viewport": {
+        "width": 768,
+        "height": 900
+      },
+      "image_size": {
+        "width": 768,
+        "height": 900
+      },
+      "scheme": "light",
+      "text_percent": 200,
+      "bytes": 92520,
+      "sha256": "26d3cd60925026f7a1795efe839609487b46cb981c50cf80679434982fd88b08"
+    },
+    {
+      "file": "precio-200.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-gráficas-conserv-c7ec6--y-tamaño-de-texto-ampliado-desktop/ui5-grafica-375-dark-Precio-histórico.png",
+      "viewport": {
+        "width": 375,
+        "height": 1000
+      },
+      "image_size": {
+        "width": 375,
+        "height": 1000
+      },
+      "scheme": "dark",
+      "text_percent": 200,
+      "bytes": 53450,
+      "sha256": "3ddcff16c812dd7769fc34c493f2a34d976eb4d909cf261ee03a34055e7b5db9"
+    },
+    {
+      "file": "finanzas-200.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-gráficas-conserv-c7ec6--y-tamaño-de-texto-ampliado-desktop/ui5-grafica-375-dark-Finanzas.png",
+      "viewport": {
+        "width": 375,
+        "height": 1000
+      },
+      "image_size": {
+        "width": 375,
+        "height": 1000
+      },
+      "scheme": "dark",
+      "text_percent": 200,
+      "bytes": 72201,
+      "sha256": "986f7bb34704090ed3d47531b51ebf180884559d64f14c65ae5756e5d601d324"
+    },
+    {
+      "file": "margenes-escritorio.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-gráficas-conserv-c7ec6--y-tamaño-de-texto-ampliado-desktop/ui5-grafica-1440-light-Márgenes.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": {
+        "width": 1440,
+        "height": 1000
+      },
+      "scheme": "light",
+      "text_percent": 100,
+      "bytes": 154978,
+      "sha256": "d623ef0b3adb10c6f3f4b1c09d46f4965a3d268b48c24203547f68fdc7f394dd"
+    },
+    {
+      "file": "seleccion-escritorio.png",
+      "source": "temp/ui5-qa/20261121T231111-940717Z/chromium/test-results/ui5-UI5-·-diseño-integrado-c5cb2-s-y-texto-al-200-por-ciento-desktop/ui5-seleccion-light-1440-100.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "image_size": {
+        "width": 1440,
+        "height": 1136
+      },
+      "scheme": "light",
+      "text_percent": 100,
+      "bytes": 426845,
+      "sha256": "d38d99d44650501ffb53343a0e200d5df9922842f7452053ac35a55d93d59c57"
+    }
+  ],
+  "performance": {
+    "schema": "intval-browser-performance-2",
+    "environment": {
+      "browser": "158.0.8127.18",
+      "os": "darwin",
+      "machine": "arm64",
+      "logicalCpus": 8,
+      "cpuModel": "Apple M1"
+    },
+    "profile": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuSlowdown": 4,
+      "network": "localhost sin limitación de red",
+      "cache": "nuevo contexto y caché HTTP deshabilitada por muestra",
+      "samples": 3,
+      "reducedMotion": true
+    },
+    "interpretation": "Mediciones de laboratorio, sin datos de campo. Event Timing conserva muestras cuando existen. El tiempo de click DOM a dos frames es un indicador de respuesta de ordenación, no INP de usuarios reales.",
+    "samples": [
+      {
+        "run": 1,
+        "entry": {
+          "lcpMs": 284,
+          "cls": 0.0685550340710002
+        },
+        "sortActionToTwoFramesMs": [
+          23.40000000037253,
+          28.100000001490116,
+          27.40000000037253,
+          26.90000000037253
+        ],
+        "eventTimingSamples": [
+          {
+            "id": 3350,
+            "duration": 40
+          },
+          {
+            "id": 3350,
+            "duration": 40
+          },
+          {
+            "id": 3350,
+            "duration": 40
+          },
+          {
+            "id": 3357,
+            "duration": 24
+          },
+          {
+            "id": 3357,
+            "duration": 24
+          },
+          {
+            "id": 3357,
+            "duration": 24
+          },
+          {
+            "id": 3364,
+            "duration": 16
+          },
+          {
+            "id": 3364,
+            "duration": 16
+          },
+          {
+            "id": 3364,
+            "duration": 16
+          },
+          {
+            "id": 3371,
+            "duration": 16
+          },
+          {
+            "id": 3371,
+            "duration": 16
+          },
+          {
+            "id": 3371,
+            "duration": 16
+          },
+          {
+            "id": 3385,
+            "duration": 16
+          },
+          {
+            "id": 3385,
+            "duration": 16
+          },
+          {
+            "id": 3385,
+            "duration": 16
+          }
+        ],
+        "initialJs": [
+          "http://127.0.0.1:4321/_astro/Base.astro_astro_type_script_index_0_lang.Bpst-rkM.js",
+          "http://127.0.0.1:4321/_astro/AnalysisApp.C18d_cpC.js",
+          "http://127.0.0.1:4321/_astro/client.FasGtEyh.js",
+          "http://127.0.0.1:4321/_astro/rolldown-runtime.XKyaHtl9.js",
+          "http://127.0.0.1:4321/_astro/model.DncSjQal.js",
+          "http://127.0.0.1:4321/_astro/react.B54jxNxs.js",
+          "http://127.0.0.1:4321/_astro/react-dom.c_sf7UW_.js"
+        ]
+      },
+      {
+        "run": 2,
+        "entry": {
+          "lcpMs": 252,
+          "cls": 0.0685550340710002
+        },
+        "sortActionToTwoFramesMs": [
+          25.199999999254942,
+          27.40000000037253,
+          26.59999999962747,
+          26.5
+        ],
+        "eventTimingSamples": [
+          {
+            "id": 7728,
+            "duration": 32
+          },
+          {
+            "id": 7728,
+            "duration": 32
+          },
+          {
+            "id": 7728,
+            "duration": 32
+          },
+          {
+            "id": 7735,
+            "duration": 24
+          },
+          {
+            "id": 7735,
+            "duration": 24
+          },
+          {
+            "id": 7735,
+            "duration": 24
+          },
+          {
+            "id": 7742,
+            "duration": 16
+          },
+          {
+            "id": 7742,
+            "duration": 16
+          },
+          {
+            "id": 7742,
+            "duration": 16
+          }
+        ],
+        "initialJs": [
+          "http://127.0.0.1:4321/_astro/Base.astro_astro_type_script_index_0_lang.Bpst-rkM.js",
+          "http://127.0.0.1:4321/_astro/AnalysisApp.C18d_cpC.js",
+          "http://127.0.0.1:4321/_astro/client.FasGtEyh.js",
+          "http://127.0.0.1:4321/_astro/rolldown-runtime.XKyaHtl9.js",
+          "http://127.0.0.1:4321/_astro/react.B54jxNxs.js",
+          "http://127.0.0.1:4321/_astro/model.DncSjQal.js",
+          "http://127.0.0.1:4321/_astro/react-dom.c_sf7UW_.js"
+        ]
+      },
+      {
+        "run": 3,
+        "entry": {
+          "lcpMs": 268,
+          "cls": 0.08767772511848342
+        },
+        "sortActionToTwoFramesMs": [
+          24.40000000037253,
+          28.5,
+          27.40000000037253,
+          27.299999998882413
+        ],
+        "eventTimingSamples": [
+          {
+            "id": 3306,
+            "duration": 40
+          },
+          {
+            "id": 3306,
+            "duration": 40
+          },
+          {
+            "id": 3306,
+            "duration": 40
+          },
+          {
+            "id": 3313,
+            "duration": 24
+          },
+          {
+            "id": 3313,
+            "duration": 24
+          },
+          {
+            "id": 3313,
+            "duration": 24
+          },
+          {
+            "id": 3320,
+            "duration": 16
+          },
+          {
+            "id": 3320,
+            "duration": 16
+          },
+          {
+            "id": 3320,
+            "duration": 16
+          },
+          {
+            "id": 3327,
+            "duration": 16
+          },
+          {
+            "id": 3327,
+            "duration": 16
+          },
+          {
+            "id": 3327,
+            "duration": 16
+          },
+          {
+            "id": 3334,
+            "duration": 16
+          },
+          {
+            "id": 3334,
+            "duration": 16
+          },
+          {
+            "id": 3334,
+            "duration": 16
+          },
+          {
+            "id": 3341,
+            "duration": 16
+          },
+          {
+            "id": 3341,
+            "duration": 16
+          },
+          {
+            "id": 3341,
+            "duration": 16
+          }
+        ],
+        "initialJs": [
+          "http://127.0.0.1:4321/_astro/Base.astro_astro_type_script_index_0_lang.Bpst-rkM.js",
+          "http://127.0.0.1:4321/_astro/AnalysisApp.C18d_cpC.js",
+          "http://127.0.0.1:4321/_astro/client.FasGtEyh.js",
+          "http://127.0.0.1:4321/_astro/rolldown-runtime.XKyaHtl9.js",
+          "http://127.0.0.1:4321/_astro/react.B54jxNxs.js",
+          "http://127.0.0.1:4321/_astro/model.DncSjQal.js",
+          "http://127.0.0.1:4321/_astro/react-dom.c_sf7UW_.js"
+        ]
+      }
+    ]
+  }
+}

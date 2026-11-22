@@ -6,8 +6,8 @@ La arquitectura web está detallada en la [SDD web: Astro, React y FastAPI](SDD_
 La presentación e interacción vigentes están en la [SDD de interfaz Liquid Glass](SDD_UI.md),
 con el [HTML completo como anexo normativo](../prototipo-intval-liquid-glass.html).
 Leer primero 21.19 para continuar. F1–F10 y UI-1–5 están implementadas y verificadas
-localmente. F11 está implementada con pruebas locales; la imagen y su smoke en CI
-siguen pendientes de aceptación.
+localmente. F11 tiene imagen, smoke y Tests aprobados en CI; Web requiere confirmar
+la corrección del detalle de UI-5 antes de la aceptación completa.
 
 | Campo | Valor |
 | --- | --- |
@@ -17,7 +17,7 @@ siguen pendientes de aceptación.
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F10 y UI-1–5 verificadas localmente. F11 implementada, pendiente de imagen/smoke y CI del commit. Continuidad en 21.19; publicación independiente |
+| Estado | F1–F10 y UI-1–5 verificadas localmente. F11 con imagen/smoke y Tests aprobados en CI; corrección de Web pendiente del nuevo run. Continuidad en 21.19; publicación independiente |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -2228,9 +2228,11 @@ El contrato continúa siendo agnóstico del PaaS y no exige Blueprint ni SDK.
 
 [TDD_F11.md](TDD_F11.md) contiene los ciclos RED/GREEN y el estado de verificación.
 Las pruebas locales incluyen el build Astro y demo/API/Excel reales en ASGI.
-La imagen y su smoke HTTP en un contenedor aún no se han ejecutado: Docker no está
-disponible en esta sesión. Completar Distribución, Tests y Web en CI para aceptar
-la entrega; no presentar el workflow preparado como un run remoto aprobado.
+El commit `b725546` aprobó Distribución (imagen y smoke HTTP reales) y Tests.
+Web detectó 5 px de desbordamiento del detalle a 320 px con texto al 200 %;
+[TDD_UI5.md](TDD_UI5.md) registra la corrección y su matriz local enfocada aprobada.
+Confirmar el nuevo run de Web antes de aceptar F11; la validación local de macOS
+no sustituye Linux.
 
 No se modificaron fórmulas, catálogo, locks, versiones financieras, CLI ni anexo.
 Las capturas UI-5 siguen vigentes. Mantener una instancia/worker por los trabajos

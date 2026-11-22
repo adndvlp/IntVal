@@ -125,9 +125,11 @@ Los trabajos viven en memoria: usar una instancia; un reinicio los pierde.
 
 La [guía de despliegue](docs/development.md) explica configuración, verificación
 y regreso a Streamlit. El workflow **Distribución** construye y prueba la imagen
-con la demo, históricos y Excel reales; su primer run remoto está pendiente.
-El [registro F11](docs/TDD_F11.md) separa esa comprobación de las pruebas locales
-aprobadas. No hay un servicio publicado como parte de esta entrega.
+con la demo, históricos y Excel reales; su
+[primer run remoto está aprobado](https://github.com/adndvlp/IntVal/actions/runs/44964709076).
+Tests también pasó. Web detectó un desbordamiento de UI-5; el parche requiere
+un nuevo run antes de cerrar F11. Detalles en el [registro F11](docs/TDD_F11.md).
+No hay un servicio publicado como parte de esta entrega.
 
 ## Desarrollo y comprobaciones
 
@@ -253,8 +255,8 @@ la landing estática, metodología y sistema visual, con ocho pruebas de navegad
 y capturas finales revisadas. F8 añade API de trabajos, cachés, históricos y
 Excel con snapshots y recuperación de adquisiciones bloqueadas. F9 incorpora
 el dashboard, sus pruebas y capturas reales revisadas. F10 completa la calidad integrada, las mediciones y las referencias visuales.
-F11 incorpora la distribución y el arranque web/API, con imagen y smoke en CI
-pendientes de aceptación. El despliegue público y la validación de su URL son
+F11 incorpora la distribución y el arranque web/API, con imagen y smoke aprobados
+en CI; queda confirmar la corrección de Web. El despliegue público y la validación de su URL son
 acciones posteriores.
 
 Interfaz vigente (UI-5): [escritorio](docs/images/ui5/resultados-escritorio-claro.png),

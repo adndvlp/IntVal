@@ -304,6 +304,7 @@
 .methods-table th {
   text-align: start;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 .methods-table td,
 .methods-table thead th:last-child {

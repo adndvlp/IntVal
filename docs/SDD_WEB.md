@@ -8,7 +8,7 @@
 | Fecha | 2026-11-21 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6–F10 verificadas localmente; F11 implementada con pruebas locales, imagen y smoke en CI pendientes |
+| Estado de F6–F11 | F6–F10 verificadas localmente; F11 con imagen/smoke y Tests aprobados en CI, corrección de Web pendiente de confirmar |
 | Encargo de esta edición | Distribución agnóstica F11 solicitada; UI-1–5 cerrados; sin publicación |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
@@ -2169,11 +2169,14 @@ no se creó Blueprint, SDK ni recurso remoto.
 
 [TDD_F11.md](TDD_F11.md) registra RED/GREEN y las comprobaciones locales.
 El workflow Distribución construye y prueba la imagen final, conserva manifiesto
-y logs y comprueba demo, históricos, Excel, runtime y señales. Su primer run real
-está pendiente: esta sesión no tiene Docker. No marcar F11 cerrada hasta obtener
-esa evidencia y los workflows Tests y Web verdes del commit entregado.
+y logs y comprueba demo, históricos, Excel, runtime y señales. El commit `b725546`
+aprobó Distribución y Tests en CI. Web detectó un desbordamiento de 5 px del detalle
+en Chromium/Linux a 320 px con texto al 200 %. La corrección y su comprobación local
+enfocada están en [TDD_UI5.md](TDD_UI5.md); falta confirmar el nuevo run de Web.
+No marcar F11 cerrada sin ese resultado remoto.
 
-No repetir UI-5 ni sus capturas: no se cambió el frontend. No modificar fórmulas,
+Validar la corrección de UI-5 con su evidencia propia; no rehacer el rediseño.
+No modificar fórmulas,
 locks, catálogo, CLI o versiones financieras para resolver distribución. Mantener
 una instancia/worker mientras los trabajos sean efímeros en memoria. La URL
 pública se verifica al desplegar por encargo; no se ha autorizado publicación.

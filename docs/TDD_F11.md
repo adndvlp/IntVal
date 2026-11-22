@@ -2,8 +2,19 @@
 
 Fecha: 2026-11-21. Base: `9ffb209`, cierre de UI-5.
 
-**Estado:** implementación y comprobaciones locales aprobadas; aceptación de la
-imagen final y CI remoto pendientes. No se publicó ningún servicio.
+**Estado actualizado tras `b725546`:** imagen y smoke aprobados en CI, junto con
+Tests. Web detectó un desbordamiento del detalle a 320 px con texto al 200 %;
+la corrección y su validación pendiente se registran en [TDD_UI5.md](TDD_UI5.md).
+F11 sigue pendiente de aceptación completa. No se publicó ningún servicio.
+
+El [primer run de Distribución](https://github.com/adndvlp/IntVal/actions/runs/44964709076)
+construyó la imagen y aprobó el recorrido HTTP y SIGTERM el 2026-11-22 UTC.
+[Tests](https://github.com/adndvlp/IntVal/actions/runs/44964709129) aprobó 537 pruebas,
+con una omisión prevista del build Astro ausente en el job Python y cobertura
+95.44 %. El [run Web](https://github.com/adndvlp/IntVal/actions/runs/44964709034)
+terminó con 90 escenarios aprobados, 11 omisiones previstas y un fallo.
+Las secciones siguientes conservan la evidencia local y los pendientes que
+existían al preparar el primer commit; no sustituyen este resultado remoto.
 
 ## Alcance implementado
 

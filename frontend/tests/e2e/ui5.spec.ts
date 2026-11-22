@@ -27,13 +27,52 @@ async function geometry(page: Page, name: string) {
     const dialog = document.querySelector<HTMLDialogElement>('dialog[open]');
     const region = document.querySelector<HTMLElement>('.result-scroll');
     const row = region?.querySelector('tbody th');
+    const dialogRect = dialog?.getBoundingClientRect();
+    const contentRight =
+      dialog && dialogRect
+        ? dialogRect.left +
+          dialog.clientLeft +
+          dialog.clientWidth -
+          parseFloat(getComputedStyle(dialog).paddingRight)
+        : 0;
+    const overflowing =
+      dialog && dialogRect
+        ? [...dialog.querySelectorAll<HTMLElement>('*')]
+            .filter((el) => {
+              const r = el.getBoundingClientRect();
+              for (
+                let parent: Element | null = el;
+                parent && parent !== dialog;
+                parent = parent.parentElement
+              ) {
+                if (getComputedStyle(parent).position === 'fixed') return false;
+              }
+              return (
+                r.width > 0 &&
+                r.right > contentRight + 1 &&
+                !el.closest('.detail-tabs')
+              );
+            })
+            .slice(0, 8)
+            .map((el) => ({
+              tag: el.tagName,
+              className: el.className,
+              text: el.textContent?.trim().slice(0, 100),
+              width: el.getBoundingClientRect().width,
+              whiteSpace: getComputedStyle(el).whiteSpace,
+            }))
+        : [];
     return {
       name,
       width: innerWidth,
       font: parseFloat(getComputedStyle(document.documentElement).fontSize),
       documentWidth: document.documentElement.scrollWidth,
       dialog: dialog
-        ? { width: dialog.clientWidth, scrollWidth: dialog.scrollWidth }
+        ? {
+            width: dialog.clientWidth,
+            scrollWidth: dialog.scrollWidth,
+            overflowing,
+          }
         : null,
       table:
         region && row
@@ -74,8 +113,12 @@ test('UI5 · diseño integrado a cinco anchuras, dos modos y texto al 200 por ci
       failures.push(
         `${name}: overflow del documento ${sample.documentWidth}/${sample.width}`,
       );
-    if (sample.dialog && sample.dialog.scrollWidth > sample.dialog.width + 1)
-      failures.push(`${name}: overflow del modal`);
+    if (sample.dialog && sample.dialog.scrollWidth > sample.dialog.width + 1) {
+      failures.push(
+        `${name}: overflow del modal ${sample.dialog.scrollWidth}/${sample.dialog.width}; ${JSON.stringify(sample.dialog.overflowing)}`,
+      );
+      await capture(page, info, `fallo-${name}`);
+    }
     if (
       name.startsWith('resultados') &&
       sample.table &&
@@ -114,6 +157,15 @@ test('UI5 · diseño integrado a cinco anchuras, dos modos y texto al 200 por ci
             detail.locator('details:not(#palette-switcher)'),
           ).toHaveCount(0);
           await inspect(`detalle-${suffix}`);
+          if (width === 320 && scale === 2) {
+            const methodsTable = detail.locator('.methods-table');
+            await methodsTable.evaluate((table) => {
+              table.style.letterSpacing = '0.12em';
+            });
+            await inspect(`detalle-espaciado-${suffix}`);
+            await methodsTable.scrollIntoViewIfNeeded();
+            await capture(page, info, `detalle-espaciado-${suffix}`);
+          }
           if ([375, 1440].includes(width) && scale === 1)
             await capture(page, info, `detalle-${suffix}`);
           await detail.getByRole('button', { name: 'Cerrar detalle' }).click();

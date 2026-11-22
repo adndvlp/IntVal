@@ -110,3 +110,53 @@ Las comprobaciones iniciales se ejecutaron con Node 26.0.0; tras la segunda rond
 UI-5 queda cerrada tras la ejecución final y la inspección de sus imágenes. El usuario ejecutó el lanzador en su terminal porque esta sesión no puede lanzar Chromium (`bootstrap_check_in ... Permission denied (1100)`). Se revisaron sus artefactos reales; no se atribuyen esas mediciones a JSDOM ni a las capturas de F10. Las capturas de modales conservan el viewport de la prueba, y las gráficas se fotografían antes de desplazar el modal a su tabla de datos.
 
 El comando de reproducción sigue siendo `.venv/bin/python qa_ui5.py`. Cada ronda nueva requiere su propia revisión de candidatos; el lanzador no aprueba imágenes automáticamente. F11, publicación y verificación del CI remoto quedan separados. No se ha desplegado ni hecho commit/push.
+
+## Seguimiento de CI Linux — `b725546`
+
+El [workflow Web](https://github.com/adndvlp/IntVal/actions/runs/44964709034)
+terminó con 90 escenarios aprobados, 11 omisiones previstas y un fallo en
+«diseño integrado»: `detalle-light-320-200` y `detalle-dark-320-200` desbordan el
+modal en Chromium/Linux. Firefox y WebKit aprobaron esa misma matriz. Es evidencia
+RED real del commit publicado; el cierre local anterior no acreditaba Linux.
+
+El usuario recuperó el ZIP de CI mediante `/tmp/ui5-ci.py`. Su `ui5-layout.json`
+mide 287 px de ancho útil y 292 px de contenido en ambos fallos, frente a
+302/302 px en la última ronda de Chromium/macOS. La diferencia de 15 px de ancho
+disponible, asociada a la barra de desplazamiento del modal, deja al descubierto
+la restricción de ancho mínimo. Se inspeccionó también la traza de ese estado;
+el diagnóstico nuevo permite identificar directamente el elemento si se repite.
+
+El CSS de la tabla de métodos dejaba sus encabezados sin oportunidades de corte
+dentro de palabras, mientras las cifras conservan `white-space: nowrap`.
+Se añade `overflow-wrap: anywhere` sólo a esos encabezados: permite reducir su
+ancho mínimo y repartir el texto en el espacio disponible, sin reducir la fuente,
+recortar las cifras ni ocultar el desbordamiento. Según
+[CSS Text](https://www.w3.org/TR/css-text-3/#overflow-wrap-property), esas
+oportunidades participan en el cálculo del ancho mínimo del contenido.
+La relación con el fallo Linux debe confirmarse en la siguiente ejecución real.
+
+La prueba conserva su exigencia de ausencia de desbordamiento. Ahora registra
+también las medidas y los elementos que rebasan el contenido del modal, y guarda
+una captura en el instante del fallo, antes de cerrar el detalle. Esto evita que
+la única imagen de error muestre la página visitada al final de la matriz.
+En el caso de 320 px y texto al 200 % comprueba además la tabla con espaciado de
+letras de 0.12 em y guarda las dos capturas correspondientes. Es un recorrido
+adicional dentro de la misma matriz; no se omiten proyectos ni casos existentes.
+Las capturas de ese control se toman después de llevar la tabla a la vista; la
+medición ocurre antes de desplazarla. El listado diagnóstico excluye controles
+fijos respecto al viewport, que no determinan el ancho del contenido del modal.
+
+Tipos, lint, formato, build de cuatro páginas, 69 pruebas de shell/anexo y
+presupuesto de assets pasan después del cambio. No se modifican fórmulas, datos,
+API, tamaño de letra, tolerancias, omisiones ni reintentos. La sesión vuelve a
+reproducir el bloqueo de Chromium en macOS (`bootstrap_check_in ... Permission
+denied (1100)`). La descarga original se obtuvo con el helper desde la terminal
+del usuario. La validación del parche en Chromium/Linux sigue pendiente de CI.
+
+El usuario ejecutó después `/tmp/ui5-fix.py`, limitado a la matriz de diseño de
+Chromium, sobre el build corregido: **1 prueba aprobada en 15.4 s**, 107 muestras
+de geometría y ningún fallo, incluidos ambos modos y el espaciado nuevo. Evidencia:
+`temp/ci-ui5-fix/20261122T002532-079628Z/`. Se inspeccionaron su informe y capturas.
+Los ajustes posteriores de captura y diagnóstico no cambian el CSS ni las
+condiciones de aceptación; se comprobaron sus tipos y estilo. No se atribuye esta
+ronda de macOS a Linux ni se marca F11 cerrada antes del nuevo run remoto.

@@ -106,27 +106,28 @@ el producto no importa fixtures de pruebas. La
 
 ## Publicar el servicio
 
-Los comandos siguientes corresponden al servicio Streamlit de compatibilidad.
-La distribución de la web y API conserva su alcance separado en F11; UI-1 no
-modifica esos lanzadores ni publica el rediseño.
-
-El servicio es **agnóstico del proveedor de alojamiento**: requiere Linux,
-Bash, CPython 3.12, HTTP/WebSockets y un puerto proporcionado mediante `PORT`.
-En el entorno del servicio, configura estos comandos:
+El [Dockerfile](Dockerfile) construye la web y la API como **un solo servicio**.
+El alojamiento sólo necesita ejecutar la imagen y proporcionar `PORT`.
+Node se utiliza durante el build; el contenedor final ejecuta Python y sirve
+la web, `/api/v1` y el Excel desde el mismo origen.
 
 ```bash
-# Preparación
-python -m pip install --no-deps -r requirements.txt
-python -m pip check
-
-# Arranque
-bash iniciar_servicio.sh
+# En un entorno que ya tenga Docker
+docker build -t intval .
+docker run --rm -e PORT=8000 -p 8000:8000 intval
 ```
 
-El arranque utiliza el Python preparado, escucha en `0.0.0.0:$PORT` y no instala
-paquetes. El health check es `/_stcore/health`. Configurar `VALORACION_DEMO=1` es
-opcional. La [guía de despliegue](docs/development.md) describe el contrato y cómo
-validar la URL del entorno elegido. La publicación se configura fuera del código.
+En Render, por ejemplo, se configura un **Web Service con runtime Docker**, este
+Dockerfile y health check `/readyz`; Render proporciona `PORT`. El contrato sirve
+también para otros PaaS y no requiere Blueprint ni SDK del alojamiento.
+El arranque escucha en `0.0.0.0:$PORT`, usa un worker y no instala dependencias.
+Los trabajos viven en memoria: usar una instancia; un reinicio los pierde.
+
+La [guía de despliegue](docs/development.md) explica configuración, verificación
+y regreso a Streamlit. El workflow **Distribución** construye y prueba la imagen
+con la demo, históricos y Excel reales; su primer run remoto está pendiente.
+El [registro F11](docs/TDD_F11.md) separa esa comprobación de las pruebas locales
+aprobadas. No hay un servicio publicado como parte de esta entrega.
 
 ## Desarrollo y comprobaciones
 
@@ -173,11 +174,12 @@ mínimo y refactorización en verde**. Véanse [CONTRIBUTING](CONTRIBUTING.md), 
 debe comprobar su propio run remoto.
 
 La base de la nueva web está en `frontend/`, con Astro estático, React y
-TypeScript. Incluye landing, metodología y el dashboard React conectado a la API
-FastAPI: selección de empresas, supuestos, progreso y cancelación, filtros,
-cuatro gráficas y descarga del Excel completo. La demo se abre desde la landing;
-Mercado sólo analiza al solicitarlo. El arranque por defecto continúa en
-Streamlit hasta la transición F11. Para instalar y comprobar el
+TypeScript. Abre directamente el analizador React conectado a FastAPI: selección
+de empresas, ajustes, progreso y cancelación, resultados ordenables, cuatro
+gráficas y descarga del Excel completo. Incluye demo, apariencia personalizable,
+modo oscuro y Cómo se calcula. El análisis se inicia al solicitarlo.
+El arranque por defecto sirve esta web y la API; `iniciar_streamlit.sh` conserva
+la interfaz anterior. Para instalar y comprobar el
 frontend se usa Node 26.13.1 y npm 11.12.1:
 
 ```bash
@@ -228,16 +230,19 @@ no la validez predictiva de una valoración.
   e historial, con datos y Excel conciliados con Python. UI-5 completa la revisión
   en tres motores, apariencia, texto ampliado y rendimiento, con evidencia en [TDD_UI5](docs/TDD_UI5.md). Evidencia de [UI-1](docs/TDD_UI1.md),
   [UI-2](docs/TDD_UI2.md), [UI-3](docs/TDD_UI3.md) y [UI-4](docs/TDD_UI4.md).
-- [Arquitectura web y entregas F6–F10](docs/SDD_WEB.md): Astro, dashboard React y API
+- [Arquitectura web y entregas F6–F11](docs/SDD_WEB.md): Astro, dashboard React y API
   FastAPI. F6 implementa los fundamentos; F7 incorpora la landing y metodología
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el
-  transporte de análisis y F9 lo integra en el dashboard. F10 está implementada y verificada localmente, con pruebas integradas, capacidad y referencias visuales. F11 no está implementada.
+  transporte de análisis y F9 lo integra en el dashboard. F10 está verificada
+  localmente y UI-1–5 completan el rediseño vigente. F11 incorpora la distribución
+  Docker y el arranque web/API, con aceptación de imagen y CI pendientes.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
   [F3](docs/TDD_F3.md), [corrección de CI](docs/TDD_CI_APPTEST.md),
   [F4](docs/TDD_F4.md), [F5](docs/TDD_F5.md), [F6](docs/TDD_F6.md),
-  [F7](docs/TDD_F7.md), [F8](docs/TDD_F8.md), [F9](docs/TDD_F9.md) y [F10](docs/TDD_F10.md).
+  [F7](docs/TDD_F7.md), [F8](docs/TDD_F8.md), [F9](docs/TDD_F9.md),
+  [F10](docs/TDD_F10.md) y [F11](docs/TDD_F11.md).
 
 F1–F5 están implementadas y verificadas localmente. La demo, el ejemplo público,
 las capturas reales revisadas y la licencia MIT completan la presentación del
@@ -248,7 +253,9 @@ la landing estática, metodología y sistema visual, con ocho pruebas de navegad
 y capturas finales revisadas. F8 añade API de trabajos, cachés, históricos y
 Excel con snapshots y recuperación de adquisiciones bloqueadas. F9 incorpora
 el dashboard, sus pruebas y capturas reales revisadas. F10 completa la calidad integrada, las mediciones y las referencias visuales.
-F11, el despliegue público y la validación de su URL quedan pendientes.
+F11 incorpora la distribución y el arranque web/API, con imagen y smoke en CI
+pendientes de aceptación. El despliegue público y la validación de su URL son
+acciones posteriores.
 
 Interfaz vigente (UI-5): [escritorio](docs/images/ui5/resultados-escritorio-claro.png),
 [móvil oscuro](docs/images/ui5/resultados-movil-oscuro.png) y

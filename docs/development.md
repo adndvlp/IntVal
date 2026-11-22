@@ -1,94 +1,125 @@
 # Despliegue agnóstico, dependencias y desarrollo
 
-La aplicación se ejecuta como un **servicio web Python/Streamlit sobre Linux**.
-El usuario accede por URL. El proveedor de alojamiento, su plan y su mecanismo
-para publicar el servicio se eligen fuera de la aplicación: el repositorio no
-requiere un Blueprint, una API o un manifiesto de una plataforma específica.
+IntVal sirve la web Astro/React y la API FastAPI en **un solo servicio**. El usuario
+entra por URL; el alojamiento ejecuta la imagen de [Dockerfile](../Dockerfile).
+No requiere un Blueprint, SDK o dominio de una plataforma concreta.
 
-Las comprobaciones locales sirven para desarrollar y validar el código. La
-referencia es **CPython 3.12** en `.python-version`, compartida con CI. La
-verificación local usa macOS ARM64/Python 3.12.2; CI apunta a Ubuntu. La ejecución
-remota de CI y la validación de una URL publicada son evidencias independientes.
-
-La [SDD web](SDD_WEB.md) define Astro estático, React y FastAPI. F6 incorpora sus
-fundamentos, descritos en la sección 8; F7 añade la landing (sección 9), con
-revisión local y capturas completadas. F8 incorpora análisis HTTP (sección 10);
-F9 añade el dashboard React conectado a esa API (sección 11).
-F10 está implementada y verificada localmente ([procedimiento](QA_F10.md)); F11 sigue pendiente. El contrato de
-ejecución publicado de esta guía continúa siendo Streamlit hasta la transición
-de F11.
+F11 incorpora esta distribución y cambia el arranque por defecto. Las pruebas
+locales de API, estáticos y arranque están aprobadas; la construcción y el smoke
+reales de la imagen deben completarse en CI. El estado y la evidencia se mantienen
+en [TDD_F11.md](TDD_F11.md). Las secciones F4–F10 posteriores conservan el historial
+anterior al cambio de entrada; el contrato vigente es el de las secciones 1–3.
 
 ## 1. Contrato de ejecución
 
 | Requisito | Contrato |
 | --- | --- |
-| Runtime | Linux, Bash y CPython 3.12 |
-| Preparación | `python -m pip install --no-deps -r requirements.txt` |
-| Comprobar dependencias | `python -m pip check` |
-| Arranque | `bash iniciar_servicio.sh` |
-| Puerto | Variable de entorno `PORT`, obligatoria |
-| Dirección de escucha | `0.0.0.0` |
-| Health check | `/_stcore/health` |
-| Comunicación | HTTP y WebSockets de Streamlit |
+| Artefacto | Imagen Docker multietapa, Linux |
+| Build web | Node 26.13.1, npm 11.12.1, `npm ci`, Astro estático |
+| Runtime final | Bash y CPython 3.12; sin Node/npm |
+| Dependencias Python | `requirements.txt`, instalado durante el build con `--no-deps`; `pip check` obligatorio |
+| Arranque | `bash iniciar_servicio.sh`; ENTRYPOINT de la imagen |
+| Puerto | `PORT`, obligatorio; entero entre 1 y 65535 |
+| Dirección | `0.0.0.0:$PORT` |
+| Procesos e instancias | Un worker ASGI y una instancia del servicio |
+| Salud | `/healthz`: proceso; `/readyz`: gestor disponible y archivos del build presentes |
+| HTTP | Web en `/` y `/app/`, Cómo se calcula en `/metodologia/`, API en `/api/v1` |
 
-Configurar Python 3.12 explícitamente en el entorno elegido. `.python-version`
-es la referencia del repositorio y CI; cada plataforma puede tener su propio
-mecanismo para seleccionar el intérprete. No se supone que todas lean ese archivo.
+El arranque usa `exec python -m uvicorn valoracion.web.distribucion:create_app
+--factory --host 0.0.0.0 --port "$PORT" --workers 1`. No instala paquetes ni crea
+entornos. `WEB_CONCURRENCY` no aumenta los workers. Uvicorn recibe SIGTERM y
+cierra el gestor de trabajos durante el lifespan.
 
-La preparación instala la resolución de ejecución. Las herramientas pytest/Ruff
-sólo pertenecen a desarrollo y CI. El arranque usa `python` del entorno preparado
-y su `PORT`; no crea ni activa `.venv` dentro del checkout y no instala paquetes.
+La imagen incluye la demo y los estáticos; no depende de volúmenes persistentes.
+El usuario del contenedor no es root. `.dockerignore` excluye entornos, tests,
+reportes, temporales y el historial Git. El build exige wheels Python: si falta
+una para la arquitectura elegida, falla antes de publicar el servicio.
 
-`iniciar_servicio.sh` ejecuta Streamlit en primer plano con `exec`, modo headless,
-file watcher y telemetría opcional desactivados. Conserva señales/código de salida.
-Sin `PORT`, termina con un diagnóstico genérico antes de iniciar Streamlit.
-
-No se añade un backend HTTP separado, una base de datos ni almacenamiento
-persistente como requisito de F4. El proceso web es el que proporciona Streamlit.
+Las versiones de Node/Python y las dependencias de aplicación están fijadas.
+Las etiquetas base y los paquetes Debian pueden recibir revisiones: esto no
+promete una imagen idéntica byte por byte. El smoke registra el ID, arquitectura,
+commit y huellas de los locks y Dockerfile para identificar lo probado.
 
 ## 2. Configurar el alojamiento elegido
 
-1. Preparar un runtime compatible con Python 3.12 y las bibliotecas del lock.
-2. Configurar los comandos de preparación y arranque del contrato anterior.
-3. Definir `PORT` y exponer ese puerto con soporte HTTP/WebSockets.
-4. Configurar el health check, si el entorno admite esa comprobación.
-5. Publicar y verificar la URL, análisis de un ticker, gráficas y descarga Excel.
+1. Conectar el repositorio al PaaS y elegir Docker con el Dockerfile de la raíz.
+2. Usar su ENTRYPOINT, sin sobrescribir el arranque con Streamlit.
+3. Exponer el puerto que el entorno inyecte en `PORT` y mantener una instancia.
+4. Configurar `/readyz` como health check y publicar cuando la imagen esté validada.
+5. Verificar la URL resultante: selección, análisis, detalle, gráficas y Excel.
 
-La conexión al repositorio, los secretos del alojamiento, dominios, TLS, permisos,
-planes y reglas de despliegue automático pertenecen a la configuración del
-entorno. El código y sus pruebas no requieren SDK, credenciales ni recursos de
-un proveedor concreto. CI verifica el repositorio y no publica el servicio.
+En [Render Web Services](https://render.com/docs/web-services), elegir runtime
+Docker. Render proporciona `PORT` y termina TLS; el servicio escucha en todas las
+interfaces. No hace falta instalar Node/Python en un servidor ni mantener un VPS.
+El mismo artefacto sirve en otro alojamiento compatible con Docker y HTTP.
+Planes, dominios, permisos y despliegue automático se configuran fuera del código.
 
-No hay una URL ni recursos de alojamiento creados como parte de esta edición.
-La comprobación final se realiza sobre la URL que genere el entorno elegido.
+Variables opcionales del producto:
+
+| Variable | Uso |
+| --- | --- |
+| `VALORACION_DEMO=1` | Selecciona demo por defecto; Mercado sigue disponible |
+| `VALORACION_MARKET_ENABLED=0` | Deshabilita Mercado; la demo sigue disponible |
+| `VALORACION_MAX_TICKERS` | Límite de cada análisis; por defecto 650 |
+| `PUBLIC_SITE_URL` | Argumento de build con URL real para canonical/OG; omitir si aún no existe |
+
+La distribución incluida fija `PUBLIC_API_BASE_URL` vacío al compilar: web y API
+comparten origen y no requieren CORS. La modalidad de desarrollo con API separada
+sigue disponible; no es necesaria para publicar la imagen. No se carga un `.env`
+automáticamente. Los límites operativos adicionales están definidos y validados
+en `valoracion/web/ajustes.py`; no es necesario modificarlos para empezar.
+
+Para construir y probar desde un entorno que **ya tenga Docker**:
+
+```bash
+python3 qa_distribucion.py
+```
+
+El workflow [Distribución](../.github/workflows/distribucion.yml) ejecuta ese mismo
+comando en Ubuntu y adjunta `reportes-distribucion`. Comprueba la imagen final:
+runtime sin root ni Node/npm, `pip check`, CLI, PORT, páginas y recarga, MIME,
+404/405, API, salud, demo, históricos, Excel y cierre mediante SIGTERM. Usa un
+puerto local aleatorio y elimina sólo su contenedor al terminar. No publica ni
+sube imágenes. El manifiesto y logs quedan en `temp/distribucion-qa/`, ignorados
+por Git. Un workflow escrito no acredita un run aprobado: el primer resultado
+remoto sigue pendiente.
+
+Sin Docker local, no hace falta instalarlo para desarrollar: CI realiza la prueba
+de imagen. La suite Python usa ASGI en memoria y comprueba también el build Astro
+real cuando está presente. Esas pruebas no sustituyen la ejecución del contenedor.
+
+### Compatibilidad y rollback
+
+`app.py` y [iniciar_streamlit.sh](../iniciar_streamlit.sh) conservan la UI anterior.
+Para volver a ella en la misma imagen:
+
+```bash
+docker run --rm -e PORT=8000 -p 8000:8000 --entrypoint bash intval /app/iniciar_streamlit.sh
+```
+
+En el PaaS, cambiar el comando a `bash /app/iniciar_streamlit.sh` y el health check
+a `/_stcore/health`; comprobar soporte WebSocket. Para restaurar la web nueva,
+volver al ENTRYPOINT por defecto y `/readyz`. Un rollback de imagen también debe
+restaurar el health check correspondiente. No mezclar las dos entradas en un
+mismo puerto. Ninguna conserva trabajos de un proceso anterior.
 
 ## 3. Estado de la aplicación
 
-La app conserva resultados/cachés en memoria y exporta Excel para descarga.
-Un reinicio puede requerir repetir el análisis; no se presupone persistencia del
-sistema de archivos de un alojamiento. Esa característica y los límites de
-recursos se deben revisar en el entorno de publicación elegido.
+Trabajos, cachés y resultados son temporales en memoria. Mantener **una instancia
+y un worker**: varias instancias no comparten IDs, cola o snapshots. Un reinicio,
+redeploy o suspensión pierde los trabajos; la UI permite solicitar otro análisis.
+El Excel se descarga desde el snapshot del trabajo, sin necesitar disco persistente.
 
 Yahoo sigue siendo un proveedor externo con disponibilidad y límites propios.
-Un health check exitoso acredita que Streamlit responde, no que cada ticker tenga
-datos. No se modificó la metodología para el alojamiento.
+Un health check no consulta Yahoo ni acredita datos para un ticker concreto.
+La demo usa los archivos sintéticos incluidos y no hace consultas financieras
+externas. La primera carga de la web necesita conexión al servicio.
 
-La UI incluye un selector **Fuente de datos → Demostración** que usa archivos
-locales versionados y carga tres casos al activarse. Puede configurarse
-`VALORACION_DEMO=1` para abrir esa vista en sesiones nuevas. Es una variable del
-producto, independiente del proveedor de alojamiento; no cambia los comandos
-de preparación/arranque ni exige una base de datos.
-
-La demo no consulta Yahoo ni descarga históricos. La primera carga de recursos
-de la página sigue necesitando acceder al servicio web. Los resultados son
-deterministas para el dataset, la configuración y la metodología fijados; el
-Excel incorpora la fecha de generación. No confundir el modo de producto con
-la suite de tests ni prometer que todo el servicio web funciona sin conexión.
-
-Al cambiar de fuente se descarta el análisis anterior. Las claves de caché de
-análisis y ambos tipos de históricos incluyen la fuente, y no se mezclan precios
-de mercado con la demo. La configuración guardada al analizar sigue siendo la
-que se exporta hasta solicitar otro análisis.
+La configuración aceptada y su fuente permanecen asociadas al trabajo y al Excel.
+Cambiar el borrador o la apariencia no vuelve a calcular ni modifica ese snapshot.
+Los límites de memoria, adquisición y plazo siguen vigentes; una prueba local no
+acredita capacidad o disponibilidad de un plan PaaS. F11 no cambia las fórmulas,
+el catálogo, la metodología, los contratos ni el límite de símbolos.
 
 ## 4. Preparar un entorno de desarrollo
 
@@ -355,7 +386,8 @@ posteriores al commit; no se deducen del resultado local.
 El build estático incorpora `/`, `/metodologia/`, `/app/` y `/404.html`.
 La landing y metodología no hidratan React ni hacen peticiones a la API.
 Los CTA conservan `fuente=demo|market` al entrar al dashboard integrado en F9.
-El arranque por defecto continúa siendo Streamlit hasta la transición F11.
+Durante F7 el arranque por defecto seguía siendo Streamlit. F11 lo sustituye por
+la web/API según el contrato vigente de las secciones 1–3.
 
 El diseño comparte tokens de color, tipografía y estados entre las rutas.
 Usa fuentes del sistema, sin descargas de fuentes ni bibliotecas de gráficas
@@ -412,7 +444,8 @@ La factoría de la sección 8 ahora expone trabajos, resultados, cancelación,
 históricos y Excel. Iniciar Uvicorn con **un proceso**, sin --workers múltiples:
 cola, IDs y cachés pertenecen a la memoria de esa instancia. Reiniciar elimina
 los trabajos; no hay base de datos, cuentas ni listado global de análisis.
-El comando de producción Streamlit permanece vigente hasta F11.
+En F8 el comando de producción seguía siendo Streamlit. F11 introduce la entrada
+web/API integrada; las secciones 1–3 describen el arranque vigente.
 
 ### Recorrido HTTP
 

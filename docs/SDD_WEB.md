@@ -4,18 +4,18 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.12 |
-| Fecha | 2026-11-15 |
+| Versión de esta extensión | 1.13 |
+| Fecha | 2026-11-21 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6–F10 implementadas y verificadas localmente; F11 pendiente |
-| Encargo de esta edición | UI-1–5 de SDD_UI integrados, matriz de navegador y capturas revisadas; publicación pendiente |
+| Estado de F6–F11 | F6–F10 verificadas localmente; F11 implementada con pruebas locales, imagen y smoke en CI pendientes |
+| Encargo de esta edición | Distribución agnóstica F11 solicitada; UI-1–5 cerrados; sin publicación |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
 | Método obligatorio | TDD en cada incremento de software |
 | Licencia y titular | MIT; Copyright (c) 2026 adndvlp |
-| Continuidad | Leer primero SDD_UI.md y 21.10; conservar arquitectura, contratos y evidencia histórica de este documento |
+| Continuidad | Leer primero 21.11 y TDD_F11.md; conservar SDD_UI.md, contratos y evidencia histórica |
 
 **Revisión vigente de interfaz:** [SDD_UI.md](SDD_UI.md), con el
 [HTML completo adjunto](../prototipo-intval-liquid-glass.html). Sustituye las
@@ -1206,11 +1206,13 @@ Un build multietapa instala versiones fijadas de Node/npm, compila frontend/dist
 y prepara el runtime Python. La imagen final contiene Python, dependencias de
 ejecución, código/datos y los estáticos; no necesita servidor Node.
 
-FastAPI sirve /api/v1 y salud; después monta los estáticos de Astro. Registrar
-la API antes del montaje raíz para no responder HTML a errores de API.
+FastAPI sirve /api/v1 y salud; después resuelve los estáticos de Astro mediante
+el handler por defecto del router. Un montaje raíz puede consumir matches
+parciales de métodos: conservar los 405 de API y reservar también sus rutas
+desconocidas para errores JSON.
 Verificar rutas directas, trailing slash, 404 y MIME. No usar un fallback SPA
 global que convierta cualquier ruta desconocida en un 200.
-[Archivos estáticos con FastAPI](https://fastapi.tiangolo.com/tutorial/static-files/).
+[Archivos estáticos con Starlette](https://starlette.dev/staticfiles/).
 
 El servicio se aloja en cualquier PaaS compatible con esa imagen y HTTP. Mantener
 PORT obligatorio y escucha 0.0.0.0. TLS/dominio/plan/autodespliegue son ajustes del
@@ -1221,6 +1223,10 @@ entorno, no dependencias del producto.
 Durante F6–F10, iniciar_servicio.sh sigue siendo la entrada Streamlit existente.
 La API tiene una entrada de desarrollo explícita. No cambiar el comando público
 de producción antes de cumplir los criterios de migración.
+
+Ese párrafo registra la transición prevista. F11 ya incorpora el cambio de entrada
+y las pruebas locales; la imagen real se verifica antes de publicar. El estado de
+aceptación de la distribución está en 21.11 y TDD_F11.md.
 
 En F11, iniciar_servicio.sh pasa a ejecutar Uvicorn con un worker mediante exec,
 usando el PORT del entorno y sin instalar paquetes al iniciar. Documentar el
@@ -1238,13 +1244,13 @@ y pruebas cuando cambie el arranque.
 | VALORACION_DEMO | Runtime | 1 selecciona demo por defecto en meta |
 | VALORACION_MARKET_ENABLED | Runtime | Permite deshabilitar Mercado; demo sigue disponible |
 | VALORACION_MAX_TICKERS | Runtime | Límite publicado de símbolos |
-| VALORACION_MAX_QUEUED_JOBS | Runtime | Admisión acotada |
-| VALORACION_JOB_TTL_SECONDS | Runtime | Retención terminal |
-| VALORACION_MAX_JOB_SECONDS | Runtime | Plazo cooperativo |
-| VALORACION_DATA_BUDGET_MB | Runtime | Presupuesto gestionado de datos |
+| VALORACION_MAX_QUEUE | Runtime | Admisión acotada |
+| VALORACION_TERMINAL_TTL_SECONDS | Runtime | Retención terminal |
+| VALORACION_JOB_DEADLINE_SECONDS | Runtime | Plazo cooperativo |
+| VALORACION_MEMORY_BUDGET_BYTES | Runtime | Presupuesto gestionado de datos, en bytes |
 | VALORACION_CORS_ORIGINS | Runtime | Allowlist opcional para modalidad separada |
 | PUBLIC_SITE_URL | Build | URL real para canonical/sitemap/OG; no inventar dominio |
-| PUBLIC_API_BASE_URL | Build opcional | URL de API sólo si se separa; default relativo /api/v1 |
+| PUBLIC_API_BASE_URL | Build opcional separado | Vacío en la imagen integrada; el cliente agrega /api/v1 en el mismo origen |
 
 Los defaults financieros pertenecen a Configuracion y a la configuración inicial
 web explícita, no a una colección de variables del proveedor. Configuración
@@ -1601,8 +1607,9 @@ fuente o versión como si siguiera vigente.
 
 ## 18. Fases F6–F11
 
-F6–F10 están implementadas; F11 sigue pendiente. Continuar una por una;
-cada fase incluye código, pruebas, documentación y evidencia propia.
+F6–F10 están verificadas localmente. F11 incorpora distribución y cambio de
+arranque, con imagen/smoke y CI pendientes de aceptación. Cada fase conserva
+código, pruebas, documentación y evidencia propia; continuidad vigente en 21.11.
 
 ### 18.1 F6 — Fundamentos web, contratos iniciales y CI
 
@@ -1748,9 +1755,13 @@ No equivale a certificación financiera, legal o de disponibilidad del alojamien
 | F11-R06 | README, arquitectura, desarrollo, SDD, capturas y limitaciones actuales |
 | F11-R07 | Verificar CLI, motor, catálogo, contratos y ejemplos sin cambios involuntarios |
 
-Primeros RED: API interceptada por fallback HTML, ruta /app/ falla al recargar,
-arranque ignora PORT, instala paquetes o no propaga señales; todos se reproducen
-antes de corregirlos.
+Casos iniciales: API interceptada por fallback HTML, ruta /app/ falla al recargar,
+arranque ignora PORT, instala paquetes o no propaga señales. Observar RED ante
+una capacidad ausente y caracterizar el comportamiento que ya sea correcto.
+
+Ejecución: se observaron RED de `/app/` ausente y entrada todavía Streamlit. Los
+otros casos se caracterizaron con pruebas de contrato, sin inventar defectos
+previos. Implementación local y pendientes registrados en [TDD_F11.md](TDD_F11.md).
 
 Cierre de implementación: imagen y smoke reales en un entorno permitido,
 paridad y comprobaciones obligatorias verdes. La URL pública se verifica al
@@ -1777,7 +1788,7 @@ flowchart LR
 | F8 | Implementada y verificada localmente | TDD_F8.md; 458 pruebas Python, procesos reales y contratos sin drift |
 | F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), demo/XLSX reales y capturas revisadas |
 | F10 | Implementada y verificada localmente | [TDD_F10.md](TDD_F10.md); automatización, capacidad y referencias visuales verificadas |
-| F11 | Especificada, pendiente | Ninguna todavía |
+| F11 | Implementada; aceptación de imagen/CI pendiente | [TDD_F11.md](TDD_F11.md); pruebas locales y workflow Distribución |
 
 Que una fase tenga un plan detallado o un ejemplo JSON no significa que esté
 implementada. No marcar casillas de ejecución hasta aportar evidencia.
@@ -2145,7 +2156,27 @@ separa los límites de lectura de los del formulario y valida la procedencia del
 detalle; [TDD_UI4.md](TDD_UI4.md) registra sus pruebas. UI-5 está cerrada según la
 SDD de interfaz: [TDD_UI5.md](TDD_UI5.md) conserva la ronda final con 91 escenarios
 aprobados, 11 omisiones previstas, capturas revisadas y mediciones de laboratorio.
-F11 no se considera iniciada.
+F11 no se consideraba iniciada al cerrar UI-5; el encargo posterior y su estado
+están en 21.11.
+
+### 21.11 F11 — Distribución implementada y aceptación pendiente
+
+El usuario solicitó F11 tras confirmar compatibilidad con Render. Base de esta
+entrega: `9ffb209`. Dockerfile multietapa, handler estático después de la API,
+arranque Uvicorn de un worker por PORT, compatibilidad Streamlit y verificador
+de imagen están implementados. El contrato sigue siendo agnóstico del PaaS;
+no se creó Blueprint, SDK ni recurso remoto.
+
+[TDD_F11.md](TDD_F11.md) registra RED/GREEN y las comprobaciones locales.
+El workflow Distribución construye y prueba la imagen final, conserva manifiesto
+y logs y comprueba demo, históricos, Excel, runtime y señales. Su primer run real
+está pendiente: esta sesión no tiene Docker. No marcar F11 cerrada hasta obtener
+esa evidencia y los workflows Tests y Web verdes del commit entregado.
+
+No repetir UI-5 ni sus capturas: no se cambió el frontend. No modificar fórmulas,
+locks, catálogo, CLI o versiones financieras para resolver distribución. Mantener
+una instancia/worker mientras los trabajos sean efímeros en memoria. La URL
+pública se verifica al desplegar por encargo; no se ha autorizado publicación.
 
 ## 22. Fuentes y mantenimiento
 

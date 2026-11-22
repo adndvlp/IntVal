@@ -1,5 +1,42 @@
 # Arquitectura
 
+## Distribución vigente — ADR-005 (F11)
+
+Fecha: 2026-11-21. Implementación y pruebas locales aprobadas; imagen final
+pendiente de construir y verificar en el workflow Distribución. Evidencia en
+[TDD_F11.md](TDD_F11.md); contrato de alojamiento en [development.md](development.md).
+
+`Dockerfile` compila Astro con Node/npm fijados e instala el lock Python en etapas
+de build. La etapa final ejecuta Python como usuario sin privilegios, sin Node/npm.
+`iniciar_servicio.sh` inicia `valoracion.web.distribucion:create_app` con Uvicorn,
+`PORT`, `0.0.0.0`, un worker y `exec`. Streamlit conserva su entrada explícita
+`iniciar_streamlit.sh` para compatibilidad y rollback.
+
+```mermaid
+flowchart LR
+    B[Navegador] --> S[Un servicio ASGI]
+    S --> API[API y salud]
+    S --> WEB[Build estático Astro / React]
+    API --> G[Gestor en memoria]
+    G --> D[Servicio de dominio]
+    D --> P[Proveedor demo o Yahoo]
+    D --> C[Cálculos y Excel]
+```
+
+La fábrica de distribución compone la API existente con `StaticFiles(html=True)`.
+Su handler por defecto se ejecuta después del router: conserva los 405 y redirects
+de la API y reserva `/api` incluso si el build contiene archivos con ese nombre.
+Un montaje raíz consumiría también matches parciales de métodos. Las páginas
+desconocidas devuelven el 404 del build con estado 404, sin fallback SPA global.
+Los activos con hash tienen caché inmutable y gzip negociado; el HTML se revalida.
+La distribución exige un build completo al arrancar y `/readyz` comprueba sus
+archivos además del gestor. No añade rutas al contrato OpenAPI.
+
+El gestor y los trabajos siguen en memoria: **una instancia y un worker**.
+Un reinicio pierde los trabajos. No se añadieron bases de datos, colas externas,
+SDK de alojamiento ni cambios financieros. El resto del documento conserva las
+decisiones históricas; el arranque de F4 fue sustituido por este contrato en F11.
+
 ## Decisión ADR-001: separar adquisición, cálculo, orquestación y presentación
 
 Fecha: 2026-11-12. Estado: implementada y verificada localmente.
@@ -15,7 +52,7 @@ históricos. El cierre implementado de F5 está en 21.11 de la SDD. La etapa
 posterior se especifica en [SDD_WEB.md](SDD_WEB.md); F6 incorpora los fundamentos
 web descritos al final. F8 añade el transporte de trabajos del ADR-003;
 F9 incorpora el dashboard del ADR-004; F10 completa la calidad integrada y las
-referencias visuales. La continuidad vigente es 21.17 de la SDD general.
+referencias visuales. La continuidad vigente es 21.19 de la SDD general.
 
 El motor anterior concentraba catálogo, consultas de Yahoo, cálculos, Excel y CLI
 en unas 1,900 líneas. Streamlit también descargaba y transformaba estados para
@@ -413,11 +450,13 @@ describen el alcance al cerrar esas fases, ampliado aquí por F8.
 La [SDD web](SDD_WEB.md) define F6–F11: landing estática Astro, dashboard React y
 API FastAPI, manteniendo el motor/proveedores/Excel existentes. F6 implementa
 los fundamentos, F7 la presentación estática y F8 el transporte HTTP completo.
-F9 integra esos contratos en `/app/`. F10 verifica la calidad integrada; F11 sigue pendiente.
+F9 integra esos contratos en `/app/`. F10 verifica la calidad integrada. Al cerrar
+F9, F11 quedaba pendiente; el ADR-005 de este documento recoge su implementación
+posterior y el estado de aceptación de la imagen.
 
 El transporte HTTP tiene cachés propias y preserva snapshots/configuración de
-análisis. La entrada actual seguirá funcionando
-hasta demostrar paridad y cumplir los criterios de transición de F11.
+análisis. La entrada Streamlit se conserva como compatibilidad explícita después
+de la transición de F11; el contrato vigente figura en el ADR-005.
 
 Fecha: 2026-11-13. Base: `93a143a`. Evidencia: [TDD_F9.md](TDD_F9.md).
 El frontend se organiza en `src/features/analysis/`:

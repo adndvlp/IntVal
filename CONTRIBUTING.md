@@ -1,8 +1,13 @@
 # Contribuir a IntVal
 
-El producto es un servicio web Streamlit sobre Linux y Python 3.12. El repositorio
-conserva un contrato de arranque agnóstico del alojamiento. Los comandos siguientes
+El producto sirve Astro/React y FastAPI en un único servicio Linux/Python 3.12.
+Streamlit se conserva como compatibilidad. El repositorio mantiene un contrato
+de arranque agnóstico del alojamiento. Los comandos siguientes
 son para desarrollar desde la raíz; no son instrucciones para el usuario de la web.
+
+El build portable y el smoke de imagen se describen en
+[development.md](docs/development.md). El workflow **Distribución** ejecuta
+`python qa_distribucion.py` con Docker y conserva la evidencia; no publica servicios.
 
 ## Preparar y verificar
 

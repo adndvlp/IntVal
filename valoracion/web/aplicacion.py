@@ -1,6 +1,7 @@
 """API de trabajos efímeros; el motor financiero y Streamlit siguen independientes."""
 
 import logging
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from typing import Annotated
@@ -52,7 +53,12 @@ def _respuesta_error(error):
     )
 
 
-def create_app(ajustes: Ajustes | None = None, *, gestor: GestorTrabajos | None = None) -> FastAPI:
+def create_app(
+    ajustes: Ajustes | None = None,
+    *,
+    gestor: GestorTrabajos | None = None,
+    preparacion_extra: Callable[[], bool] | None = None,
+) -> FastAPI:
     ajustes = ajustes if ajustes is not None else Ajustes.del_entorno()
     universo, demo = cargar_universo(), ProveedorDemo()
     gestor = gestor if gestor is not None else GestorTrabajos(ajustes)
@@ -124,7 +130,7 @@ def create_app(ajustes: Ajustes | None = None, *, gestor: GestorTrabajos | None 
         responses={503: {"model": RespuestaError}},
     )
     async def preparado():
-        if not gestor.listo:
+        if not gestor.listo or (preparacion_extra is not None and not preparacion_extra()):
             raise FalloWeb(
                 503, "SERVICE_UNAVAILABLE", "El servicio se está preparando.", retryable=True
             )

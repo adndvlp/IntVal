@@ -185,7 +185,19 @@ export default function ResultsTable({
           </thead>
           <tbody>
             {filtered.slice(current * 25, (current + 1) * 25).map((c) => (
-              <tr key={c.ticker} data-selected={selected === c.ticker}>
+              <tr
+                key={c.ticker}
+                data-selected={selected === c.ticker}
+                onClick={(event) => {
+                  if (
+                    event.target instanceof Element &&
+                    event.target.closest('a, button, input, select, textarea')
+                  )
+                    return;
+                  if (window.getSelection()?.isCollapsed === false) return;
+                  event.currentTarget.querySelector('a')?.click();
+                }}
+              >
                 <th scope="row">
                   <a
                     href={`#empresa/${encodeURIComponent(c.ticker)}`}

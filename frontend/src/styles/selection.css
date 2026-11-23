@@ -57,7 +57,7 @@
 }
 .batch-summary {
   position: sticky;
-  inset-block-start: 12px;
+  inset-block-start: 0;
   z-index: 5;
   display: flex;
   flex-wrap: wrap;

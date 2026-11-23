@@ -1,12 +1,87 @@
 """P-01 a P-12: se ejecutan los adaptadores reales con respuestas sintéticas."""
 
 import math
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 
 import valoracion.proveedores.yahoo as motor
 from tests.fixtures.datos_sinteticos import TickerSintetico
+
+
+class ErrorHTTPPrueba(Exception):
+    def __init__(self, status):
+        self.response = SimpleNamespace(status_code=status)
+        super().__init__("cookie=NO_PUBLICAR; https://privado/crumb=NO_PUBLICAR")
+
+
+def test_yahoo_explica_y_registra_info_rechazada_sin_filtrar_secretos(caplog):
+    ticker = TickerSintetico(get_info_result=ErrorHTTPPrueba(401), info={})
+    datos = motor.ProveedorYahoo(ticker_factory=lambda _: ticker).obtener_empresa("AAPL")
+    assert datos.precio == 40
+    assert datos.moneda_financiera is None
+    assert any("401" in d.mensaje for d in datos.diagnosticos)
+    assert "YAHOO_UNAUTHORIZED" in caplog.text
+    assert "stage=info" in caplog.text
+    assert "NO_PUBLICAR" not in caplog.text
+    assert all("NO_PUBLICAR" not in d.mensaje for d in datos.diagnosticos)
+
+
+@pytest.mark.parametrize("error", [ErrorHTTPPrueba(503), TimeoutError(), ConnectionError()])
+def test_yahoo_reintenta_info_transitoria_con_ticker_nuevo_y_conserva_monedas(error):
+    fallido = TickerSintetico(get_info_result=error, info={})
+    recuperado = TickerSintetico()
+    llamadas = []
+
+    def fabrica(simbolo):
+        llamadas.append(simbolo)
+        return fallido if len(llamadas) == 1 else recuperado
+
+    datos = motor.ProveedorYahoo(ticker_factory=fabrica).obtener_empresa("AAPL")
+    assert llamadas == ["AAPL", "AAPL"]
+    assert datos.moneda_financiera == datos.moneda_cotizacion == "USD"
+    assert datos.info["shortName"] == "Industrial sintética"
+    assert not datos.diagnosticos
+
+
+@pytest.mark.parametrize("status", [401, 403, 429])
+def test_yahoo_no_insiste_automaticamente_ante_rechazo_o_limite(status):
+    llamadas = []
+
+    def fabrica(simbolo):
+        llamadas.append(simbolo)
+        return TickerSintetico(get_info_result=ErrorHTTPPrueba(status), info={})
+
+    datos = motor.ProveedorYahoo(ticker_factory=fabrica).obtener_empresa("AAPL")
+    assert llamadas == ["AAPL"]
+    assert any(str(status) in d.mensaje for d in datos.diagnosticos)
+
+
+def test_yahoo_limita_a_un_reintento_y_conserva_el_error_final():
+    llamadas = []
+
+    def fabrica(simbolo):
+        llamadas.append(simbolo)
+        return TickerSintetico(get_info_result=ErrorHTTPPrueba(503), info={})
+
+    datos = motor.ProveedorYahoo(ticker_factory=fabrica).obtener_empresa("AAPL")
+    assert llamadas == ["AAPL", "AAPL"]
+    assert datos.moneda_financiera is None
+    assert any("YAHOO_TEMPORARY_ERROR" in d.mensaje for d in datos.diagnosticos)
+
+
+def test_yahoo_distingue_estados_vacios_de_errores_de_adquisicion(caplog):
+    ticker = TickerSintetico(
+        income_stmt=ErrorHTTPPrueba(429), cashflow=pd.DataFrame(), balance_sheet=pd.DataFrame()
+    )
+    datos = motor.ProveedorYahoo(ticker_factory=lambda _: ticker).obtener_empresa("AAPL")
+    assert datos.resultados.empty and datos.flujo.empty and datos.balance.empty
+    assert any("429" in d.mensaje for d in datos.diagnosticos)
+    assert "stage=income_stmt" in caplog.text
+    assert "YAHOO_RATE_LIMITED" in caplog.text
+    assert "stage=cashflow" in caplog.text and "YAHOO_EMPTY_RESPONSE" in caplog.text
+    assert "NO_PUBLICAR" not in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -2,27 +2,96 @@
 
 from __future__ import annotations
 
+import logging
+import re
 from datetime import datetime, timezone
 
 import pandas as pd
 import yfinance as yf
 
-from ..modelos import DatosEmpresa, TrazabilidadDatos
+from ..modelos import DatosEmpresa, Diagnostico, TrazabilidadDatos
 from ..normalizacion import numero_valido
 
 CACHE_FX: dict[tuple[str, str], float | None] = {}
+LOG = logging.getLogger(__name__)
 
 
-def obtener_info_segura(accion: yf.Ticker) -> dict:
+def _clasificar_fallo(error):
+    status = getattr(getattr(error, "response", None), "status_code", None)
+    status = status if type(status) is int else None
+    nombre = type(error).__name__ if error is not None else "EmptyResponse"
+    if status == 429 or nombre == "YFRateLimitError":
+        return "YAHOO_RATE_LIMITED", 429, False
+    if status in {401, 403}:
+        return "YAHOO_UNAUTHORIZED", status, False
+    if status is not None and 500 <= status <= 599:
+        return "YAHOO_TEMPORARY_ERROR", status, True
+    if isinstance(error, TimeoutError) or nombre in {"Timeout", "ReadTimeout", "ConnectTimeout"}:
+        return "YAHOO_TIMEOUT", status, True
+    if isinstance(error, ConnectionError) or nombre in {"ConnectionError", "DNSError"}:
+        return "YAHOO_CONNECTION_ERROR", status, True
+    return ("YAHOO_EMPTY_RESPONSE" if error is None else "YAHOO_DATA_ERROR"), status, False
+
+
+def _registrar_fallo(ticker, etapa, error=None, diagnosticos=None):
+    codigo, status, _ = _clasificar_fallo(error)
+    simbolo = (
+        ticker
+        if isinstance(ticker, str) and re.fullmatch(r"[A-Z0-9.^=&_-]{1,40}", ticker)
+        else "UNKNOWN"
+    )
+    LOG.warning(
+        "yahoo_data_unavailable ticker=%s stage=%s code=%s http_status=%s error_type=%s",
+        simbolo,
+        etapa,
+        codigo,
+        status or "-",
+        type(error).__name__ if error else "EmptyResponse",
+    )
+    if diagnosticos is not None:
+        objeto = {
+            "info": "la información de la empresa",
+            "income_stmt": "el estado de resultados",
+            "cashflow": "el flujo de caja",
+            "balance_sheet": "el balance",
+        }[etapa]
+        if codigo == "YAHOO_UNAUTHORIZED":
+            mensaje = f"Yahoo Finance no autorizó la consulta de {objeto} (HTTP {status})."
+        elif codigo == "YAHOO_RATE_LIMITED":
+            mensaje = f"Yahoo Finance limitó las consultas de {objeto} (HTTP 429)."
+        elif error is None:
+            mensaje = f"Yahoo Finance no devolvió {objeto}."
+        else:
+            mensaje = f"No se pudo obtener {objeto} de Yahoo Finance ({codigo})."
+        diagnosticos.append(Diagnostico(mensaje, ambito="proveedor"))
+
+
+def obtener_info_segura(
+    accion: yf.Ticker, *, ticker=None, diagnosticos=None, reintentar=None
+) -> dict:
+    error = None
     try:
         info = accion.get_info()
-        return info if isinstance(info, dict) else {}
-    except Exception:
+    except Exception as fallo:
+        error = fallo
         try:
             info = accion.info
-            return info if isinstance(info, dict) else {}
         except Exception:
-            return {}
+            info = {}
+    if isinstance(info, dict) and info:
+        return info
+    if reintentar is not None and _clasificar_fallo(error)[2]:
+        # El objeto de yfinance queda marcado como consultado tras un fallo.
+        # Un objeto nuevo permite un único reintento real, sin bucles ni esperas.
+        _registrar_fallo(ticker, "info", error)
+        try:
+            info = reintentar().get_info()
+            if isinstance(info, dict) and info:
+                return info
+        except Exception as fallo:
+            error = fallo
+    _registrar_fallo(ticker, "info", error, diagnosticos)
+    return {}
 
 
 def _fecha_indice(indice, posicion=-1) -> str | None:
@@ -179,12 +248,16 @@ def obtener_tipo_cambio(moneda_financiera: str, moneda_cotizacion: str) -> float
     )
 
 
-def _estado_seguro(accion, nombre: str) -> pd.DataFrame:
+def _estado_seguro(accion, nombre: str, *, ticker=None, diagnosticos=None) -> pd.DataFrame:
     try:
         estado = getattr(accion, nombre)
-    except Exception:
+    except Exception as error:
+        _registrar_fallo(ticker, nombre, error, diagnosticos)
         return pd.DataFrame()
-    return pd.DataFrame() if estado is None else estado
+    if estado is None or estado.empty:
+        _registrar_fallo(ticker, nombre, diagnosticos=diagnosticos)
+        return pd.DataFrame()
+    return estado
 
 
 def _monedas(info: dict) -> tuple[str | None, str | None]:
@@ -202,6 +275,11 @@ class ProveedorYahoo:
         self._ticker_factory = ticker_factory
         self._cache_fx = {} if cache_fx is None else cache_fx
         self._trazas_fx = {}
+
+    def preparar_proceso(self):
+        # Se activa sólo en el hijo aislado: yfinance entrega excepciones al
+        # adaptador, que registra códigos seguros sin cookies ni URLs crudas.
+        yf.config.debug.hide_exceptions = False
 
     def _ticker(self, ticker: str):
         return (self._ticker_factory or yf.Ticker)(ticker)
@@ -274,13 +352,19 @@ class ProveedorYahoo:
 
     def obtener_empresa(self, ticker: str) -> DatosEmpresa:
         accion = self._ticker(ticker)
-        info = obtener_info_segura(accion)
+        diagnosticos = []
+        info = obtener_info_segura(
+            accion,
+            ticker=ticker,
+            diagnosticos=diagnosticos,
+            reintentar=lambda: self._ticker(ticker),
+        )
         precio, fuente_precio, fecha_precio = _precio_con_fuente(accion)
         objetivo, fuente_objetivo, estadistico = _objetivo_con_fuente(accion, info)
         acciones, fuente_acciones, fecha_acciones = _acciones_con_fuente(accion, info, precio)
-        resultados = _estado_seguro(accion, "income_stmt")
-        flujo = _estado_seguro(accion, "cashflow")
-        balance = _estado_seguro(accion, "balance_sheet")
+        resultados = _estado_seguro(accion, "income_stmt", ticker=ticker, diagnosticos=diagnosticos)
+        flujo = _estado_seguro(accion, "cashflow", ticker=ticker, diagnosticos=diagnosticos)
+        balance = _estado_seguro(accion, "balance_sheet", ticker=ticker, diagnosticos=diagnosticos)
         financiera, cotizacion = _monedas(info)
         fx = self._tipo_cambio(financiera, cotizacion)
         return DatosEmpresa(
@@ -295,6 +379,7 @@ class ProveedorYahoo:
             moneda_financiera=financiera,
             moneda_cotizacion=cotizacion,
             tipo_cambio=fx,
+            diagnosticos=tuple(diagnosticos),
             trazabilidad=self._trazabilidad(
                 info,
                 financiera,
@@ -310,9 +395,15 @@ class ProveedorYahoo:
 
     def obtener_estados_historicos(self, ticker: str) -> DatosEmpresa:
         accion = self._ticker(ticker)
-        info = obtener_info_segura(accion)
-        resultados = _estado_seguro(accion, "income_stmt")
-        flujo = _estado_seguro(accion, "cashflow")
+        diagnosticos = []
+        info = obtener_info_segura(
+            accion,
+            ticker=ticker,
+            diagnosticos=diagnosticos,
+            reintentar=lambda: self._ticker(ticker),
+        )
+        resultados = _estado_seguro(accion, "income_stmt", ticker=ticker, diagnosticos=diagnosticos)
+        flujo = _estado_seguro(accion, "cashflow", ticker=ticker, diagnosticos=diagnosticos)
         financiera, cotizacion = _monedas(info)
         fx = self._tipo_cambio(financiera, cotizacion)
         return DatosEmpresa(
@@ -323,6 +414,7 @@ class ProveedorYahoo:
             moneda_financiera=financiera,
             moneda_cotizacion=cotizacion,
             tipo_cambio=fx,
+            diagnosticos=tuple(diagnosticos),
             trazabilidad=self._trazabilidad(info, financiera, cotizacion),
         )
 

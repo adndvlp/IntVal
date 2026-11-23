@@ -536,6 +536,16 @@ class GestorTrabajos:
                         p, d = crear_resultado_error(ticker, ErrorProveedor())
                     sello = self._sello(self.ajustes.analysis_cache_ttl_seconds)
                 fila = deepcopy((p, d, sello))
+                if p["Mediana de modelos"] is None:
+                    LOG.warning(
+                        "analysis_no_estimate id=%s source=%s ticker=%s status=%s reporting_currency=%s quote_currency=%s",
+                        job.id,
+                        job.source,
+                        ticker,
+                        p["Estado"],
+                        d.get("Moneda estados"),
+                        p["Moneda"],
+                    )
                 with self._condicion:
                     tamano = _tamano(fila)
                     if not self._espacio(tamano, job.id):
@@ -543,7 +553,11 @@ class GestorTrabajos:
                     job.rows.append(fila)
                     job.bytes += tamano
                     job.revision += 1
-                    if cache is None and p["Estado"] != "ERROR":
+                    if (
+                        cache is None
+                        and p["Estado"] != "ERROR"
+                        and p["Mediana de modelos"] is not None
+                    ):
                         self._cache_put(
                             clave, fila, self.ajustes.analysis_cache_ttl_seconds, job.id
                         )

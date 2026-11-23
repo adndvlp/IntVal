@@ -92,6 +92,19 @@ def test_idempotencia_normalizada_snapshot_y_conflicto(entorno):
     assert len(fabrica.llamadas) == 1
 
 
+def test_sin_estimaciones_no_cachea_el_fallo_y_registra_un_diagnostico(entorno, caplog):
+    gestor, fabrica, _, _ = entorno
+    for _ in range(2):
+        identificador = gestor.crear(pedido(["DEMO-INCOMPLETA"]))["id"]
+        assert gestor.esperar_terminal(identificador, 3)["state"] == "completed"
+        row = gestor.resultados(identificador, 0, 1)["items"][0]
+        assert row["median"]["value_per_share"] is None
+        assert row["calculation"]["cache_hit"] is False
+    assert len(fabrica.llamadas) == 2
+    assert "analysis_no_estimate" in caplog.text
+    assert "ticker=DEMO-INCOMPLETA" in caplog.text
+
+
 def test_cola_acotada_cancelacion_en_cola_y_durante_empresa(entorno):
     gestor, fabrica, _, error = entorno
     fabrica.soltar.clear()

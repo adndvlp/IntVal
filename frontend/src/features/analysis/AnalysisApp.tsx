@@ -115,6 +115,15 @@ function Workspace({
       active.counts.ERROR
     : 0;
   const completed = active?.state === 'completed' && !analysis.loadingRows;
+  const noEstimates =
+    completed &&
+    snapshot?.job.id === active?.id &&
+    snapshot.rows.length > 0 &&
+    snapshot.rows.every((company) => company.median.value_per_share === null);
+  const unavailableReason =
+    noEstimates && snapshot.rows.length === 1
+      ? snapshot.rows[0]?.notes?.split(';')[0]
+      : undefined;
   const defaults = editableConfiguration(meta.configuration);
   const modified = configurationChanged(
     draft.configuration,
@@ -182,7 +191,9 @@ function Workspace({
                     ? 'Recuperando análisis…'
                     : 'Enviando análisis…'
                   : completed
-                    ? `${stateLabels.completed}${observations ? ' con observaciones' : ''}`
+                    ? noEstimates
+                      ? 'No hay estimaciones disponibles'
+                      : `${stateLabels.completed}${observations ? ' con observaciones' : ''}`
                     : analysis.loadingRows && active && terminal(active.state)
                       ? 'Cargando los resultados completos…'
                       : stateLabels[active!.state]}
@@ -212,6 +223,7 @@ function Workspace({
                 </button>
               )}
             </div>
+            {unavailableReason && <p>{unavailableReason}</p>}
             {active && !terminal(active.state) && (
               <>
                 <progress

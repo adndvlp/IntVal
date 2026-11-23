@@ -2,8 +2,8 @@
 
 ## Distribución vigente — ADR-005 (F11)
 
-Fecha: 2026-11-21. Implementación y pruebas locales aprobadas; imagen final
-pendiente de construir y verificar en el workflow Distribución. Evidencia en
+Fecha: 2026-11-21. Implementación, pruebas locales y los tres workflows de CI
+aprobados en `52d1d52`, incluida la imagen final y su smoke. Evidencia en
 [TDD_F11.md](TDD_F11.md); contrato de alojamiento en [development.md](development.md).
 
 `Dockerfile` compila Astro con Node/npm fijados e instala el lock Python en etapas

@@ -94,14 +94,23 @@ test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot
       encoding: 'utf8',
     }),
   ).toContain('conciliados');
-  await table
-    .getByRole('link', { name: 'Manufacturas Horizonte', exact: true })
-    .click();
+  await table.getByRole('cell').first().click();
   const detail = page.getByRole('dialog', {
     name: 'Manufacturas Horizonte',
     exact: true,
   });
   await expect(detail.getByRole('heading', { name: 'Métodos' })).toBeVisible();
+  const position = await detail.evaluate((dialog) => {
+    const rect = dialog.getBoundingClientRect();
+    return {
+      horizontal: Math.abs(
+        rect.left + rect.width / 2 - document.documentElement.clientWidth / 2,
+      ),
+      vertical: Math.abs(rect.top + rect.height / 2 - innerHeight / 2),
+    };
+  });
+  expect(position.horizontal).toBeLessThanOrEqual(1);
+  expect(position.vertical).toBeLessThanOrEqual(1);
   await expect(
     detail.getByRole('heading', { name: 'Supuestos' }),
   ).toBeVisible();
@@ -163,6 +172,20 @@ test('Mercado no analiza al abrir; selector y ajustes a 320 px y texto al 200 po
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addStyleTag({ content: 'html { font-size: 200%; }' });
   await noOverflow(page);
+  const summary = page.locator('.batch-summary');
+  await summary.evaluate((element) => {
+    window.scrollTo(0, scrollY + element.getBoundingClientRect().top + 80);
+  });
+  await expect
+    .poll(async () => Math.abs((await summary.boundingBox())!.y))
+    .toBeLessThanOrEqual(1);
+  await expect(
+    page.getByLabel('Seleccionar página', { exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: info.outputPath('ui3-catalog-sticky.png'),
+    fullPage: false,
+  });
   await page.getByRole('button', { name: 'Ajustes de valoración' }).click();
   const dialog = page.getByRole('dialog', { name: 'Ajustes de valoración' });
   await expect(dialog.getByRole('spinbutton')).toHaveCount(9);

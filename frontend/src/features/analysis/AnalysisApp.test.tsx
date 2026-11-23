@@ -77,7 +77,7 @@ it('un lote con errores conserva la empresa, su diagnóstico y el Excel', async 
   render(<AnalysisApp baseUrl="" initialSource="demo" />);
   const link = await run();
   expect(
-    await screen.findByText('Análisis completado con observaciones'),
+    await screen.findByText('No hay estimaciones disponibles'),
   ).toBeTruthy();
   expect(screen.getByText('Sin estimación')).toBeTruthy();
   expect(
@@ -85,7 +85,48 @@ it('un lote con errores conserva la empresa, su diagnóstico y el Excel', async 
       .disabled,
   ).toBe(false);
   await userEvent.click(link);
-  expect(screen.getByText('Datos no disponibles en este caso.')).toBeTruthy();
+  expect(
+    within(screen.getByRole('dialog')).getByText(
+      'Datos no disponibles en este caso.',
+    ),
+  ).toBeTruthy();
+});
+
+it('un precio disponible no oculta que faltan datos para obtener una estimación', async () => {
+  const api = server();
+  const original = api.fetcher.getMockImplementation()!;
+  api.fetcher.mockImplementation(async (input, init) => {
+    const response = await original(input, init);
+    const data = await response.json();
+    if (data.counts)
+      data.counts = { OK: 0, 'DATOS INCOMPLETOS': 1, REVISAR: 0, ERROR: 0 };
+    if (data.items?.[0]?.proxies) {
+      data.items[0].status = 'DATOS INCOMPLETOS';
+      data.items[0].currency = null;
+      data.items[0].median = {
+        value_per_share: null,
+        upside: null,
+        count: 0,
+        included_models: [],
+      };
+      data.items[0].notes =
+        'Yahoo Finance no autorizó la consulta de información (HTTP 401).; FX no verificable.';
+    }
+    return new Response(JSON.stringify(data), { status: response.status });
+  });
+  render(<AnalysisApp baseUrl="" initialSource="demo" />);
+  await run();
+  expect(
+    await screen.findByText('No hay estimaciones disponibles'),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      'Yahoo Finance no autorizó la consulta de información (HTTP 401).',
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.queryByText('Análisis completado con observaciones'),
+  ).toBeNull();
 });
 it('envía los nueve ajustes guardados y normaliza los símbolos adicionales', async () => {
   const api = server();

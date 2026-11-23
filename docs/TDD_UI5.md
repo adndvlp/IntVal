@@ -160,3 +160,49 @@ de geometría y ningún fallo, incluidos ambos modos y el espaciado nuevo. Evide
 Los ajustes posteriores de captura y diagnóstico no cambian el CSS ni las
 condiciones de aceptación; se comprobaron sus tipos y estilo. No se atribuye esta
 ronda de macOS a Linux ni se marca F11 cerrada antes del nuevo run remoto.
+
+## Confirmación remota de la corrección
+
+El [run Web 44967048831](https://github.com/adndvlp/IntVal/actions/runs/44967048831)
+de `52d1d52` aprobó 122 pruebas unitarias y 91 escenarios de navegador en Linux,
+con las 11 omisiones previstas. La matriz de diseño pasó en Chromium, Firefox y
+WebKit, incluida la tabla ampliada y espaciada. Se verificaron conclusión, pasos
+y logs de ese mismo SHA. Tests y Distribución también pasaron; F11 queda cerrada
+según [TDD_F11.md](TDD_F11.md). No se publicó un servicio.
+
+## Seguimiento — acceso al detalle y centrado (2026-11-23)
+
+El usuario no identificaba el nombre como enlace y pidió abrir el detalle desde
+toda la fila, además de centrar el modal que aparecía a la izquierda.
+La fila delega el clic en el enlace existente, conserva el foco de retorno y no
+duplica la apertura. El cursor y el resaltado identifican el área accionable;
+seleccionar cifras para copiarlas no abre el detalle. El reset de Tailwind
+anulaba los márgenes nativos del diálogo: se declaran `margin: auto` e `inset: 0`
+en el modal, conservando sus límites adaptables.
+
+RED: el caso de clic en toda la fila falló por cero aperturas; las seis pruebas
+restantes del archivo pasaron. GREEN: 125 pruebas unitarias frontend, cobertura
+de líneas 95.16 % y ramas 86.32 %, tipos (82 archivos sin diagnósticos) y build
+del mismo origen aprobados. El recorrido E2E existente ahora abre desde la celda
+de precio y comprueba el centrado del modal en ambos ejes con tolerancia de 1 px.
+Su ejecución en navegador queda pendiente de CI por el bloqueo local ya descrito;
+no se atribuye una inspección visual a las pruebas de componentes.
+Pasan también ESLint, formato, las 69 pruebas de shell/anexo y el presupuesto
+de carga: analizador con 103.05 KiB JS y 12.62 KiB CSS gzip.
+
+Registros: `/tmp/intval-row-red.log`, `/tmp/intval-row-unit.log`,
+`/tmp/intval-row-types.log` y `/tmp/intval-row-build.log`. Se actualiza UI-RES-08
+y UI-DLG-01 de [SDD_UI.md](SDD_UI.md); no se modifica el anexo histórico.
+
+## Seguimiento — barra de selección móvil (2026-11-23)
+
+La captura del usuario muestra una franja de filas por encima de «Seleccionar
+página» al desplazarse. `.batch-summary` tenía `inset-block-start: 12px`;
+se cambia a `0` para fijarla al borde superior. No cambia el contenido ni la
+selección. Se actualiza 4.2 de la SDD y el recorrido móvil de `dashboard.spec.ts`
+comprueba, a 320 px y texto al 200 %, que la barra llegue al borde después de
+desplazarse; guarda `ui3-catalog-sticky.png`. Esa comprobación de geometría sigue
+pendiente de navegador en CI, sin atribuirla a jsdom ni a la captura aportada.
+Build, ESLint, formato, las 69 pruebas de shell/anexo y presupuesto de carga
+aprobados. Registros locales en `/tmp/intval-sticky-build.log`,
+`/tmp/intval-sticky-shell.log` y `/tmp/intval-sticky-e2e-list.log`.

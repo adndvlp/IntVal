@@ -4,11 +4,11 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.13 |
+| Versión de esta extensión | 1.14 |
 | Fecha | 2026-11-21 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
-| Estado de F6–F11 | F6–F10 verificadas localmente; F11 con imagen/smoke y Tests aprobados en CI, corrección de Web pendiente de confirmar |
+| Estado de F6–F11 | Implementadas; F11 cerrada en 52d1d52 con imagen, Tests, Web y Distribución aprobados en CI |
 | Encargo de esta edición | Distribución agnóstica F11 solicitada; UI-1–5 cerrados; sin publicación |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
@@ -1607,8 +1607,8 @@ fuente o versión como si siguiera vigente.
 
 ## 18. Fases F6–F11
 
-F6–F10 están verificadas localmente. F11 incorpora distribución y cambio de
-arranque, con imagen/smoke y CI pendientes de aceptación. Cada fase conserva
+F6–F10 están verificadas localmente. F11 está cerrada con imagen/smoke y los tres
+workflows aprobados en `52d1d52`. Cada fase conserva
 código, pruebas, documentación y evidencia propia; continuidad vigente en 21.11.
 
 ### 18.1 F6 — Fundamentos web, contratos iniciales y CI
@@ -1788,7 +1788,7 @@ flowchart LR
 | F8 | Implementada y verificada localmente | TDD_F8.md; 458 pruebas Python, procesos reales y contratos sin drift |
 | F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), demo/XLSX reales y capturas revisadas |
 | F10 | Implementada y verificada localmente | [TDD_F10.md](TDD_F10.md); automatización, capacidad y referencias visuales verificadas |
-| F11 | Implementada; aceptación de imagen/CI pendiente | [TDD_F11.md](TDD_F11.md); pruebas locales y workflow Distribución |
+| F11 | Cerrada; imagen y tres workflows de CI aprobados en 52d1d52 | [TDD_F11.md](TDD_F11.md) |
 
 Que una fase tenga un plan detallado o un ejemplo JSON no significa que esté
 implementada. No marcar casillas de ejecución hasta aportar evidencia.
@@ -2172,14 +2172,25 @@ El workflow Distribución construye y prueba la imagen final, conserva manifiest
 y logs y comprueba demo, históricos, Excel, runtime y señales. El commit `b725546`
 aprobó Distribución y Tests en CI. Web detectó un desbordamiento de 5 px del detalle
 en Chromium/Linux a 320 px con texto al 200 %. La corrección y su comprobación local
-enfocada están en [TDD_UI5.md](TDD_UI5.md); falta confirmar el nuevo run de Web.
-No marcar F11 cerrada sin ese resultado remoto.
+enfocada están en [TDD_UI5.md](TDD_UI5.md). El commit `52d1d52` aprobó los tres
+workflows, incluidos 91 escenarios de navegador en Linux, imagen y smoke reales.
+F11 queda cerrada; los runs y metadatos del artefacto están en TDD_F11.md.
 
 Validar la corrección de UI-5 con su evidencia propia; no rehacer el rediseño.
 No modificar fórmulas,
 locks, catálogo, CLI o versiones financieras para resolver distribución. Mantener
 una instancia/worker mientras los trabajos sean efímeros en memoria. La URL
 pública se verifica al desplegar por encargo; no se ha autorizado publicación.
+
+### 21.12 Seguimiento de Mercado en el primer despliegue
+
+El usuario publicó el servicio en Render y reportó ausencia de estimaciones aun
+cuando había precio. Se añaden causas de adquisición al snapshot y a logs seguros,
+un reintento acotado de información transitoria y exclusión de la caché para filas
+sin estimación. La web anuncia ese caso directamente y presenta la primera causa
+cuando hay una sola empresa. No cambia el flujo, la apariencia, el contrato API
+ni el motor financiero. El HTTP real del proveedor en Render sigue pendiente de
+confirmación. Evidencia y continuidad en [TDD_MERCADO.md](TDD_MERCADO.md).
 
 ## 22. Fuentes y mantenimiento
 

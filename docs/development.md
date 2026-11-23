@@ -5,8 +5,8 @@ entra por URL; el alojamiento ejecuta la imagen de [Dockerfile](../Dockerfile).
 No requiere un Blueprint, SDK o dominio de una plataforma concreta.
 
 F11 incorpora esta distribución y cambia el arranque por defecto. Las pruebas
-locales de API, estáticos y arranque están aprobadas; la construcción y el smoke
-reales de la imagen deben completarse en CI. El estado y la evidencia se mantienen
+locales de API, estáticos y arranque están aprobadas, junto con la construcción
+y el smoke reales de la imagen en CI. F11 está cerrada en `52d1d52`; evidencia
 en [TDD_F11.md](TDD_F11.md). Las secciones F4–F10 posteriores conservan el historial
 anterior al cambio de entrada; el contrato vigente es el de las secciones 1–3.
 
@@ -81,8 +81,8 @@ runtime sin root ni Node/npm, `pip check`, CLI, PORT, páginas y recarga, MIME,
 404/405, API, salud, demo, históricos, Excel y cierre mediante SIGTERM. Usa un
 puerto local aleatorio y elimina sólo su contenedor al terminar. No publica ni
 sube imágenes. El manifiesto y logs quedan en `temp/distribucion-qa/`, ignorados
-por Git. Un workflow escrito no acredita un run aprobado: el primer resultado
-remoto sigue pendiente.
+por Git. El run de cierre, junto con Tests y Web, está aprobado para `52d1d52`;
+los enlaces y resultados están en [TDD_F11.md](TDD_F11.md).
 
 Sin Docker local, no hace falta instalarlo para desarrollar: CI realiza la prueba
 de imagen. La suite Python usa ASGI en memoria y comprueba también el build Astro
@@ -114,6 +114,34 @@ Yahoo sigue siendo un proveedor externo con disponibilidad y límites propios.
 Un health check no consulta Yahoo ni acredita datos para un ticker concreto.
 La demo usa los archivos sintéticos incluidos y no hace consultas financieras
 externas. La primera carga de la web necesita conexión al servicio.
+
+### Diagnóstico de Mercado sin estimaciones
+
+Cuando ningún resultado tiene una estimación, la web muestra «No hay estimaciones
+disponibles». Para una sola empresa muestra también la primera causa del snapshot;
+el detalle y el Excel conservan los diagnósticos completos. Terminar de procesar
+un lote no acredita haber obtenido datos suficientes para valorarlo.
+
+El adaptador registra `yahoo_data_unavailable` con símbolo, etapa (`info`,
+`income_stmt`, `cashflow` o `balance_sheet`), código y estado HTTP disponible.
+Distingue `YAHOO_UNAUTHORIZED` (401/403), `YAHOO_RATE_LIMITED` (429),
+`YAHOO_TEMPORARY_ERROR` (5xx), `YAHOO_TIMEOUT`, `YAHOO_CONNECTION_ERROR`,
+`YAHOO_EMPTY_RESPONSE` y otros errores de datos. El gestor añade
+`analysis_no_estimate` con ID de análisis y monedas conocidas. Estos eventos son
+warnings y aparecen con el nivel de logs habitual; no hace falta activar debug
+de yfinance ni mostrar cookies, URLs o cuerpos de respuestas del proveedor.
+
+La adquisición web activa las excepciones de yfinance sólo dentro del proceso
+aislado. Si la consulta de información falla transitoriamente, permite un único
+reintento con un objeto nuevo; no insiste ante 401, 403 o 429. Un resultado sin
+estimación no entra en la caché de análisis: pulsar «Analizar de nuevo» inicia
+otra adquisición, aunque el trabajo anterior sigue disponible como snapshot.
+La idempotencia de una misma solicitud se conserva.
+
+La ausencia de monedas, clasificación o estados no se corrige suponiendo USD ni
+inventando estados financieros. El incidente observado en Render y la evidencia
+de esta corrección están en [TDD_MERCADO.md](TDD_MERCADO.md). Falta observar el
+estado HTTP real del proveedor en ese despliegue; `/readyz` con 200 no lo resuelve.
 
 La configuración aceptada y su fuente permanecen asociadas al trabajo y al Excel.
 Cambiar el borrador o la apariencia no vuelve a calcular ni modifica ese snapshot.

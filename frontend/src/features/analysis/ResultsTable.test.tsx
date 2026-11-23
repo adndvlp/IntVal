@@ -105,6 +105,45 @@ it('abrir detalle conserva búsqueda, orden, página y contexto de la comparaci�
   expect(screen.getByText('No hay coincidencias.')).toBeTruthy();
 });
 
+it('abre el detalle desde toda la fila una sola vez y conserva el acceso con teclado', async () => {
+  const select = vi.fn();
+  render(<ResultsTable rows={[company()]} selected={null} onSelect={select} />);
+  const link = screen.getByRole('link', { name: 'Empresa DEMO-USA' });
+  const row = link.closest('tr')!;
+  const symbol = within(row).getByText('DEMO-USA · USD');
+  for (const target of [
+    row,
+    symbol,
+    ...within(row).getAllByRole('cell'),
+    link,
+  ]) {
+    await userEvent.click(target);
+    expect(select).toHaveBeenCalledExactlyOnceWith('DEMO-USA');
+    expect(document.activeElement).toBe(link);
+    select.mockClear();
+  }
+  await userEvent.keyboard('{Enter}');
+  expect(select).toHaveBeenCalledExactlyOnceWith('DEMO-USA');
+});
+
+it('permite seleccionar y copiar cifras sin abrir el detalle', async () => {
+  const select = vi.fn();
+  render(<ResultsTable rows={[company()]} selected={null} onSelect={select} />);
+  const price = within(table()).getAllByRole('cell')[0]!;
+  const selection = window.getSelection()!;
+  const range = document.createRange();
+  range.selectNodeContents(price);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  try {
+    expect(selection.toString()).toBe('100.00');
+    price.click();
+    expect(select).not.toHaveBeenCalled();
+  } finally {
+    selection.removeAllRanges();
+  }
+});
+
 it('las flechas desplazan únicamente la región enfocada', async () => {
   render(
     <ResultsTable rows={[company()]} selected={null} onSelect={vi.fn()} />,

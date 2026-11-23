@@ -126,9 +126,9 @@ Los trabajos viven en memoria: usar una instancia; un reinicio los pierde.
 La [guía de despliegue](docs/development.md) explica configuración, verificación
 y regreso a Streamlit. El workflow **Distribución** construye y prueba la imagen
 con la demo, históricos y Excel reales; su
-[primer run remoto está aprobado](https://github.com/adndvlp/IntVal/actions/runs/44964709076).
-Tests también pasó. Web detectó un desbordamiento de UI-5; el parche requiere
-un nuevo run antes de cerrar F11. Detalles en el [registro F11](docs/TDD_F11.md).
+[run remoto de cierre está aprobado](https://github.com/adndvlp/IntVal/actions/runs/44967048857).
+Tests y Web también pasaron para el mismo commit `52d1d52`; F11 está cerrada.
+Detalles en el [registro F11](docs/TDD_F11.md).
 No hay un servicio publicado como parte de esta entrega.
 
 ## Desarrollo y comprobaciones
@@ -237,7 +237,7 @@ no la validez predictiva de una valoración.
   públicas, verificadas con navegador y capturas revisadas. F8 implementa el
   transporte de análisis y F9 lo integra en el dashboard. F10 está verificada
   localmente y UI-1–5 completan el rediseño vigente. F11 incorpora la distribución
-  Docker y el arranque web/API, con aceptación de imagen y CI pendientes.
+  Docker y el arranque web/API, con imagen y los tres workflows aprobados en CI.
 - [Arquitectura](docs/architecture.md), [metodología](docs/methodology.md) y
   [desarrollo/despliegue](docs/development.md).
 - Evidencia TDD: [F1](docs/TDD_F1.md), [F2](docs/TDD_F2.md),
@@ -255,8 +255,8 @@ la landing estática, metodología y sistema visual, con ocho pruebas de navegad
 y capturas finales revisadas. F8 añade API de trabajos, cachés, históricos y
 Excel con snapshots y recuperación de adquisiciones bloqueadas. F9 incorpora
 el dashboard, sus pruebas y capturas reales revisadas. F10 completa la calidad integrada, las mediciones y las referencias visuales.
-F11 incorpora la distribución y el arranque web/API, con imagen y smoke aprobados
-en CI; queda confirmar la corrección de Web. El despliegue público y la validación de su URL son
+F11 está cerrada con distribución, smoke y los tres workflows aprobados en CI.
+El despliegue público y la validación de su URL son
 acciones posteriores.
 
 Interfaz vigente (UI-5): [escritorio](docs/images/ui5/resultados-escritorio-claro.png),

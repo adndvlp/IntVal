@@ -1,8 +1,11 @@
 """Proveedores locales importables por procesos spawn; nunca acceden a la red."""
 
 import time
+from types import SimpleNamespace
 
+from tests.fixtures.datos_sinteticos import TickerSintetico
 from valoracion.proveedores.demo import ProveedorDemo
+from valoracion.proveedores.yahoo import ProveedorYahoo
 
 
 class ProveedorControlado(ProveedorDemo):
@@ -17,3 +20,15 @@ class ProveedorControlado(ProveedorDemo):
 def fabrica_controlada(source):
     assert source in {"demo", "market"}
     return ProveedorControlado()
+
+
+class ErrorYahooPrueba(Exception):
+    response = SimpleNamespace(status_code=401)
+
+
+def fabrica_yahoo_rechazado(source):
+    return ProveedorYahoo(
+        ticker_factory=lambda _: TickerSintetico(
+            get_info_result=ErrorYahooPrueba("cookie=SECRETO"), info={}
+        )
+    )

@@ -2,10 +2,23 @@
 
 Fecha: 2026-11-21. Base: `9ffb209`, cierre de UI-5.
 
-**Estado actualizado tras `b725546`:** imagen y smoke aprobados en CI, junto con
-Tests. Web detectó un desbordamiento del detalle a 320 px con texto al 200 %;
-la corrección y su validación pendiente se registran en [TDD_UI5.md](TDD_UI5.md).
-F11 sigue pendiente de aceptación completa. No se publicó ningún servicio.
+**Estado: F11 cerrada en `52d1d52`.** Tests, Web y Distribución están aprobados
+para ese mismo commit. La distribución está preparada y verificada; no se publicó
+ningún servicio.
+
+| Workflow | Evidencia remota de cierre |
+| --- | --- |
+| Tests | [Run 44967049071](https://github.com/adndvlp/IntVal/actions/runs/44967049071): 537 aprobadas, una omisión prevista del build Astro ausente y cobertura 95.47 % |
+| Web | [Run 44967048831](https://github.com/adndvlp/IntVal/actions/runs/44967048831): 122 unitarias y 91 escenarios de navegador aprobados; 11 omisiones previstas |
+| Distribución | [Run 44967048857](https://github.com/adndvlp/IntVal/actions/runs/44967048857): imagen final, recorrido HTTP y SIGTERM aprobados |
+
+Se comprobaron el SHA completo `52d1d5255ad9d36a91c8e94e8611f4b9c88f8ab1`,
+la conclusión de los tres workflows, sus pasos y los logs de resultados. El
+artefacto `reportes-distribucion` está adjunto al run, ID `14732455236`, con digest
+`sha256:6ffb232bdcd8c6aaf4ec178c43e5a7cf1002db1d52e12c22fd62cd3fb034e69c`.
+Su manifiesto identifica la imagen y las huellas verificadas por el script.
+
+## Primera pasada de CI
 
 El [primer run de Distribución](https://github.com/adndvlp/IntVal/actions/runs/44964709076)
 construyó la imagen y aprobó el recorrido HTTP y SIGTERM el 2026-11-22 UTC.
@@ -14,17 +27,17 @@ con una omisión prevista del build Astro ausente en el job Python y cobertura
 95.44 %. El [run Web](https://github.com/adndvlp/IntVal/actions/runs/44964709034)
 terminó con 90 escenarios aprobados, 11 omisiones previstas y un fallo.
 Las secciones siguientes conservan la evidencia local y los pendientes que
-existían al preparar el primer commit; no sustituyen este resultado remoto.
+existían al preparar el primer commit; el resultado vigente es el cierre anterior.
 
 ## Alcance implementado
 
 | Requisito | Implementación y verificación |
 | --- | --- |
-| F11-R01 | Dockerfile multietapa: build Astro, dependencias Python y runtime sin Node/npm. Construcción real pendiente de CI |
-| F11-R02 | Fábrica `valoracion.web.distribucion:create_app`; rutas, MIME, caché, gzip, 404/405, salud y smoke ASGI con el build real aprobados. Repetición HTTP en imagen preparada |
-| F11-R03 | PORT obligatorio y validado, `0.0.0.0`, un worker, runtime preparado y `exec`. Pruebas de proceso/señales aprobadas; SIGTERM de imagen pendiente |
+| F11-R01 | Dockerfile multietapa: build Astro, dependencias Python y runtime sin Node/npm; construcción real aprobada en CI |
+| F11-R02 | Fábrica `valoracion.web.distribucion:create_app`; rutas, MIME, caché, gzip, 404/405, salud y smoke ASGI y HTTP en la imagen final aprobados |
+| F11-R03 | PORT obligatorio y validado, `0.0.0.0`, un worker, runtime preparado y `exec`; proceso, señales y SIGTERM en imagen aprobados |
 | F11-R04 | `iniciar_servicio.sh` inicia web/API; `iniciar_streamlit.sh` conserva la entrada anterior. Rollback y health checks documentados |
-| F11-R05 | Workflow Distribución construye y comprueba la imagen, conserva logs/manifiesto. Tests y Web siguen separados. Runs remotos del commit pendientes |
+| F11-R05 | Workflows Distribución, Tests y Web aprobados para el mismo commit, con reportes separados |
 | F11-R06 | README, CONTRIBUTING, arquitectura, desarrollo y SDD actualizados. Las capturas aprobadas de UI-5 siguen vigentes: no cambió el frontend |
 | F11-R07 | Regresión de Python, contratos, ejemplo demo y CLI protegidos. Sin cambios de fórmulas, catálogo, locks, snapshots financieros ni anexo |
 
@@ -111,9 +124,9 @@ en `temp/distribucion-local-qa/20261122T000101-921179Z/manifest.json`, con logs,
 JUnit, cobertura y huellas. Es una salida ignorada por Git y separada del smoke
 de imagen pendiente.
 
-## Imagen y CI: verificación pendiente
+## Imagen y CI
 
-Esta sesión no dispone de Docker ni de un daemon compatible. La ejecución de
+Esta sesión no disponía de Docker ni de un daemon compatible. La ejecución de
 `python qa_distribucion.py` termina con diagnóstico y estado `failed` en su
 manifiesto; no afirma haber construido la imagen. Los tags de las bases se
 comprobaron en el catálogo oficial; eso no sustituye un build real.
@@ -130,10 +143,12 @@ Los logs y el manifiesto quedan en `temp/distribucion-qa/` y se adjuntan como
 `reportes-distribucion` durante siete días, también cuando falla. No se publican
 imágenes ni servicios y no se usan credenciales del alojamiento.
 
-**Para aceptar F11:** obtener Distribución, Tests y Web verdes del commit
-entregado e inspeccionar el manifiesto con estado `passed`, ID de imagen y cierre
-completo. No repetir UI-5 ni pedir instalar Docker en el Mac para esa prueba.
-La verificación de una URL pública corresponde a un despliegue solicitado después.
+**Cierre acreditado:** Distribución, Tests y Web verdes en `52d1d52`, con el
+verificador de imagen terminado correctamente y su artefacto conservado. El
+script sólo informa éxito después de comprobar la imagen y el cierre completo;
+los logs y metadatos se verificaron mediante GitHub. No repetir UI-5 ni instalar
+Docker en el Mac para volver a acreditar esa ejecución. La verificación de una
+URL pública corresponde a un despliegue solicitado después.
 
 ## Fuentes primarias
 

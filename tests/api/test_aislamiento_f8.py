@@ -6,7 +6,7 @@ from importlib import import_module
 
 import pytest
 
-from tests.fixtures.proveedores_f8 import fabrica_controlada
+from tests.fixtures.proveedores_f8 import fabrica_controlada, fabrica_yahoo_rechazado
 from valoracion.web.esquemas import ConfiguracionWeb
 
 
@@ -66,3 +66,19 @@ def test_instancias_yahoo_no_comparten_cache_fx_entre_trabajos():
     primero._cache_fx["MXNUSD"] = 99
     assert "MXNUSD" not in segundo._cache_fx
     assert "MXNUSD" not in CACHE_FX
+
+
+def test_diagnostico_yahoo_sobrevive_al_hijo_y_su_log_no_expone_secretos(capfd):
+    import yfinance as yf
+
+    modulo = import_module("valoracion.web.aislamiento")
+    anterior = yf.config.debug.hide_exceptions
+    config = ConfiguracionWeb().a_dominio("market")
+    with modulo.EjecutorAislado("market", 8, fabrica_yahoo_rechazado) as ejecutor:
+        principal, _ = ejecutor.ejecutar("analysis", "AAPL", config)
+    assert principal["Mediana de modelos"] is None
+    assert "401" in principal["Notas"]
+    registro = capfd.readouterr().err
+    assert "YAHOO_UNAUTHORIZED" in registro
+    assert "SECRETO" not in registro and "SECRETO" not in principal["Notas"]
+    assert yf.config.debug.hide_exceptions == anterior

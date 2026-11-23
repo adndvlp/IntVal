@@ -6,18 +6,18 @@ La arquitectura web está detallada en la [SDD web: Astro, React y FastAPI](SDD_
 La presentación e interacción vigentes están en la [SDD de interfaz Liquid Glass](SDD_UI.md),
 con el [HTML completo como anexo normativo](../prototipo-intval-liquid-glass.html).
 Leer primero 21.19 para continuar. F1–F10 y UI-1–5 están implementadas y verificadas
-localmente. F11 tiene imagen, smoke y Tests aprobados en CI; Web requiere confirmar
-la corrección del detalle de UI-5 antes de la aceptación completa.
+localmente. F11 está cerrada en `52d1d52`, con Tests, Web y Distribución aprobados
+en CI, incluida la imagen final. La publicación de una URL sigue pendiente.
 
 | Campo | Valor |
 | --- | --- |
-| Versión del documento | 2.13 |
+| Versión del documento | 2.14 |
 | Fecha de elaboración | 2026-11-12 |
 | Última revisión de interfaz | 2026-11-21; cierre UI-5 y TDD_UI5.md |
 | Idioma del producto y del documento | Español |
 | Nombre actual de la carpeta | `valoracion_app` |
 | Línea base inspeccionada | Commit `635cd15` (`fst commit`) |
-| Estado | F1–F10 y UI-1–5 verificadas localmente. F11 con imagen/smoke y Tests aprobados en CI; corrección de Web pendiente del nuevo run. Continuidad en 21.19; publicación independiente |
+| Estado | F1–F11 y UI-1–5 implementadas. Cierre F11 con imagen y tres workflows verdes en 52d1d52; continuidad en 21.19. Publicación independiente |
 | Línea base de la etapa web | Commit 345aa0a, entrega F5; árbol de producto limpio antes de esta redacción |
 | Trabajo previo realizado | Creación y verificación de `.gitignore` |
 | Primera implementación acordada | F1: corrección de fallos, pruebas y automatización en una misma entrega |
@@ -1551,7 +1551,7 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | Entrega | Estado | Evidencia |
 | --- | --- | --- |
 | `.gitignore` | Completada | Archivo existente y comprobación E-005 |
-| SDD | Actualizada | Versión 2.13; continuidad vigente en 21.19 y extensión SDD_WEB.md |
+| SDD | Actualizada | Versión 2.14; continuidad vigente en 21.19 y extensión SDD_WEB.md |
 | F1 | Implementada y verificada localmente; incluida en CI previo a F5 | Suite, workflow, matriz y registro TDD; cierre en sección 21.6 |
 | F2 | Implementada y verificada localmente; incluida en CI previo a F5 | Paquete, catálogo, proveedor inyectable, pruebas migradas y ADR; cierre en sección 21.7 |
 | F3 | Implementada y verificada localmente | Metodología versionada, políticas/trace, ejemplo Decimal, UI/Excel y tests; cierre en sección 21.8. Sin validación predictiva |
@@ -1562,7 +1562,7 @@ La configuración mínima de tests/CI de F1 no espera a la formalización comple
 | F8 | Implementada y verificada localmente | [TDD_F8.md](TDD_F8.md); API, procesos, snapshots, cachés y Excel |
 | F9 | Implementada y verificada localmente | [TDD_F9.md](TDD_F9.md), dashboard y capturas reales |
 | F10 | Implementada y verificada localmente | [TDD_F10.md](TDD_F10.md); calidad integrada y referencias visuales |
-| F11 | Implementada; imagen y CI pendientes de aceptación | [TDD_F11.md](TDD_F11.md) y SDD web, sección 18.6 |
+| F11 | Cerrada; imagen y tres workflows de CI aprobados en 52d1d52 | [TDD_F11.md](TDD_F11.md) y SDD web, sección 18.6 |
 
 ## 20. Decisiones y riesgos
 
@@ -2231,13 +2231,30 @@ Las pruebas locales incluyen el build Astro y demo/API/Excel reales en ASGI.
 El commit `b725546` aprobó Distribución (imagen y smoke HTTP reales) y Tests.
 Web detectó 5 px de desbordamiento del detalle a 320 px con texto al 200 %;
 [TDD_UI5.md](TDD_UI5.md) registra la corrección y su matriz local enfocada aprobada.
-Confirmar el nuevo run de Web antes de aceptar F11; la validación local de macOS
-no sustituye Linux.
+El commit `52d1d52` aprobó después Tests, Web y Distribución: 537 pruebas Python,
+122 unitarias frontend y 91 escenarios de navegador, con las omisiones previstas
+documentadas. La imagen y su smoke HTTP/SIGTERM están verificados. F11 queda
+cerrada; la publicación de una URL requiere un encargo separado.
 
 No se modificaron fórmulas, catálogo, locks, versiones financieras, CLI ni anexo.
 Las capturas UI-5 siguen vigentes. Mantener una instancia/worker por los trabajos
 en memoria; un reinicio los pierde. El despliegue y la verificación de una URL
 pública requieren un encargo posterior. No se creó ningún servicio remoto.
+
+### 21.20 Incidente de adquisición de Mercado tras el despliegue
+
+El 2026-11-23 el usuario comunicó su despliegue en Render y resultados sin
+estimación para cualquier ticker. El detalle de AAPL conserva un precio, pero
+carece de información corporativa, monedas y estados financieros. Las respuestas
+HTTP 200/202 de la API y `/readyz` no comprueban la adquisición de Yahoo.
+
+Se corrigen el silenciamiento de errores del adaptador, la caché de resultados
+sin estimación y el anuncio de un análisis completado sin explicar ese resultado.
+Se añade un único reintento real de información ante fallos transitorios y
+diagnósticos seguros en logs y snapshot. Se mantienen fórmulas, clasificación,
+guardas de moneda/FX, versiones y contratos. La causa HTTP en Render todavía
+requiere observar el despliegue corregido; no se atribuye a un bloqueo de IP sin
+esa evidencia. Pruebas y límites en [TDD_MERCADO.md](TDD_MERCADO.md).
 
 ## 22. Fuentes y mantenimiento
 
@@ -2280,11 +2297,11 @@ software ya implementado se identifican por separado.
 | F8 | API de análisis, trabajos, cachés, históricos y Excel | Implementada: [TDD_F8.md](TDD_F8.md) |
 | F9 | Dashboard React e integración con paridad funcional | Implementada: [TDD_F9.md](TDD_F9.md) |
 | F10 | Calidad integrada, accesibilidad, móvil, rendimiento y capturas | Implementada y verificada localmente; [TDD_F10.md](TDD_F10.md) |
-| F11 | Distribución agnóstica, arranque y cierre de la migración | Implementada; imagen/CI pendientes: [TDD_F11.md](TDD_F11.md) |
+| F11 | Distribución agnóstica, arranque y cierre de la migración | Cerrada con imagen y CI: [TDD_F11.md](TDD_F11.md) |
 
 Cada fase tiene requisitos, primeros casos RED, criterios de cierre y una matriz
 de verificación en la extensión. F10 está cerrada con el alcance de aquella entrega.
 La integración del diseño Liquid Glass sigue el plan de SDD_UI.md y está cerrada.
-F11 se implementa por solicitud explícita, con aceptación pendiente. La publicación de una URL sigue siendo una acción
+F11 se implementó por solicitud explícita y está cerrada. La publicación de una URL sigue siendo una acción
 externa separada del diseño y de la preparación del artefacto.
 

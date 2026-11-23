@@ -162,6 +162,10 @@
   font-weight: 400;
   overflow-wrap: anywhere;
 }
+.workspace .comparison-table tbody tr {
+  cursor: pointer;
+}
+.workspace .comparison-table tbody tr:is(:hover, :focus-within) :is(th, td),
 .workspace .comparison-table tr[data-selected='true'] :is(th, td) {
   background: var(--blue-soft);
 }
@@ -169,6 +173,7 @@
   color: var(--muted);
 }
 .ui-dialog {
+  margin: auto;
   max-inline-size: calc(100% - 32px);
   max-block-size: calc(100dvh - 32px);
   border: 1px solid var(--glass-edge);
@@ -179,6 +184,7 @@
   box-shadow: var(--glass-shadow);
 }
 .ui-dialog:modal {
+  inset: 0;
   overscroll-behavior: contain;
 }
 .ui-dialog::backdrop {

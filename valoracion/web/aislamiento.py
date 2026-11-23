@@ -35,6 +35,8 @@ def crear_proveedor(source):
 def _servir(conexion, source, fabrica):
     try:
         proveedor = fabrica(source)
+        if isinstance(proveedor, ProveedorYahoo):
+            proveedor.preparar_proceso()
         while True:
             operacion, argumentos = conexion.recv()
             try:

@@ -115,7 +115,7 @@ La vista empieza con Elige las empresas y una superficie que contiene buscador, 
 
 ### 4.2 Acciones y alcance de la selección
 
-La barra de acciones queda sobre la lista y disponible al desplazarse: Seleccionar página, conteo global, acción global cuando aplica, Limpiar y Analizar.
+La barra de acciones queda sobre la lista y disponible al desplazarse: Seleccionar página, conteo global, acción global cuando aplica, Limpiar y Analizar. Al fijarse queda pegada al borde superior del viewport, sin una franja por la que se vean pasar filas por encima.
 
 | Acción                         | Regla                                                                                                                                      |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -194,7 +194,7 @@ Cabecera: Resultados, conteo del lote o de coincidencias, Editar selección y Ex
 
 | Columna        | Contenido                                                            | Alineación en escritorio            |
 | -------------- | -------------------------------------------------------------------- | ----------------------------------- |
-| Empresa        | Nombre; símbolo y moneda en segunda línea. El nombre abre el detalle | Izquierda; ancho de referencia 37 % |
+| Empresa        | Nombre; símbolo y moneda en segunda línea. Toda la fila abre el detalle | Izquierda; ancho de referencia 37 % |
 | Precio         | Precio por acción en la moneda de la empresa                         | Centro; 21 %                        |
 | Valor estimado | Estimación central o Sin estimación                                  | Centro; 21 %                        |
 | Diferencia     | Diferencia porcentual con signo o —                                  | Centro; 21 %                        |
@@ -214,6 +214,8 @@ Cuando el contenedor no supera el ancho mínimo de la tabla (50rem en la app; 43
 **UI-RES-06.** No hay filtros de Precio >/< o Diferencia >/<, panel Filtrar, selectores adicionales de mercado/disponibilidad ni chips que repitan esas condiciones. La búsqueda y la ordenación desde los encabezados son las interacciones vigentes.
 
 **UI-RES-07.** No duplicar Precio, Estimado, Diferencia o Ver análisis dentro de cada fila como si fueran tarjetas. No añadir una explicación repetida del contenido del Excel bajo la tabla.
+
+**UI-RES-08.** Pulsar cualquier celda o espacio de una fila abre el detalle de esa empresa una sola vez. La fila se reconoce como accionable por el cursor y el resaltado al pasar sobre ella o enfocar su enlace. El nombre conserva su enlace para el teclado y el retorno de foco al cerrar; no añadir una parada de tabulación por celda. Seleccionar texto para copiar cifras no abre el detalle.
 
 ### 6.2 Formato y significado
 
@@ -376,7 +378,7 @@ Los valores CSS completos, espaciados, radios, sombras y posiciones están en el
 
 ## 11. Modales, foco y comportamiento adaptable
 
-**UI-DLG-01.** Detalle y Ajustes usan un diálogo modal real, con nombre y foco inicial. No permitir interacción accidental con la comparación que queda debajo.
+**UI-DLG-01.** Detalle y Ajustes usan un diálogo modal real, centrado horizontal y verticalmente en el viewport, con nombre y foco inicial. Conservar los límites de tamaño y el desplazamiento interno en pantallas pequeñas. No permitir interacción accidental con la comparación que queda debajo.
 
 **UI-DLG-02.** Cerrar mediante control, Escape o un gesto que empieza y termina fuera de sus límites. `closedby="any"` es la referencia; sin soporte, usar un fallback que respete el evento cancelable antes de cerrar.
 

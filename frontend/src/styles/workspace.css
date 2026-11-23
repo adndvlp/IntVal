@@ -172,6 +172,10 @@
 .muted {
   color: var(--muted);
 }
+html:has(.ui-dialog:modal) {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
 .ui-dialog {
   margin: auto;
   max-inline-size: calc(100% - 32px);

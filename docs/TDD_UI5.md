@@ -327,9 +327,10 @@ conserva su comprobación de ejecutables. RED: el contrato del workflow rechazó
 la ausencia de `--user 1001`. GREEN: 55 comprobaciones locales aprobadas.
 
 El recorrido desktop de Chromium observó 7.5 px en el centrado horizontal.
-La prueba comparaba el modal con `documentElement.clientWidth`, que excluye la
-barra de desplazamiento, en lugar del ancho del viewport. Usa ahora `innerWidth`,
-manteniendo 1 px de tolerancia; conserva la medición vertical.
+Se atribuyó inicialmente a la referencia `documentElement.clientWidth` y se
+cambió por `innerWidth`, manteniendo 1 px de tolerancia y la medición vertical.
+El run siguiente demostró que ese cambio no resolvía el defecto; véase el
+seguimiento del centrado al final de este documento.
 Referencia: [clientWidth](https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth)
 e [innerWidth](https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth).
 
@@ -368,3 +369,36 @@ queda pendiente de CI: esta sesión sigue sin poder iniciar Chromium. Registros:
 `/tmp/intval-ci-smoke-red.log`, `/tmp/intval-ci-smoke-green.log` y
 `/tmp/intval-ci-smoke-list.log`, `/tmp/intval-mobile-row-unit.log` y
 `/tmp/intval-mobile-fix-list.log`.
+
+## Seguimiento — centrado y reserva de scrollbar (2026-11-23)
+
+El [run Web 45269417712](https://github.com/adndvlp/IntVal/actions/runs/45269417712)
+de `e584b48` terminó con **89 aprobadas, 11 omitidas y dos fallidas**. Firefox
+arrancó y el recorrido móvil superó el clic que agotaba su tiempo. Sólo fallan
+las dos comprobaciones de centrado de Chromium (desktop y móvil): 7.5 px frente
+al máximo de 1 px. Tests y Distribución pasaron para ese SHA.
+
+`html` conserva `scrollbar-gutter: stable`. La evidencia del primer run muestra
+una reserva de 15 px en Chromium incluso cuando no hay una barra pintada. La
+captura desktop sitúa el centro del modal en 632.5 px para una imagen de 1280 px.
+Cambiar la referencia de JavaScript sin cambiar la reserva no fue una solución.
+La interacción de la reserva con el viewport y elementos fijos se documenta en
+[CSSWG #8099](https://github.com/w3c/csswg-drafts/issues/8099).
+
+Se añade `html:has(.ui-dialog:modal)` con `overflow: hidden` y
+`scrollbar-gutter: auto`: mientras hay un modal, el fondo no se desplaza ni
+reserva una columna lateral. El diálogo conserva su centrado nativo mediante
+insets y márgenes automáticos, límites de tamaño, scroll interno y capa modal.
+Al cerrar el último modal dejan de aplicarse ambas reglas. La prueba mantiene
+`innerWidth` y el límite de **1 px**, sin compensaciones numéricas ni cambios
+específicos de Chromium.
+
+Pasan las 20 pruebas de Modal, CompanyDetail y ResultsTable, las 69 del shell,
+las dos del medidor de activos, formato, build y presupuesto de carga. El CSS
+compilado incluye la regla. Se intentó ejecutar exclusivamente los dos casos
+E2E con Playwright, pero el sandbox impide enlazar `127.0.0.1:8766` (`operation not
+permitted`); el servidor no llegó a iniciar y no se ejecutaron esos casos. No se
+presentan las pruebas de componentes como validación del centrado en navegador.
+Registros: `/tmp/intval-center-unit.log`, `/tmp/intval-center-build.log`,
+`/tmp/intval-center-shell.log`, `/tmp/intval-center-budget.log` y
+`/tmp/intval-center-e2e.log`. La validación E2E de esta corrección sigue pendiente.

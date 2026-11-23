@@ -311,3 +311,60 @@ Ruff, formato, YAML, sintaxis Bash y diff comprobados. Registros locales:
 `/tmp/intval-ci-git-red.log` y `/tmp/intval-ci-git-green.log`.
 El próximo push debe validar el recorrido completo en Actions; no se afirma que
 las pruebas E2E hayan pasado en esta revisión.
+
+## Seguimiento — primer smoke en el contenedor (2026-11-23)
+
+El [run Web 45261299845](https://github.com/adndvlp/IntVal/actions/runs/45261299845)
+de `dc56f2c` aprobó todos los pasos previos y ejecutó los 102 escenarios:
+59 aprobados, 7 omitidos y 36 fallidos. Se leyeron los logs completos. Tests y
+Distribución pasaron para ese mismo SHA.
+
+34 fallos corresponden al arranque de Firefox: el proceso corre como root y
+`/github/home` pertenece a `pwuser`. Se cambia el job al usuario 1001 siguiendo la
+[configuración de contenedores de Playwright](https://playwright.dev/docs/ci#via-containers),
+sin reasignar `HOME` ni desactivar protecciones del navegador. La preparación
+conserva su comprobación de ejecutables. RED: el contrato del workflow rechazó
+la ausencia de `--user 1001`. GREEN: 55 comprobaciones locales aprobadas.
+
+El recorrido desktop de Chromium observó 7.5 px en el centrado horizontal.
+La prueba comparaba el modal con `documentElement.clientWidth`, que excluye la
+barra de desplazamiento, en lugar del ancho del viewport. Usa ahora `innerWidth`,
+manteniendo 1 px de tolerancia; conserva la medición vertical.
+Referencia: [clientWidth](https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth)
+e [innerWidth](https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth).
+
+El tercer fallo distinto es el timeout de 30 s del recorrido Chromium móvil.
+El usuario aportó `temp/reportes-web.zip` (artefacto `14860223018`), que permitió
+leer la traza y la captura. La descarga de Excel y su conciliación terminaron;
+el bloqueo ocurre en el clic de la primera celda numérica, línea 97 de la versión
+ejecutada, llamada `vqgm@832`. El primer intento apunta a `(248.07, 785.07)` y
+`#palette-controls summary` intercepta el clic. Al reintentar, Chromium cambia
+el desplazamiento y el encabezado fijo de la empresa también intercepta el
+centro de la celda. La traza repite esas dos intercepciones hasta el límite.
+
+La prueba ahora desplaza esa misma celda con `scrollIntoView`, centrada
+verticalmente y alineada al extremo derecho, antes de pulsarla. Conserva el clic
+real sobre una cifra y la comprobación de apertura del detalle desde la fila.
+No modifica la aplicación ni oculta Apariencia. Se retira la espera diagnóstica
+de 10 s; no se añaden reintentos, acciones forzadas, omisiones ni aumentos de
+tiempo. Evidencia extraída en `temp/ci-dc56f2c-mobile/`.
+
+Tras revisar el registro completo aportado por el usuario, se retiran los
+marcadores manuales de etapas, el volcado de coordenadas y el arranque adicional
+de cada navegador previo a la suite. Playwright ya registra acciones y trazas.
+Firefox y centrado mantienen sus correcciones.
+
+El aviso `analysis_no_estimate` queda limitado a Mercado: `DEMO-INCOMPLETA`
+carece de estimación a propósito. La regresión comprueba ambas fuentes y que
+ninguna cachee filas vacías. RED: falló la ausencia de aviso en demo, mientras
+Mercado pasó. GREEN: 21 pruebas del gestor y aislamiento aprobadas. Registros:
+`/tmp/intval-demo-log-red.log` y `/tmp/intval-demo-log-green.log`.
+
+Pasan Ruff, formato, validación YAML/Bash/JavaScript, ESLint y el listado de los
+12 casos del dashboard. Tras corregir el recorrido móvil, pasan también las
+7 pruebas de ResultsTable, incluidas la apertura desde cada celda, teclado y la
+selección de texto sin abrir el detalle. La ejecución E2E de las correcciones
+queda pendiente de CI: esta sesión sigue sin poder iniciar Chromium. Registros:
+`/tmp/intval-ci-smoke-red.log`, `/tmp/intval-ci-smoke-green.log` y
+`/tmp/intval-ci-smoke-list.log`, `/tmp/intval-mobile-row-unit.log` y
+`/tmp/intval-mobile-fix-list.log`.

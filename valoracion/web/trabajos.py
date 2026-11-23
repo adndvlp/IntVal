@@ -536,7 +536,7 @@ class GestorTrabajos:
                         p, d = crear_resultado_error(ticker, ErrorProveedor())
                     sello = self._sello(self.ajustes.analysis_cache_ttl_seconds)
                 fila = deepcopy((p, d, sello))
-                if p["Mediana de modelos"] is None:
+                if job.source == "market" and p["Mediana de modelos"] is None:
                     LOG.warning(
                         "analysis_no_estimate id=%s source=%s ticker=%s status=%s reporting_currency=%s quote_currency=%s",
                         job.id,

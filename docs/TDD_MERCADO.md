@@ -57,7 +57,8 @@ un objeto nuevo. No hay bucles, esperas añadidas ni insistencia ante 401/403/42
 Se conserva el límite temporal del proceso aislado. La recuperación no deja un
 diagnóstico de fallo definitivo en un resultado que ya obtuvo los metadatos.
 
-El gestor registra `analysis_no_estimate` y sólo introduce en la caché filas
+El gestor registra `analysis_no_estimate` sólo para Mercado; la demo incompleta
+es deliberada y no genera ese aviso. Sólo introduce en la caché filas
 con una mediana disponible y estado distinto de `ERROR`. Los trabajos y su
 idempotencia siguen vigentes. Se puede volver a analizar sin reutilizar una fila
 vacía. El lote sigue terminando como procesado y conserva resultados y Excel.

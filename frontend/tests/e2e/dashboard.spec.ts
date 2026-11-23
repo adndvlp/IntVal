@@ -94,7 +94,16 @@ test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot
       encoding: 'utf8',
     }),
   ).toContain('conciliados');
-  await table.getByRole('cell').first().click();
+  const priceCell = table.getByRole('cell').first();
+  // Evita Apariencia y la columna fija antes de pulsar una cifra de la fila.
+  await priceCell.evaluate((cell) =>
+    cell.scrollIntoView({
+      block: 'center',
+      inline: 'end',
+      behavior: 'instant',
+    }),
+  );
+  await priceCell.click();
   const detail = page.getByRole('dialog', {
     name: 'Manufacturas Horizonte',
     exact: true,
@@ -103,9 +112,7 @@ test('demo real: tabla ordenable, detalle diferido y Excel completo del snapshot
   const position = await detail.evaluate((dialog) => {
     const rect = dialog.getBoundingClientRect();
     return {
-      horizontal: Math.abs(
-        rect.left + rect.width / 2 - document.documentElement.clientWidth / 2,
-      ),
+      horizontal: Math.abs(rect.left + rect.width / 2 - innerWidth / 2),
       vertical: Math.abs(rect.top + rect.height / 2 - innerHeight / 2),
     };
   });

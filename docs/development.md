@@ -126,10 +126,11 @@ El adaptador registra `yahoo_data_unavailable` con símbolo, etapa (`info`,
 `income_stmt`, `cashflow` o `balance_sheet`), código y estado HTTP disponible.
 Distingue `YAHOO_UNAUTHORIZED` (401/403), `YAHOO_RATE_LIMITED` (429),
 `YAHOO_TEMPORARY_ERROR` (5xx), `YAHOO_TIMEOUT`, `YAHOO_CONNECTION_ERROR`,
-`YAHOO_EMPTY_RESPONSE` y otros errores de datos. El gestor añade
+`YAHOO_EMPTY_RESPONSE` y otros errores de datos. En Mercado, el gestor añade
 `analysis_no_estimate` con ID de análisis y monedas conocidas. Estos eventos son
 warnings y aparecen con el nivel de logs habitual; no hace falta activar debug
 de yfinance ni mostrar cookies, URLs o cuerpos de respuestas del proveedor.
+La demo incompleta es deliberada y no genera ese aviso.
 
 La adquisición web activa las excepciones de yfinance sólo dentro del proceso
 aislado. Si la consulta de información falla transitoriamente, permite un único
@@ -403,7 +404,9 @@ contra la API real.
 El job se ejecuta dentro de `mcr.microsoft.com/playwright:v1.65.0-noble`, con
 Chromium, Firefox, WebKit y sus bibliotecas del sistema ya incluidos. No ejecuta
 `playwright install --with-deps` ni depende del mirror APT del runner para los
-navegadores. Antes de probar comprueba los tres ejecutables. La versión de la
+navegadores. Antes de probar comprueba los tres ejecutables. El job usa el usuario
+1001, propietario de la carpeta personal montada,
+para permitir el arranque de Firefox sin cambiar `HOME`. La versión de la
 imagen debe coincidir con `@playwright/test` del manifest y el lock; la prueba del
 workflow protege esa relación. Conserva Node/Python fijados, un worker, cero
 reintentos y los seis proyectos. Esto sólo cambia CI, no la imagen publicada.

@@ -34,6 +34,7 @@ def test_ci_web_instala_lock_y_comprueba_tipos_y_api_real():
         f"mcr.microsoft.com/playwright:v{version_playwright}-noble"
     )
     assert "--ipc=host" in job["container"]["options"]
+    assert "--user 1001" in job["container"]["options"]
     assert "playwright install" not in comandos
     assert "apt-get" not in comandos
     instalar_npm = f"npm install --global npm@{manifest['engines']['npm']}"

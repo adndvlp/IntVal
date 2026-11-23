@@ -414,6 +414,11 @@ toolcache, que puede apuntar a una ruta del host ausente dentro del contenedor.
 La instalación usa `python -m pip` dentro de `.venv`; primero comprueba el
 intérprete, SSL y el módulo pip. Las cachés de los jobs que ejecutan directamente
 en el host no cambian.
+La comprobación de archivos generados identifica primero el checkout con
+`rev-parse` y compara contra `HEAD`. Esas invocaciones de Git declaran únicamente
+`GITHUB_WORKSPACE` como `safe.directory`, mediante `-c`, para reconocer el montaje
+del contenedor sin depender de la configuración temporal de checkout. No se
+modifica la configuración global ni se acepta cualquier directorio.
 `tests.yml` conserva todas las regresiones Python, incluidas las de API, y el
 umbral de cobertura combinada de 85 %. Ambos workflows sólo tienen permisos
 de lectura y no despliegan. Los reportes y capturas de tests están ignorados en

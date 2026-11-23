@@ -54,7 +54,8 @@ jobs:
           python -m examples.exportar_demo_web --check
           python -m valoracion.web.contratos --check
           npm run types:generate --prefix frontend
-          git diff --exit-code -- contracts/openapi.v1.json frontend/src/lib/generated/api.ts
+          git -c safe.directory="$GITHUB_WORKSPACE" rev-parse --show-toplevel
+          git -c safe.directory="$GITHUB_WORKSPACE" diff --exit-code HEAD -- contracts/openapi.v1.json frontend/src/lib/generated/api.ts
       - name: Lint, formato y tipos
         working-directory: frontend
         run: |

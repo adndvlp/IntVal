@@ -275,3 +275,39 @@ YAML, sintaxis Bash y diff sin errores. Registros locales:
 `/tmp/intval-ci-python-red.log` y `/tmp/intval-ci-python-green.log`.
 La ejecución real del workflow corregido sigue pendiente del próximo push;
 no se presenta la prueba de configuración como validación del contenedor.
+
+## Seguimiento — comparación Git de contratos en el contenedor (2026-11-23)
+
+El [run Web 45259581142](https://github.com/adndvlp/IntVal/actions/runs/45259581142)
+de `15a2d04` aprobó contenedor, Python/SSL/venv/pip y Node/npm. Falló en la
+comprobación de artefactos: el diff comparaba `a/contracts/openapi.v1.json` con
+`b/frontend/src/lib/generated/api.ts`, en vez de cada archivo con su versión.
+El checkout había creado `.git` y descargado el commit con Git 2.43.0; no fue una
+descarga por REST sin historial. Tests y Distribución pasaron para ese SHA.
+
+Git puede activar implícitamente `--no-index` con dos rutas cuando no reconoce
+un worktree. Se reprodujo **el mismo diff JSON contra TypeScript**, con ambos
+archivos versionados y sin cambios, forzando en un repositorio temporal la
+guarda de propietario de Git. La prueba usa su opción de pruebas
+`GIT_TEST_ASSUME_DIFFERENT_OWNER`, sin sudo, cambios de propietario ni ajustes del
+Git del usuario. Los logs remotos muestran la excepción `safe.directory` dentro
+de la configuración temporal de checkout; no se leyó el propietario remoto.
+
+Las dos invocaciones de Git del paso declaran `safe.directory` sólo para
+`GITHUB_WORKSPACE` mediante `-c`. Primero se exige un checkout válido con
+`rev-parse`; después `diff --exit-code HEAD -- ...` compara los dos artefactos
+contra el commit. No se elimina el control ni se confían todas las rutas.
+
+RED: la regresión nueva produjo el diff cruzado y código 1 con archivos intactos.
+GREEN: pasa con el checkout intacto y rechaza por separado cambios reales en el
+JSON y en el TypeScript, mostrando para cada uno el mismo archivo en ambos lados.
+Pasan 55 pruebas de CI/entorno/distribución. Se regeneraron además los tipos reales
+y pasaron ambos `--check` y el diff contra HEAD. Los hashes reales son
+`261dc60c60b0bc374a27b5fb254263800254dfb7` y
+`cd52f0ac646a39328d68df6959d264ce580ea653`, iguales a los dos objetos que el
+informe remoto estaba comparando incorrectamente. No había drift de contratos.
+
+Ruff, formato, YAML, sintaxis Bash y diff comprobados. Registros locales:
+`/tmp/intval-ci-git-red.log` y `/tmp/intval-ci-git-green.log`.
+El próximo push debe validar el recorrido completo en Actions; no se afirma que
+las pruebas E2E hayan pasado en esta revisión.

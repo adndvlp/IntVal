@@ -14,8 +14,13 @@ def test_ci_web_instala_lock_y_comprueba_tipos_y_api_real():
     assert workflow["permissions"] == {"contents": "read"}
     assert set(workflow["on"]) == {"push", "pull_request", "workflow_dispatch"}
     job = workflow["jobs"]["web"]
-    assert job["runs-on"] == "ubuntu-latest"
     pasos = job["steps"]
+    preparar_python = next(
+        paso for paso in pasos if paso.get("uses", "").startswith("actions/setup-python@")
+    )
+    # La caché automática invoca el script pip del host, no python -m pip.
+    assert "cache" not in preparar_python["with"]
+    assert job["runs-on"] == "ubuntu-24.04"
     for paso in pasos:
         assert not paso.get("continue-on-error", False)
         if "uses" in paso:

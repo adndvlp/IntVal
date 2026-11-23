@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: mcr.microsoft.com/playwright:v1.65.0-noble
       options: --init --ipc=host
@@ -30,13 +30,11 @@ jobs:
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version-file: .python-version
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
       - name: Instalar Python en entorno limpio
         run: |
+          python -c "import ssl, sys; print(sys.executable); print(ssl.OPENSSL_VERSION)"
           python -m venv .venv
+          .venv/bin/python -m pip --version
           .venv/bin/python -m pip install --no-deps -r requirements-dev.txt
           .venv/bin/python -m pip check
           python -c "import os; from pathlib import Path; open(os.environ['GITHUB_PATH'], 'a', encoding='utf-8').write(str(Path('.venv/bin').resolve()) + '\n')"

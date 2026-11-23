@@ -244,3 +244,34 @@ La ejecución de esta imagen y la suite de navegador corregida quedan pendientes
 del próximo commit en GitHub Actions. Docker no está instalado en esta sesión;
 no se presenta la comprobación estática como una prueba del contenedor. Repetir
 el run del SHA anterior seguiría usando el workflow anterior.
+
+## Seguimiento — Python del runner dentro del contenedor (2026-11-23)
+
+El [run Web 45257793121](https://github.com/adndvlp/IntVal/actions/runs/45257793121)
+de `2455bba` aprobó la inicialización de la imagen, pero falló en `setup-python`
+al invocar `/__t/Python/3.12.16/x64/bin/pip cache dir`, con `spawn ... ENOENT`.
+No llegó a crear `.venv` ni a ejecutar pruebas. Tests y Distribución sí pasaron.
+
+El cambio anterior dejó activa la caché automática de pip al trasladar el job
+al contenedor. Se confirmó en el código de la
+[acción fijada](https://github.com/actions/setup-python/blob/6d4fd22b20465ccc0f7354476588e8df7c9ca0e0/src/cache-distributions/pip-cache.ts)
+que ejecuta `pip cache dir` directamente. Los logs muestran el montaje de
+`/opt/hostedtoolcache` del host como `/__t`, un host Ubuntu 26.04 y un contenedor
+Noble. La acción declara la versión a partir del toolcache antes de haber
+ejecutado ese intérprete. No se inspeccionó el shebang del pip remoto: se documenta
+como riesgo de esa instalación reubicada, no como un archivo leído en CI.
+
+Se retira la caché automática de pip sólo del job Web y se fija su runner a
+Ubuntu 24.04, igual que la base del contenedor. Así tampoco se reutilizan binarios
+de Python de Ubuntu 26 dentro de Ubuntu 24. Antes de crear `.venv` se comprueba
+que Python y SSL funcionen; después se ejecuta el módulo pip de ese entorno.
+Se conserva la imagen de Playwright, sin instalaciones APT, y no se borran cachés
+del runner ni se añaden enlaces a rutas del host. El resto de los jobs conserva
+su caché de paquetes.
+
+RED: la regresión del workflow rechazó `cache: pip` en `setup-python`.
+GREEN: 54 pruebas de CI, entorno y distribución aprobadas; Ruff, formato,
+YAML, sintaxis Bash y diff sin errores. Registros locales:
+`/tmp/intval-ci-python-red.log` y `/tmp/intval-ci-python-green.log`.
+La ejecución real del workflow corregido sigue pendiente del próximo push;
+no se presenta la prueba de configuración como validación del contenedor.

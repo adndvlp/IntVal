@@ -407,6 +407,13 @@ navegadores. Antes de probar comprueba los tres ejecutables. La versión de la
 imagen debe coincidir con `@playwright/test` del manifest y el lock; la prueba del
 workflow protege esa relación. Conserva Node/Python fijados, un worker, cero
 reintentos y los seis proyectos. Esto sólo cambia CI, no la imagen publicada.
+El runner se fija a `ubuntu-24.04`, como la base Noble del contenedor, para no
+reutilizar un Python precompilado en un sistema distinto. En este job se desactiva
+la caché automática de pip de `setup-python`: invoca directamente el script del
+toolcache, que puede apuntar a una ruta del host ausente dentro del contenedor.
+La instalación usa `python -m pip` dentro de `.venv`; primero comprueba el
+intérprete, SSL y el módulo pip. Las cachés de los jobs que ejecutan directamente
+en el host no cambian.
 `tests.yml` conserva todas las regresiones Python, incluidas las de API, y el
 umbral de cobertura combinada de 85 %. Ambos workflows sólo tienen permisos
 de lectura y no despliegan. Los reportes y capturas de tests están ignorados en

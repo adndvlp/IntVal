@@ -22,6 +22,13 @@ def test_ci_web_instala_lock_y_comprueba_tipos_y_api_real():
             assert re.fullmatch(r"[\w/-]+@[a-f0-9]{40}", paso["uses"])
     comandos = "\n".join(paso.get("run", "") for paso in pasos)
     manifest = json.loads((RAIZ / "frontend/package.json").read_text(encoding="utf-8"))
+    version_playwright = manifest["devDependencies"]["@playwright/test"]
+    assert job["container"]["image"] == (
+        f"mcr.microsoft.com/playwright:v{version_playwright}-noble"
+    )
+    assert "--ipc=host" in job["container"]["options"]
+    assert "playwright install" not in comandos
+    assert "apt-get" not in comandos
     instalar_npm = f"npm install --global npm@{manifest['engines']['npm']}"
     assert instalar_npm in comandos
     assert comandos.index(instalar_npm) < comandos.index("npm ci")
@@ -38,7 +45,8 @@ def test_ci_web_instala_lock_y_comprueba_tipos_y_api_real():
         "python -m examples.exportar_demo_web --check",
         "npm run types:generate",
         "git diff --exit-code",
-        "playwright install --with-deps chromium",
+        "accessSync(browser.executablePath(), constants.X_OK)",
+        "[chromium, firefox, webkit]",
     ):
         assert comando in comandos
     assert "contracts/openapi.v1.json" in comandos

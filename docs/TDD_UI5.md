@@ -206,3 +206,41 @@ pendiente de navegador en CI, sin atribuirla a jsdom ni a la captura aportada.
 Build, ESLint, formato, las 69 pruebas de shell/anexo y presupuesto de carga
 aprobados. Registros locales en `/tmp/intval-sticky-build.log`,
 `/tmp/intval-sticky-shell.log` y `/tmp/intval-sticky-e2e-list.log`.
+
+## Seguimiento — preparación de navegadores en CI (2026-11-23)
+
+El [run Web 45248245455](https://github.com/adndvlp/IntVal/actions/runs/45248245455)
+de `d642a33` terminó cancelado. El job `137950637321` aprobó instalación Python,
+Node/npm, locks, contratos, lint/formato/tipos, unitarias y build/shell/presupuesto.
+La preparación de navegadores consumió 13 min 48 s y se canceló durante la
+descarga APT; el límite del job era 15 minutos. El smoke E2E quedó **omitido por
+esa cancelación**, no aprobado ni fallido por comportamiento de la aplicación.
+Tests y Distribución sí terminaron aprobados para ese mismo commit.
+
+Se leyeron los pasos y logs mediante GitHub. En el run anterior aprobado,
+`44967048831`, APT descargó esos mismos 140 MB en 7 segundos. Ambos runners eran
+Ubuntu 26.04; no se atribuye el incidente a incompatibilidad con Ubuntu 26.04 ni
+se cambian las dependencias de la app por esa suposición.
+
+El job Web pasa a la imagen oficial
+`mcr.microsoft.com/playwright:v1.65.0-noble`. La etiqueta se comprobó en el
+[registro de Microsoft](https://mcr.microsoft.com/v2/playwright/tags/list).
+La [documentación de Playwright](https://playwright.dev/docs/docker) identifica
+que incluye navegadores y bibliotecas del sistema; el paquete se instala con
+el lock de la app. Se sigue su [modalidad de CI en contenedor](https://playwright.dev/docs/ci#via-containers),
+con `--init --ipc=host`. Antes del smoke se verifica el permiso de ejecución de
+Chromium, Firefox y WebKit. Se elimina `playwright install --with-deps` del job;
+no se cambian workers, proyectos, reintentos, tolerancias ni el límite de 15 min.
+No hay nuevos secretos ni cambios en la imagen de producción.
+
+RED: la prueba del workflow exigió un entorno preinstalado compatible con la
+versión de `@playwright/test` y falló por ausencia de `container`. GREEN: 54 pruebas
+de CI, entorno reproducible y distribución aprobadas, con un aviso conocido de
+dependencia. Pasan Ruff, formato, diff, parseo YAML, sintaxis Bash de todos los
+pasos y sintaxis del JavaScript que comprueba ejecutables.
+Registros: `/tmp/intval-ci-image-red.log` y `/tmp/intval-ci-image-green.log`.
+
+La ejecución de esta imagen y la suite de navegador corregida quedan pendientes
+del próximo commit en GitHub Actions. Docker no está instalado en esta sesión;
+no se presenta la comprobación estática como una prueba del contenedor. Repetir
+el run del SHA anterior seguiría usando el workflow anterior.

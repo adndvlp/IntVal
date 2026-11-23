@@ -400,6 +400,13 @@ otro navegador. La suite cierra sus procesos al terminar.
 `web.yml` prepara entornos nuevos, instala el lock, comprueba OpenAPI/tipos sin
 drift, lint, formato, tipos, tests, build, HTML, presupuestos y los tres motores
 contra la API real.
+El job se ejecuta dentro de `mcr.microsoft.com/playwright:v1.65.0-noble`, con
+Chromium, Firefox, WebKit y sus bibliotecas del sistema ya incluidos. No ejecuta
+`playwright install --with-deps` ni depende del mirror APT del runner para los
+navegadores. Antes de probar comprueba los tres ejecutables. La versión de la
+imagen debe coincidir con `@playwright/test` del manifest y el lock; la prueba del
+workflow protege esa relación. Conserva Node/Python fijados, un worker, cero
+reintentos y los seis proyectos. Esto sólo cambia CI, no la imagen publicada.
 `tests.yml` conserva todas las regresiones Python, incluidas las de API, y el
 umbral de cobertura combinada de 85 %. Ambos workflows sólo tienen permisos
 de lectura y no despliegan. Los reportes y capturas de tests están ignorados en

@@ -11,6 +11,9 @@ permissions:
 jobs:
   web:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --init --ipc=host
     timeout-minutes: 15
     defaults:
       run:
@@ -69,9 +72,17 @@ jobs:
           npm run build
           npm run test:shell
           npm run test:assets
-      - name: Preparar navegador
+      - name: Comprobar navegadores incluidos en la imagen
         working-directory: frontend
-        run: npx --no-install playwright install --with-deps chromium firefox webkit
+        run: |
+          node --input-type=module <<'JS'
+          import { chromium, firefox, webkit } from '@playwright/test';
+          import { accessSync, constants } from 'node:fs';
+          for (const browser of [chromium, firefox, webkit]) {
+            accessSync(browser.executablePath(), constants.X_OK);
+            console.log(`${browser.name()}: ejecutable disponible`);
+          }
+          JS
       - name: Smoke contra la API real
         working-directory: frontend
         run: npm run test:e2e

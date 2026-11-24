@@ -186,7 +186,10 @@ def create_app(
         catalogo_local = (
             demo.catalogo()
             if es_demo
-            else [{"ticker": t, "market": mercado_de_ticker(t)} for t in universo.todos]
+            else [
+                {"ticker": t, "market": mercado_de_ticker(t), "name": universo.nombres.get(t)}
+                for t in universo.todos
+            ]
         )
         items = [e for e in catalogo_local if consulta.market in {"all", e["market"]}]
         return {

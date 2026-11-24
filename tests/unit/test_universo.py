@@ -41,6 +41,25 @@ def test_cargar_catalogo_local_valida_identidad_y_preserva_orden(tmp_path):
     assert catalogo.fecha_snapshot == "2026-11-12"
     assert catalogo.fecha_verificacion_fuentes is None
     assert dict(catalogo.fuentes[0]) == datos["fuentes"][0]
+    assert catalogo.nombres == {}
+
+
+def test_cargar_nombres_por_simbolo_exacto(tmp_path):
+    datos = documento()
+    datos["nombres"] = {"TEST.MX": "Compañía de México"}
+    catalogo = cargar(tmp_path, datos)
+    assert catalogo.todos == ("TEST", "TEST.MX")
+    assert dict(catalogo.nombres) == {"TEST.MX": "Compañía de México"}
+    with pytest.raises(TypeError):
+        catalogo.nombres["TEST"] = "Empresa"
+
+
+@pytest.mark.parametrize("nombres", [None, [], {"AJENO": "Empresa"}, {"TEST": " "}, {"TEST": 1}])
+def test_rechazar_mapa_de_nombres_invalido(tmp_path, nombres):
+    datos = documento()
+    datos["nombres"] = nombres
+    with pytest.raises(ValueError, match="nombre"):
+        cargar(tmp_path, datos)
 
 
 @pytest.mark.parametrize(

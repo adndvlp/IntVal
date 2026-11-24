@@ -4,12 +4,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión de esta extensión | 1.14 |
-| Fecha | 2026-11-21 |
+| Versión de esta extensión | 1.15 |
+| Fecha | 2026-11-24 |
 | Línea base de software inspeccionada | `345aa0a` — F5: demo y documentación de portafolio |
 | Estado de F1–F5 | Implementadas; evidencia en la SDD general y documentos TDD |
 | Estado de F6–F11 | Implementadas; F11 cerrada en 52d1d52 con imagen, Tests, Web y Distribución aprobados en CI |
-| Encargo de esta edición | Distribución agnóstica F11 solicitada; UI-1–5 cerrados; sin publicación |
+| Encargo de esta edición | Especificar la búsqueda por nombre en el catálogo de Mercado, sección 23 |
 | Stack de destino | Astro estático, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts y FastAPI |
 | Backend que se conserva | Paquete Python `valoracion`, proveedores, metodología y exportador |
 | Idioma inicial | Español; identificadores técnicos de transporte en inglés |
@@ -61,6 +61,7 @@ aislamiento de adquisiciones, cachés, históricos y Excel; evidencia en
 20. [Riesgos y decisiones revisables](#20-riesgos-y-decisiones-revisables)
 21. [Continuidad en otro chat](#21-continuidad-en-otro-chat)
 22. [Fuentes y mantenimiento](#22-fuentes-y-mantenimiento)
+23. [Búsqueda por nombre en Mercado](#23-búsqueda-por-nombre-en-mercado)
 
 ## 1. Encargo, acuerdos y alcance
 
@@ -768,6 +769,8 @@ Catálogo: `source`, `dataset_version` cuando corresponda, `reference_date`,
 `market`, `total` y elementos con ticker/mercado. El catálogo actual no tiene
 nombre fiable para todas las empresas: no inventarlo antes de analizar.
 El frontend puede filtrar localmente sus 604 símbolos.
+La [sección 23](#23-búsqueda-por-nombre-en-mercado) especifica cómo incorporar
+los nombres de Mercado en el campo `name` que ya admite el contrato.
 
 ### 9.4 Solicitud de análisis
 
@@ -2243,3 +2246,105 @@ Si cambian los activos/identidad, revisar móvil, contraste, carga y capturas.
 Al terminar F11, registrar el punto de continuidad real, mantener explícitas las
 verificaciones externas pendientes y conservar la historia F1–F5 como evidencia
 de la evolución del proyecto.
+
+## 23. Búsqueda por nombre en Mercado
+
+**Estado:** implementada localmente el 2026-11-24 sobre `184cdaf`. Verificación
+de API y del filtro local aprobada. Recorrido visual pendiente de CI.
+
+### 23.1 Comportamiento esperado
+
+En **Analizar → Mercado**, escribir `Apple` o `AAPL` permite localizar y
+seleccionar la fila **Apple Inc. · AAPL**. Escribir `Bimbo` permite localizar
+`BIMBOA.MX`. El filtro admite fragmentos del nombre e ignora mayúsculas y
+diacríticos. Se aplica antes de paginar en Catálogo y Seleccionadas y respeta el
+filtro de mercado. Enter selecciona cuando hay una sola coincidencia. El usuario
+inicia el análisis con el botón **Analizar**. [Reglas de selección de la SDD de interfaz](SDD_UI.md#41-disposición-y-búsqueda).
+
+La API ya admite `name` en cada elemento y la demo lo utiliza. La respuesta
+de Mercado en la línea base entregaba 500 símbolos de USA y 104 de México, todos sin nombre.
+El selector React ya indexa ambos campos, filtra localmente y muestra el nombre
+junto al ticker cuando viene informado. Los símbolos cuya identidad no se
+pueda verificar conservan su fila y se encuentran por ticker.
+
+### 23.2 Datos e integración
+
+1. Incorporar un mapa opcional `nombres` en `data/universo.json`, con el ticker
+   exacto del catálogo como clave y un nombre de empresa verificable como valor.
+   Preparar el mapa fuera del servicio y publicarlo junto con el catálogo.
+   Revisar los 604 símbolos del snapshot. Registrar la fuente y fecha de
+   verificación de los nombres por mercado en el mismo archivo, separadas de
+   la procedencia y la fecha del universo de símbolos.
+2. Para USA, cruzar el catálogo con los datos de símbolo, emisor y bolsa de
+   SEC EDGAR. Para México, contrastar clave y serie con las fichas de la BMV.
+   Resolver discrepancias con documentos de la bolsa o del emisor y registrar
+   la fuente de cada corrección manual. Si una asociación queda sin verificar,
+   indicar el símbolo y el motivo en la revisión de cobertura. [SEC EDGAR](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data) · [Información de emisoras BMV](https://bmv.com.mx/es/emisoras/informacion-de-emisoras).
+3. Extender `cargar_universo` para cargar el mapa de forma inmutable. Validar
+   que sus claves pertenezcan al universo y que los valores sean cadenas con
+   contenido. Aceptar snapshots anteriores sin el mapa. Conservar el orden y la
+   identidad de los símbolos, incluidos `.MX` y las clases como `BRK.B`. La
+   normalización necesaria para cruzar fuentes se limita a la preparación del
+   mapa y debe resolver cada serie sin ambigüedad.
+4. En `GET /api/v1/catalog`, adjuntar el `name` disponible a cada elemento de
+   Mercado con el esquema actual. Omitir el campo si falta un nombre verificado.
+   Mantener `ticker` como identificador en selección y solicitudes de análisis.
+   Conservar `dataset_version` y `reference_date` al añadir sólo nombres, ya que
+   representan el mismo universo y la versión forma parte de la clave de
+   selección guardada. El campo `currency` conserva su semántica actual.
+5. Reutilizar `indexCatalog`, `foldSearch` y `CompanyPicker`. Preparar el índice
+   al cargar el catálogo y aplicar el filtro sobre ese índice al escribir. El
+   nombre y el ticker deben quedar identificables también con texto ampliado.
+   Conservar el máximo de 25 filas por página y el nombre accesible de cada
+   casilla. La carga y el filtrado del catálogo se resuelven con datos locales
+   del repositorio y del navegador, con cero consultas a Yahoo u otras fuentes.
+
+### 23.3 Aceptación y verificación
+
+La respuesta de referencia de los 604 elementos pesaba **20 284 bytes JSON** en ASGI y
+**2 322 bytes al comprimirla con gzip para la comparación**. Esta última cifra
+es una medición del contenido, independiente de la compresión del alojamiento.
+En la implementación, medir la misma respuesta antes y después, incluyendo
+tamaño sin compresión y gzip. En un build de producción, comprobar el filtrado
+del catálogo completo con el perfil móvil de la sección 15, además del
+presupuesto de activos vigente. Registrar el tamaño y tiempo observados.
+
+| Caso | Resultado esperado |
+| --- | --- |
+| API de Mercado con el catálogo versionado | Publica nombres verificables de USA y México. Conserva símbolos, orden, totales, filtros de mercado y versión. Registrar nombres verificados y pendientes por mercado. |
+| Snapshot anterior o ticker sin nombre | El catálogo carga y la fila se puede encontrar y seleccionar por ticker. Un mapa presente con un símbolo ajeno o un nombre vacío falla en la validación. |
+| Búsqueda de Mercado en navegador | `Apple` y `AAPL` localizan la misma fila. `america movil` localiza América Móvil y `Bimbo` localiza `BIMBOA.MX`. El filtro por mercado sigue aplicando y el resultado puede estar fuera de la primera página original. |
+| Selección y solicitudes | Una selección guardada sólo con tickers sigue disponible. Escribir y seleccionar no genera peticiones nuevas. Pulsar Analizar envía los tickers seleccionados. |
+| Rendimiento y vista móvil | Máximo 25 filas montadas. Nombres largos, símbolo y casilla utilizables a 320 px y texto al 200 %. Se registran tamaño del catálogo y tiempo de filtrado bajo el mismo perfil antes y después. |
+
+Aplicar TDD en la implementación. Adaptar la prueba API que hoy espera que
+Mercado omita todos los nombres y añadir un recorrido de Mercado con el dataset
+versionado que detenga el POST antes de consultar el proveedor. El recorrido
+de demo sigue cubriendo sus propios datos. Registrar el fallo inicial y los
+resultados de la API, navegador y mediciones en la evidencia de la entrega.
+
+### 23.4 Resultado del 2026-11-24
+
+El [snapshot](../data/universo.json) incorpora los 500 nombres de USA y los 104
+de México. Se conservaron todos los símbolos, orden, fecha y `dataset_version`.
+El campo `fuentes_nombres` registra las procedencias de EDGAR y BMV por mercado
+y los documentos usados para completar las asociaciones faltantes, incluidas
+las históricas del catálogo. Vincular un nombre a un símbolo histórico conserva
+su identidad dentro del snapshot.
+
+En ASGI el catálogo completo pasó de 20 284 a **39 039 bytes JSON** y de 2 322
+a **8 204 bytes gzip**, equivalentes a 5 882 bytes adicionales al comprimir las
+dos respuestas con los mismos ajustes. El filtro de 604 filas pasó de 0.027 a
+0.054 ms por operación (mediana en Node 26.0.0, macOS arm64, 10 tandas de
+10 000 operaciones después del calentamiento). Esta medición ejecutó el índice
+y la comparación de texto, sin medir renderizado ni interacción en navegador.
+También encontró `Apple`, `AAPL`, `america movil` y `Bimbo` con la respuesta
+real de la API, incluyendo exclusión por mercado y selección por ticker.
+
+La prueba inicial de Python mostró ocho fallos por la ausencia del campo y de
+la validación. Después pasaron **557 pruebas Python** con 95.43 % de cobertura
+combinada y la comprobación de OpenAPI. Playwright reconoce el nuevo recorrido
+en los seis perfiles, pero la sesión no pudo abrir el puerto local de la API ni
+iniciar Chromium. La medición móvil y la comprobación visual a 320 px quedan
+pendientes del navegador. El código de producción de React y sus dependencias
+quedaron en la misma revisión.

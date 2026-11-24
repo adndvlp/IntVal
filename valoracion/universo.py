@@ -16,6 +16,7 @@ from .normalizacion import mercado_de_ticker
 class CatalogoEmpresas:
     usa: tuple[str, ...]
     mx: tuple[str, ...]
+    nombres: Mapping[str, str]
     fuentes: tuple[Mapping[str, str], ...]
     fecha_snapshot: str
     fecha_verificacion_fuentes: str | None
@@ -70,6 +71,12 @@ def cargar_universo(ruta: Path | None = None) -> CatalogoEmpresas:
             if ticker in vistos:
                 raise ValueError(f"Ticker duplicado: {ticker}")
             vistos.add(ticker)
+    nombres = datos.get("nombres", {})
+    if not isinstance(nombres, dict):
+        raise ValueError("Los nombres deben formar un mapa por ticker.")
+    for ticker, nombre in nombres.items():
+        if ticker not in vistos or not isinstance(nombre, str) or not nombre.strip():
+            raise ValueError(f"Entrada de nombre inválida para {ticker!r}.")
     fuentes = datos.get("fuentes")
     if not isinstance(fuentes, list):
         raise ValueError("Las fuentes del catálogo deben formar una lista.")
@@ -82,6 +89,7 @@ def cargar_universo(ruta: Path | None = None) -> CatalogoEmpresas:
     return CatalogoEmpresas(
         usa=tuple(mercados["USA"]),
         mx=tuple(mercados["MX"]),
+        nombres=MappingProxyType({ticker: nombre.strip() for ticker, nombre in nombres.items()}),
         fuentes=tuple(MappingProxyType(dict(fuente)) for fuente in fuentes),
         fecha_snapshot=datos["fecha_snapshot"],
         fecha_verificacion_fuentes=datos.get("fecha_verificacion_fuentes"),

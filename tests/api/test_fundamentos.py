@@ -74,12 +74,13 @@ def test_catalogo_local_por_fuente_y_mercado(source, market, total):
 
 
 def test_catalogo_publica_identidad_local_sin_obtener_estados_ni_inventar_metadatos(monkeypatch):
-    proveedor = import_module("valoracion.proveedores.demo").ProveedorDemo
-
     def no_consultar(*args, **kwargs):
         raise AssertionError("Abrir catálogo no debe obtener datos financieros")
 
-    monkeypatch.setattr(proveedor, "obtener_empresa", no_consultar)
+    demo = import_module("valoracion.proveedores.demo").ProveedorDemo
+    yahoo = import_module("valoracion.proveedores.yahoo").ProveedorYahoo
+    monkeypatch.setattr(demo, "obtener_empresa", no_consultar)
+    monkeypatch.setattr(yahoo, "_ticker", no_consultar)
     with cliente() as client:
         empresas = client.get("/api/v1/catalog", params={"source": "demo"}).json()["items"]
         assert empresas[0]["name"] == "Industrial Aurora (demo)"
@@ -87,8 +88,15 @@ def test_catalogo_publica_identidad_local_sin_obtener_estados_ni_inventar_metada
         mx = next(e for e in empresas if e["market"] == "MX")
         assert mx["name"] == "Manufacturas Horizonte (demo)"
         assert mx["currency"] == "MXN"
-        mercado = client.get("/api/v1/catalog", params={"source": "market"}).json()["items"]
-        assert all("name" not in e and "currency" not in e for e in mercado)
+        mercado = client.get("/api/v1/catalog", params={"source": "market"}).json()
+        assert mercado["dataset_version"] == "universe-2026-11-12"
+        assert mercado["reference_date"] == "2026-11-12"
+        por_ticker = {e["ticker"]: e for e in mercado["items"]}
+        assert por_ticker["AAPL"]["name"] == "Apple Inc."
+        assert "Grupo Bimbo" in por_ticker["BIMBOA.MX"]["name"]
+        assert "América Móvil" in por_ticker["AMXB.MX"]["name"]
+        assert "BERKSHIRE HATHAWAY" in por_ticker["BRK.B"]["name"].upper()
+        assert all(e.get("name") and "currency" not in e for e in mercado["items"])
 
 
 @pytest.mark.parametrize(

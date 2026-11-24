@@ -62,7 +62,7 @@ export default defineConfig({
       url: 'http://127.0.0.1:8766/healthz',
       env: {
         VALORACION_DEMO: '1',
-        VALORACION_MARKET_ENABLED: '0',
+        VALORACION_MARKET_ENABLED: '1',
         VALORACION_CORS_ORIGINS: 'http://127.0.0.1:4321',
       },
       reuseExistingServer: false,

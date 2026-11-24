@@ -1,5 +1,79 @@
 import { expect, test } from '@playwright/test';
 
+test('Mercado encuentra nombres de USA y México sin solicitar datos financieros', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem(
+      'intval.selection.v1:http://127.0.0.1:8766:market:universe-2026-11-12',
+      JSON.stringify({ version: 1, selected: ['BIMBOA.MX'], extras: '' }),
+    );
+  });
+  const apiRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/api/v1/')) apiRequests.push(request.url());
+  });
+  await page.route('**/api/v1/analyses', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 503,
+      json: { error: { code: 'SERVICE_UNAVAILABLE', message: 'Prueba' } },
+      headers: { 'access-control-allow-origin': 'http://127.0.0.1:4321' },
+    });
+  });
+  await page.goto('/app/?fuente=market');
+  const rows = page.locator('.company-option');
+  const search = page.getByRole('searchbox', { name: 'Buscar empresas' });
+  await expect(rows).toHaveCount(25);
+  await expect(page.locator('.selection-count')).toHaveText('1 seleccionada');
+  const initialRequests = apiRequests.length;
+
+  const apple = page.getByRole('checkbox', { name: /Apple Inc\. AAPL/ });
+  await search.fill('Apple');
+  await expect(apple).toBeVisible();
+  await search.fill('AAPL');
+  await expect(apple).toBeVisible();
+  await search.press('Enter');
+  await expect(apple).toBeChecked();
+
+  const market = page.getByRole('combobox', {
+    name: 'Mercado de las empresas',
+  });
+  await market.selectOption('USA');
+  await search.fill('Bimbo');
+  await expect(rows).toHaveCount(0);
+  await market.selectOption('MX');
+  await expect(
+    page.getByRole('checkbox', { name: /Grupo Bimbo.*BIMBOA\.MX/ }),
+  ).toBeChecked();
+  await search.fill('america movil');
+  await expect(
+    page.getByRole('checkbox', { name: /América Móvil.*AMXB\.MX/ }),
+  ).toBeVisible();
+
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+  await search.fill('Impulsora del Desarrollo');
+  const longName = page.getByRole('checkbox', { name: /IDEALB-1\.MX/ });
+  await expect(longName).toBeVisible();
+  expect(await rows.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(
+    true,
+  );
+  expect(apiRequests).toHaveLength(initialRequests);
+
+  const submitted = page.waitForRequest(
+    (request) =>
+      request.method() === 'POST' && request.url().endsWith('/analyses'),
+  );
+  await page.getByRole('button', { name: 'Analizar selección' }).click();
+  const payload = (await submitted).postDataJSON();
+  expect(payload.source).toBe('market');
+  expect(payload.tickers.sort()).toEqual(['AAPL', 'BIMBOA.MX']);
+});
+
 test('catálogo real: encuentra por nombre, selecciona con Enter y analiza sólo lo elegido', async ({
   page,
 }) => {
